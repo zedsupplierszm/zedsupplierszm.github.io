@@ -1065,7 +1065,29 @@
     </div>
 </div>
 
+<!-- Add Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+
 <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const storage = firebase.storage();
+
     const LOCK_TIME = { hr: 16, min: 50 };
     const OPEN_TIME = { hr: 7, min: 30 };
     const WARNING_TIME = { hr: 16, min: 30 };
@@ -1073,468 +1095,298 @@
     const LOCK_DURATION_MINUTES = 10;
     const MAX_IMAGE_SIZE = 3 * 1024 * 1024;
     
-    const SYNC_PROVIDER_FIREBASE = 'firebase';
-    const SYNC_PROVIDER_SUPABASE = 'supabase';
-    const SYNC_PROVIDER_MANUAL = 'manual';
-    
     const USER_ROLES = {
         ADMIN: 'admin',
         STAFF: 'staff'
     };
 
-    const SESSION_KEY = 'z_active_sessions';
-    
-    let userAccounts = JSON.parse(localStorage.getItem('z_user_accounts'));
-if (!userAccounts) {
-    userAccounts = [
-        { 
-            username: "JOSEPH", 
-            password: "RIGHTJOSEPH", 
-            role: "super admin", // Promoted to Super Admin
-            enabled: true, 
-            nrc: "123456/78/1", 
-            email: "zulujosephp@gmail.com" 
-        },
-        { username: "CHISHALA", password: "RIGHTCHISHALA", role: "staff", enabled: true }
-    ];
-    localStorage.setItem('z_user_accounts', JSON.stringify(userAccounts));
-}
+    // Firebase collections
+    const COLLECTIONS = {
+        USERS: 'users',
+        CATEGORIES: 'categories',
+        SUPPLIERS: 'suppliers',
+        LINKS: 'links',
+        AUDIT_LOGS: 'audit_logs',
+        SESSIONS: 'sessions'
+    };
 
+    // Global data variables
+    let categories = [];
+    let suppliers = [];
+    let links = [];
+    let userAccounts = [];
+    let currentCategory = "";
     let currentGalleryImages = [];
     let currentGalleryIndex = 0;
+    let currentRatingValue = 0;
 
-    let categories = JSON.parse(localStorage.getItem('z_categories')) || ["Stationary", "IT Equipment", "Hardware", "Marketing"];
-    let suppliers = JSON.parse(localStorage.getItem('z_suppliers')) || [];
-    let links = JSON.parse(localStorage.getItem('zamcom_links')) || [
-        { name: "Zambia Public Procurement Authority", url: "http://www.zppa.org.zm", email: "info@zppa.org.zm" },
-        { name: "Zambia Institute of Purchasing and Supply", url: "http://www.zips.org.zm", email: "info@zips.org.zm" }
-    ];
-    let currentCategory = "";
-    let certificates = JSON.parse(localStorage.getItem('z_certificates')) || {};
-    let supplierImages = JSON.parse(localStorage.getItem('z_supplier_images')) || {};
+    // ==================== FIREBASE FUNCTIONS ====================
 
-    const mainframeKey = "JATKISSEMPIRE";
-
-
-const TAB_ID = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-const SESSION_CHANNEL = new BroadcastChannel('zamcom_session_channel');
-
-const TAB_SPECIFIC_KEYS = ['logged_user', 'current_session', 'last_login'];
-const GLOBAL_KEYS = ['z_user_accounts', 'z_categories', 'z_suppliers', 'z_audit_logs'];
-
-let sessionData = {
-    tabId: TAB_ID,
-    loggedUser: null,
-    lastActive: Date.now()
-};
-
-function renderUserTable() {
-    const viewer = JSON.parse(localStorage.getItem('logged_user_data'));
-    let html = "";
-    userAccounts.forEach(u => {
-        // Privacy Rule: Only Joseph (Super Admin) sees NRC/Email
-        const canSee = (viewer && viewer.username === "JOSEPH");
-        html += `<tr>
-            <td>${u.username}</td>
-            <td>${canSee ? u.nrc : '********'}</td>
-            <td>${canSee ? u.email : '********'}</td>
-            <td>${u.role}</td>
-        </tr>`;
-    });
-    document.getElementById('userTableBody').innerHTML = html;
-}
-
-function showAuditLogs() {
-    const user = JSON.parse(localStorage.getItem('logged_user_data'));
-    const modalContent = document.getElementById('modalFields');
-    
-    let adminButtons = "";
-    if (user.username === "JOSEPH") {
-        adminButtons = `
-            <div style="margin-bottom:15px; display:flex; gap:10px;">
-                <button class="btn-del" onclick="clearLogs('all')">🗑️ Delete All Logs</button>
-                <button class="btn-del" onclick="clearLogs('50')">🗑️ Delete Last 50</button>
-            </div>`;
-    }
-    // ... insert this 'adminButtons' variable into your log modal HTML
-}
-
-function initTabSession() {
-    const tabUser = sessionStorage.getItem('tab_logged_user');
-    const tabSession = sessionStorage.getItem('tab_current_session');
-    
-    if (tabUser && tabSession) {
-        sessionData.loggedUser = tabUser;
-        localStorage.setItem('logged_user', tabUser);
-        localStorage.setItem('current_session', tabSession);
-    }
-    
-    broadcastSessionEvent('TAB_ACTIVATED', {
-        tabId: TAB_ID,
-        user: sessionData.loggedUser,
-        timestamp: Date.now()
-    });
-}
-
-function broadcastSessionEvent(type, data) {
-    SESSION_CHANNEL.postMessage({
-        type: type,
-        tabId: TAB_ID,
-        data: data,
-        timestamp: Date.now()
-    });
-}
-
-SESSION_CHANNEL.onmessage = function(event) {
-    const message = event.data;
-    
-    switch(message.type) {
-        case 'LOGIN':
-            if (message.tabId !== TAB_ID && message.data.user) {
-                updateUserDisplayFromBroadcast(message.data.user);
-            }
-            break;
-            
-        case 'LOGOUT':
-            if (message.tabId !== TAB_ID) {
-                handleRemoteLogout(message.data.user);
-            }
-            break;
-            
-        case 'TAB_ACTIVATED':
-            break;
-            
-        case 'SESSION_EXPIRED':
-            if (message.data.user === sessionData.loggedUser) {
-                handleSessionExpired();
-            }
-            break;
-    }
-};
-
-    function showSyncSettings() {
-        const fields = document.getElementById('modalFields');
-        document.getElementById('modalTitle').innerText = "Sync Settings";
-        
-        const syncProvider = localStorage.getItem('sync_provider') || SYNC_PROVIDER_MANUAL;
-        const lastSync = localStorage.getItem('last_sync') || 'Never';
-        
-        fields.innerHTML = `
-            <div style="margin-bottom: 20px;">
-                <h4>Sync Options</h4>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">Select Sync Method:</label>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <label style="display: flex; align-items: center; gap: 10px;">
-                            <input type="radio" name="syncProvider" value="${SYNC_PROVIDER_MANUAL}" ${syncProvider === SYNC_PROVIDER_MANUAL ? 'checked' : ''} onchange="updateSyncProvider('${SYNC_PROVIDER_MANUAL}')">
-                            <div>
-                                <strong>Manual Backup/Import</strong>
-                                <div style="font-size: 12px; color: #666;">Export JSON files and import manually. No internet required.</div>
-                            </div>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 10px;">
-                            <input type="radio" name="syncProvider" value="${SYNC_PROVIDER_FIREBASE}" ${syncProvider === SYNC_PROVIDER_FIREBASE ? 'checked' : ''} onchange="updateSyncProvider('${SYNC_PROVIDER_FIREBASE}')">
-                            <div>
-                                <strong>Google Firebase (Recommended)</strong>
-                                <div style="font-size: 12px; color: #666;">Real-time sync. Easy setup with Google account.</div>
-                            </div>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 10px;">
-                            <input type="radio" name="syncProvider" value="${SYNC_PROVIDER_SUPABASE}" ${syncProvider === SYNC_PROVIDER_SUPABASE ? 'checked' : ''} onchange="updateSyncProvider('${SYNC_PROVIDER_SUPABASE}')">
-                            <div>
-                                <strong>Supabase</strong>
-                                <div style="font-size: 12px; color: #666;">PostgreSQL database with real-time features.</div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="firebaseConfigSection" style="display: ${syncProvider === SYNC_PROVIDER_FIREBASE ? 'block' : 'none'}; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
-                <h4 style="margin-top: 0;">Firebase Setup</h4>
-                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
-                    <strong>Recommended for beginners:</strong> Create a free Firebase project at 
-                    <a href="https://firebase.google.com" target="_blank">firebase.google.com</a>, then add your config below.
-                </p>
-                <div style="margin-bottom: 10px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Firebase Configuration:</label>
-                    <textarea id="firebaseConfig" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}' 
-                              style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: monospace; font-size: 12px;">${localStorage.getItem('firebase_config') || ''}</textarea>
-                </div>
-                <button class="btn" style="background: #FFA000; width: 100%; margin-top: 10px;" onclick="saveFirebaseConfig()">Save Firebase Config</button>
-            </div>
-            
-            <div id="supabaseConfigSection" style="display: ${syncProvider === SYNC_PROVIDER_SUPABASE ? 'block' : 'none'}; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
-                <h4 style="margin-top: 0;">Supabase Setup</h4>
-                <div style="margin-bottom: 10px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Supabase URL:</label>
-                    <input type="text" id="supabaseUrl" value="${localStorage.getItem('supabase_url') || ''}" placeholder="https://your-project.supabase.co" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">API Key:</label>
-                    <input type="password" id="supabaseKey" value="${localStorage.getItem('supabase_key') || ''}" placeholder="eyJhbGciOiJIUzI1NiIsInR..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                </div>
-                <button class="btn" style="background: #3ECF8E; width: 100%; margin-top: 10px;" onclick="saveSupabaseConfig()">Save Supabase Config</button>
-            </div>
-            
-            <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
-                <p style="margin: 0; font-size: 12px;">
-                    <strong>Last Sync:</strong> ${lastSync}<br>
-                    <strong>Current Method:</strong> ${syncProvider.toUpperCase()}
-                </p>
-            </div>
-            
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="btn btn-add" onclick="manualSyncToCloud()" style="flex: 1;">Sync Now</button>
-                <button class="btn" onclick="loadFromCloud()" style="flex: 1; background: #4CAF50;">Load from Cloud</button>
-            </div>
-            
-            <div style="margin-top: 20px; font-size: 11px; color: #666; text-align: center;">
-                <p>Firebase is recommended for easy setup and automatic sync. It's free for small projects.</p>
-            </div>
-        `;
-        
-        document.getElementById('modalSaveBtn').style.display = 'none';
-        document.getElementById('modalOverlay').style.display = 'flex';
-    }
-    
-    function updateSyncProvider(provider) {
-        localStorage.setItem('sync_provider', provider);
-        showSyncSettings();
-    }
-    
-    function saveFirebaseConfig() {
-        const config = document.getElementById('firebaseConfig').value.trim();
-        if (config) {
-            try {
-                JSON.parse(config);
-                localStorage.setItem('firebase_config', config);
-                showNotification('Firebase config saved!', 'success');
-            } catch (e) {
-                showNotification('Invalid JSON format', 'error');
-            }
-        } else {
-            showNotification('Please enter Firebase config', 'error');
-        }
-    }
-    
-    function saveSupabaseConfig() {
-        const url = document.getElementById('supabaseUrl').value.trim();
-        const key = document.getElementById('supabaseKey').value.trim();
-        if (url && key) {
-            localStorage.setItem('supabase_url', url);
-            localStorage.setItem('supabase_key', key);
-            showNotification('Supabase config saved!', 'success');
-        } else {
-            showNotification('Please enter both URL and API key', 'error');
-        }
-    }
-    
-    async function manualSyncToCloud() {
-        const provider = localStorage.getItem('sync_provider') || SYNC_PROVIDER_MANUAL;
-        
-        if (provider === SYNC_PROVIDER_MANUAL) {
-            exportData();
-            return;
-        }
-        
+    async function loadAllData() {
         try {
-            const data = getAllData();
+            // Load categories
+            const categoriesSnapshot = await db.collection(COLLECTIONS.CATEGORIES).get();
+            categories = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
-            if (provider === SYNC_PROVIDER_FIREBASE) {
-                await syncToFirebase(data);
-            } else if (provider === SYNC_PROVIDER_SUPABASE) {
-                await syncToSupabase(data);
+            // Load suppliers
+            const suppliersSnapshot = await db.collection(COLLECTIONS.SUPPLIERS).get();
+            suppliers = suppliersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Load links
+            const linksSnapshot = await db.collection(COLLECTIONS.LINKS).get();
+            links = linksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Load users
+            const usersSnapshot = await db.collection(COLLECTIONS.USERS).get();
+            userAccounts = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // If no users exist, create default users
+            if (userAccounts.length === 0) {
+                await createDefaultUsers();
             }
             
-            localStorage.setItem('last_sync', new Date().toLocaleString());
-            showNotification('Data synced to cloud!', 'success');
+            return true;
         } catch (error) {
-            console.error('Sync error:', error);
-            showNotification('Failed to sync to cloud', 'error');
+            console.error("Error loading data:", error);
+            showNotification("Failed to load data from database", "error");
+            return false;
         }
     }
-    
-    async function loadFromCloud() {
-        const provider = localStorage.getItem('sync_provider') || SYNC_PROVIDER_MANUAL;
+
+    async function createDefaultUsers() {
+        const defaultUsers = [
+            { 
+                username: "JOSEPH", 
+                password: "RIGHTJOSEPH", 
+                role: "super admin",
+                enabled: true, 
+                nrc: "123456/78/1", 
+                email: "zulujosephp@gmail.com",
+                createdAt: new Date().toISOString()
+            },
+            { 
+                username: "CHISHALA", 
+                password: "RIGHTCHISHALA", 
+                role: "staff", 
+                enabled: true,
+                createdAt: new Date().toISOString()
+            }
+        ];
         
-        if (provider === SYNC_PROVIDER_MANUAL) {
-            showNotification('Manual mode: Use Import feature', 'warning');
-            return;
+        for (const user of defaultUsers) {
+            await db.collection(COLLECTIONS.USERS).add(user);
         }
         
+        // Reload users
+        const usersSnapshot = await db.collection(COLLECTIONS.USERS).get();
+        userAccounts = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+
+    async function saveCategory(name) {
         try {
-            let data;
-            
-            if (provider === SYNC_PROVIDER_FIREBASE) {
-                data = await loadFromFirebase();
-            } else if (provider === SYNC_PROVIDER_SUPABASE) {
-                data = await loadFromSupabase();
-            }
-            
-            if (data) {
-                loadDataIntoLocalStorage(data);
-                showNotification('Data loaded from cloud!', 'success');
-                
-                if (typeof renderCategories === 'function') renderCategories();
-                if (typeof displayLinks === 'function') displayLinks();
-                if (document.getElementById('categoryPageView').style.display !== 'none') {
-                    renderSuppliers();
-                }
-            }
+            await db.collection(COLLECTIONS.CATEGORIES).add({
+                name: name,
+                createdAt: new Date().toISOString(),
+                createdBy: getCurrentUser()
+            });
+            await loadAllData();
+            return true;
         } catch (error) {
-            console.error('Load error:', error);
-            showNotification('Failed to load from cloud', 'error');
-        }
-    }
-    
-    async function syncToFirebase(data) {
-        const config = localStorage.getItem('firebase_config');
-        if (!config) {
-            showNotification('Firebase config not found', 'error');
-            return;
-        }
-        
-        localStorage.setItem('firebase_backup', JSON.stringify(data));
-        return true;
-    }
-    
-    async function loadFromFirebase() {
-        const backup = localStorage.getItem('firebase_backup');
-        if (backup) {
-            return JSON.parse(backup);
-        }
-        return null;
-    }
-    
-    async function syncToSupabase(data) {
-        const url = localStorage.getItem('supabase_url');
-        const key = localStorage.getItem('supabase_key');
-        
-        if (!url || !key) {
-            showNotification('Supabase config not found', 'error');
-            return;
-        }
-        
-        localStorage.setItem('supabase_backup', JSON.stringify(data));
-        return true;
-    }
-    
-    async function loadFromSupabase() {
-        const backup = localStorage.getItem('supabase_backup');
-        if (backup) {
-            return JSON.parse(backup);
-        }
-        return null;
-    }
-
-    function forgotPasswordSimple() {
-        const username = prompt("Enter your username:").toUpperCase();
-        if (!username) return;
-
-        const user = getUser(username);
-        
-        if (!user) {
-            alert("User not found!");
-            return;
-        }
-        
-        if (!user.email) {
-            alert("No email registered for this user. Please contact administrator.");
-            return;
-        }
-        
-        const subject = encodeURIComponent("ZAMCOM Supplier Directory - Your Password");
-        const body = encodeURIComponent(
-            `Hello ${user.username},\n\n` +
-            `Your login credentials are:\n` +
-            `Username: ${user.username}\n` +
-            `Password: ${user.password}\n\n` +
-            `Please login and change your password immediately for security.\n\n` +
-            `ZAMCOM Procurement Department`
-        );
-        
-        const mailtoLink = `mailto:${user.email}?subject=${subject}&body=${body}`;
-        
-        if (confirm(`Send password recovery email to ${user.email}?`)) {
-            window.open(mailtoLink, '_blank');
-            recordAction(`Password recovery email sent for ${username}`);
-            alert("Email client opened. Please send the email to receive your password.");
+            console.error("Error saving category:", error);
+            return false;
         }
     }
 
-    function changePassword() {
-        const currentUser = localStorage.getItem('logged_user');
-        if (!currentUser) {
-            alert("You must be logged in to change password.");
-            return;
+    async function updateCategory(id, newName) {
+        try {
+            await db.collection(COLLECTIONS.CATEGORIES).doc(id).update({
+                name: newName,
+                updatedAt: new Date().toISOString(),
+                updatedBy: getCurrentUser()
+            });
+            await loadAllData();
+            return true;
+        } catch (error) {
+            console.error("Error updating category:", error);
+            return false;
         }
-        
-        const oldPassword = prompt("Enter your current password:");
-        if (!oldPassword) return;
-        
-        const userIndex = userAccounts.findIndex(u => u.username === currentUser);
-        
-        if (userIndex === -1) {
-            alert("User not found!");
-            return;
-        }
-        
-        if (userAccounts[userIndex].password !== oldPassword) {
-            alert("Current password is incorrect!");
-            return;
-        }
-        
-        const newPassword = prompt("Enter new password:");
-        if (!newPassword) return;
-        
-        const confirmPassword = prompt("Confirm new password:");
-        if (newPassword !== confirmPassword) {
-            alert("Passwords don't match!");
-            return;
-        }
-        
-        userAccounts[userIndex].password = newPassword;
-        saveUserData();
-        
-        alert("Password changed successfully!");
-        recordAction(`${currentUser} changed their password`);
     }
 
-    function resetPasswordFlow() {
-        const mKey = prompt("Enter Universal Mainframe Password:");
-        if (mKey === mainframeKey) {
-            const targetUser = prompt("Enter Username to reset:").toUpperCase();
-            const user = getUser(targetUser);
-            if (user) {
-                const newPass = prompt(`Enter new password for ${targetUser}:`);
-                user.password = newPass;
-                saveUserData();
-                recordAction(`Reset password for user: ${targetUser}`);
-                alert("Password changed successfully!");
-            } else { alert("User not found."); }
-        } else { alert("Unauthorized Access!"); }
+    async function deleteCategory(id) {
+        try {
+            await db.collection(COLLECTIONS.CATEGORIES).doc(id).delete();
+            await loadAllData();
+            return true;
+        } catch (error) {
+            console.error("Error deleting category:", error);
+            return false;
+        }
     }
 
-
-    function showNotification(message, type = 'success') {
-        let notification = document.getElementById('notification');
-        if (!notification) {
-            notification = document.createElement('div');
-            notification.id = 'notification';
-            notification.className = 'notification';
-            document.body.appendChild(notification);
+    async function saveSupplier(supplierData) {
+        try {
+            const supplierWithMeta = {
+                ...supplierData,
+                createdAt: new Date().toISOString(),
+                createdBy: getCurrentUser(),
+                updatedAt: new Date().toISOString(),
+                updatedBy: getCurrentUser()
+            };
+            
+            await db.collection(COLLECTIONS.SUPPLIERS).add(supplierWithMeta);
+            await loadAllData();
+            return true;
+        } catch (error) {
+            console.error("Error saving supplier:", error);
+            return false;
         }
-        
-        notification.textContent = message;
-        notification.className = `notification ${type}`;
-        notification.style.display = 'block';
-        
-        setTimeout(() => {
-            if (notification.parentElement) {
-                notification.style.display = 'none';
-            }
-        }, 5000);
+    }
+
+    async function updateSupplier(id, supplierData) {
+        try {
+            await db.collection(COLLECTIONS.SUPPLIERS).doc(id).update({
+                ...supplierData,
+                updatedAt: new Date().toISOString(),
+                updatedBy: getCurrentUser()
+            });
+            await loadAllData();
+            return true;
+        } catch (error) {
+            console.error("Error updating supplier:", error);
+            return false;
+        }
+    }
+
+    async function deleteSupplier(id) {
+        try {
+            await db.collection(COLLECTIONS.SUPPLIERS).doc(id).delete();
+            await loadAllData();
+            return true;
+        } catch (error) {
+            console.error("Error deleting supplier:", error);
+            return false;
+        }
+    }
+
+    async function saveLink(linkData) {
+        try {
+            await db.collection(COLLECTIONS.LINKS).add({
+                ...linkData,
+                createdAt: new Date().toISOString(),
+                createdBy: getCurrentUser()
+            });
+            await loadAllData();
+            return true;
+        } catch (error) {
+            console.error("Error saving link:", error);
+            return false;
+        }
+    }
+
+    async function deleteLink(id) {
+        try {
+            await db.collection(COLLECTIONS.LINKS).doc(id).delete();
+            await loadAllData();
+            return true;
+        } catch (error) {
+            console.error("Error deleting link:", error);
+            return false;
+        }
+    }
+
+    async function recordAction(action) {
+        try {
+            await db.collection(COLLECTIONS.AUDIT_LOGS).add({
+                user: getCurrentUser(),
+                action: action,
+                timestamp: new Date().toISOString(),
+                time: new Date().toLocaleString('en-GB', { 
+                    day:'2-digit', 
+                    month:'short', 
+                    hour:'2-digit', 
+                    minute:'2-digit', 
+                    second:'2-digit' 
+                })
+            });
+        } catch (error) {
+            console.error("Error recording action:", error);
+        }
+    }
+
+    async function getAuditLogs(page = 1, limit = 20) {
+        try {
+            const snapshot = await db.collection(COLLECTIONS.AUDIT_LOGS)
+                .orderBy('timestamp', 'desc')
+                .limit(limit * page)
+                .get();
+            
+            const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            return logs.slice((page - 1) * limit, page * limit);
+        } catch (error) {
+            console.error("Error getting audit logs:", error);
+            return [];
+        }
+    }
+
+    async function updateActiveSession(username) {
+        try {
+            await db.collection(COLLECTIONS.SESSIONS).doc(username).set({
+                username: username,
+                lastActive: new Date().toISOString(),
+                sessionId: generateSessionId()
+            }, { merge: true });
+        } catch (error) {
+            console.error("Error updating session:", error);
+        }
+    }
+
+    async function removeActiveSession(username) {
+        try {
+            await db.collection(COLLECTIONS.SESSIONS).doc(username).delete();
+        } catch (error) {
+            console.error("Error removing session:", error);
+        }
+    }
+
+    async function getActiveSessions() {
+        try {
+            const snapshot = await db.collection(COLLECTIONS.SESSIONS).get();
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error("Error getting sessions:", error);
+            return [];
+        }
+    }
+
+    async function uploadFileToStorage(file, path) {
+        try {
+            const storageRef = storage.ref();
+            const fileRef = storageRef.child(path);
+            await fileRef.put(file);
+            const downloadURL = await fileRef.getDownloadURL();
+            return downloadURL;
+        } catch (error) {
+            console.error("Error uploading file:", error);
+            throw error;
+        }
+    }
+
+    async function deleteFileFromStorage(path) {
+        try {
+            const storageRef = storage.ref();
+            const fileRef = storageRef.child(path);
+            await fileRef.delete();
+            return true;
+        } catch (error) {
+            console.error("Error deleting file:", error);
+            return false;
+        }
+    }
+
+    // ==================== HELPER FUNCTIONS ====================
+
+    function getCurrentUser() {
+        return localStorage.getItem('logged_user') || 'System';
     }
 
     function getUser(username) {
@@ -1545,7 +1397,7 @@ SESSION_CHANNEL.onmessage = function(event) {
         const user = getUser(username);
         if (!user || !user.enabled) return false;
         
-        if (user.role === USER_ROLES.ADMIN) return true;
+        if (user.role === 'super admin' || user.role === USER_ROLES.ADMIN) return true;
         
         if (user.role === USER_ROLES.STAFF) {
             const staffPermissions = [
@@ -1567,68 +1419,40 @@ SESSION_CHANNEL.onmessage = function(event) {
         return false;
     }
 
-    function getCurrentUserRole() {
-        const currentUser = localStorage.getItem('logged_user');
-        if (!currentUser) return null;
-        
-        const user = getUser(currentUser);
-        return user ? user.role : null;
-    }
-
     function isCurrentUserAdmin() {
-        return getCurrentUserRole() === USER_ROLES.ADMIN;
+        const currentUser = getCurrentUser();
+        const user = getUser(currentUser);
+        return user && (user.role === 'super admin' || user.role === USER_ROLES.ADMIN);
     }
 
-    function isCurrentUserStaff() {
-        return getCurrentUserRole() === USER_ROLES.STAFF;
-    }
-
-    function getActiveSessions() {
-        return JSON.parse(localStorage.getItem(SESSION_KEY)) || {};
-    }
-    
-    function updateActiveSession(username, sessionId = null) {
-        const sessions = getActiveSessions();
-        const sessionIdToUse = sessionId || generateSessionId();
-        
-        sessions[username] = {
-            sessionId: sessionIdToUse,
-            lastActive: Date.now(),
-            ip: 'local'
-        };
-        
-        localStorage.setItem(SESSION_KEY, JSON.stringify(sessions));
-        return sessionIdToUse;
-    }
-    
-    function removeActiveSession(username) {
-        const sessions = getActiveSessions();
-        delete sessions[username];
-        localStorage.setItem(SESSION_KEY, JSON.stringify(sessions));
-    }
-    
     function generateSessionId() {
         return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
-    
-    function isSessionValid(username) {
-        const sessions = getActiveSessions();
-        const session = sessions[username];
-        if (!session) return true;
-        
-        const sessionAge = Date.now() - session.lastActive;
-        const MAX_SESSION_AGE = 24 * 60 * 60 * 1000;
-        
-        if (sessionAge > MAX_SESSION_AGE) {
-            removeActiveSession(username);
-            return true;
+
+    function showNotification(message, type = 'success') {
+        let notification = document.getElementById('notification');
+        if (!notification) {
+            notification = document.createElement('div');
+            notification.id = 'notification';
+            notification.className = 'notification';
+            document.body.appendChild(notification);
         }
         
-        return false;
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.style.display = 'block';
+        
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.display = 'none';
+            }
+        }, 5000);
     }
 
+    // ==================== SYSTEM FUNCTIONS ====================
+
     function isSystemLocked() {
-        const currentUser = localStorage.getItem('logged_user');
+        const currentUser = getCurrentUser();
         if(currentUser === "JOSEPH") return false;
         
         const now = new Date();
@@ -1639,210 +1463,12 @@ SESSION_CHANNEL.onmessage = function(event) {
         return (currentTotal >= lockTotal || currentTotal < openTotal);
     }
 
-    function updateDashboardStatus() {
-        const now = new Date();
-        const isLocked = isSystemLocked();
-        const dot = document.getElementById('statusDot');
-        const txt = document.getElementById('statusText');
-        const clock = document.getElementById('liveClock');
-
-        clock.innerText = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-        if (isLocked) {
-            dot.className = 'status-offline';
-            txt.innerText = "SYSTEM SECURED (LOCKED)";
-            txt.style.color = "var(--danger-red)";
-        } else {
-            dot.className = 'pulse-online';
-            txt.innerText = "SYSTEM OPERATIONAL (OPEN)";
-            txt.style.color = "var(--primary-green)";
-        }
-    }
-
-    function updateCountdown() {
-        const now = new Date();
-        const isLocked = isSystemLocked();
-        const currentUser = localStorage.getItem('logged_user');
-        
-        const lockUI = document.getElementById('lockStatusContent');
-        const loginUI = document.getElementById('loginFieldsContent');
-        const lockMessage = document.getElementById('lockMessage');
-
-        if (isLocked) {
-            lockUI.style.display = 'block';
-            loginUI.style.display = 'none';
-s
-            if (currentUser === "JOSEPH") {
-                lockMessage.innerHTML = "<strong>🔓 ADMIN OVERRIDE:</strong> You can bypass system lock.";
-                lockMessage.style.color = "var(--primary-green)";
-            } else {
-                lockMessage.innerHTML = "System access is restricted to authorized personnel during operational hours.";
-                lockMessage.style.color = "#666";
-            }
-
-            let target = new Date();
-            target.setHours(7, 30, 0, 0);
-
-            if (now > target) {
-                target.setDate(target.getDate() + 1);
-            }
-
-            const diff = target - now;
-            
-            const hours = Math.floor(diff / (1000 * 60 * 60));
-            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const secs = Math.floor((diff % (1000 * 60)) / 1000);
-
-            document.getElementById('countdownClock').innerText = 
-                `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        } else {
-            lockUI.style.display = 'none';
-            loginUI.style.display = 'block';
-        }
-    }
-
-    function recordAction(action) {
-        let logs = JSON.parse(localStorage.getItem('z_audit_logs')) || [];
-        const user = localStorage.getItem('logged_user') || 'System';
-        const entry = {
-            user: user,
-            action: action,
-            time: new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', second:'2-digit' })
-        };
-        logs.unshift(entry); 
-        if(logs.length > 1000) logs.pop(); 
-        localStorage.setItem('z_audit_logs', JSON.stringify(logs));
-    }
-
-    function recordSupplierEdit(supplierIndex, action) {
-        let editHistory = JSON.parse(localStorage.getItem('z_supplier_edit_history')) || {};
-        const supplierId = supplierIndex;
-        const user = localStorage.getItem('logged_user') || 'System';
-        const timestamp = new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-        
-        if (!editHistory[supplierId]) {
-            editHistory[supplierId] = [];
-        }
-        
-        const historyEntry = {
-            user: user,
-            action: action,
-            timestamp: timestamp,
-            date: new Date().toISOString()
-        };
-        
-        editHistory[supplierId].unshift(historyEntry);
-        
-        if (editHistory[supplierId].length > 10) {
-            editHistory[supplierId].pop();
-        }
-        
-        localStorage.setItem('z_supplier_edit_history', JSON.stringify(editHistory));
-    }
-
-    function getSupplierEditHistory(supplierIndex) {
-        const editHistory = JSON.parse(localStorage.getItem('z_supplier_edit_history')) || {};
-        return editHistory[supplierIndex] || [];
-    }
-
-    function toggleHistoryDropdown(supplierIndex, event) {
-        event.stopPropagation();
-        
-        const dropdownId = `history-dropdown-${supplierIndex}`;
-        const dropdown = document.getElementById(dropdownId);
-        const allDropdowns = document.querySelectorAll('.history-dropdown');
-        
-        allDropdowns.forEach(d => {
-            if (d.id !== dropdownId) {
-                d.classList.remove('show');
-            }
-        });
-        
-        if (dropdown) {
-            dropdown.classList.toggle('show');
-            
-            if (dropdown.classList.contains('show')) {
-                const history = getSupplierEditHistory(supplierIndex);
-                const supplier = suppliers[supplierIndex];
-                
-                let historyHTML = '';
-                
-                if (history.length > 0) {
-                    history.forEach((entry, index) => {
-                        historyHTML += `
-                            <div class="history-item">
-                                <div class="history-user">${entry.user}</div>
-                                <div class="history-date">${entry.timestamp}</div>
-                                <div class="history-action">${entry.action}</div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    historyHTML = `
-                        <div class="history-item">
-                            <div style="color: #888; font-style: italic;">
-                                No edit history recorded for this supplier.
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                dropdown.innerHTML = historyHTML;
-            }
-        }
-        
-        const closeDropdown = (e) => {
-            if (!dropdown.contains(e.target) && !e.target.closest('.modified-by-display')) {
-                dropdown.classList.remove('show');
-                document.removeEventListener('click', closeDropdown);
-            }
-        };
-        
-        setTimeout(() => {
-            document.addEventListener('click', closeDropdown);
-        }, 10);
-    }
-
     function togglePassword() {
         const pField = document.getElementById('passIn');
         pField.type = pField.type === "password" ? "text" : "password";
     }
 
-    function getLoginMeta(username) {
-        return JSON.parse(localStorage.getItem(`login_meta_${username}`)) || {
-            attempts: 0,
-            lockedUntil: null
-        };
-    }
-
-    function saveLoginMeta(username, meta) {
-        localStorage.setItem(`login_meta_${username}`, JSON.stringify(meta));
-    }
-
-    function clearLoginMeta(username) {
-        localStorage.removeItem(`login_meta_${username}`);
-    }
-
-    function isAccountLocked(username) {
-        const meta = getLoginMeta(username);
-        if (!meta.lockedUntil) return false;
-
-        const now = Date.now();
-        if (now > meta.lockedUntil) {
-            clearLoginMeta(username);
-            recordAction(`Account auto-unlocked for user: ${username}`);
-            return false;
-        }
-        return true;
-    }
-
-    function getRemainingLockTime(username) {
-        const meta = getLoginMeta(username);
-        if (!meta.lockedUntil) return 0;
-        return Math.ceil((meta.lockedUntil - Date.now()) / 60000);
-    }
-
-    function handleLogin() {
+    async function handleLogin() {
         if (isSystemLocked()) {
             const currentUser = document.getElementById('userIn').value.toUpperCase().trim();
             if (currentUser !== "JOSEPH") {
@@ -1853,9 +1479,6 @@ s
 
         const u = document.getElementById('userIn').value.toUpperCase().trim();
         const p = document.getElementById('passIn').value.trim();
-
-
-        
 
         if (!u) {
             alert("Username required.");
@@ -1873,32 +1496,15 @@ s
             return;
         }
 
-        if (!isSessionValid(u)) {
-            alert("User is already logged in on another device. Please logout from other devices first.");
-            return;
-        }
-
-        if (isAccountLocked(u)) {
-            const mins = getRemainingLockTime(u);
-            alert(`Account locked due to multiple failed attempts.\nTry again in ${mins} minute(s).`);
-            return;
-        }
-
         if (user.password === p) {
-            clearLoginMeta(u);
-
-            user.lastLogin = new Date().toISOString();
-            saveUserData();
-
-            const sessionId = updateActiveSession(u);
             localStorage.setItem('logged_user', u);
-            localStorage.setItem('current_session', sessionId);
             localStorage.setItem('last_login', new Date().toDateString());
             document.getElementById('loginOverlay').style.display = 'none';
 
+            await updateActiveSession(u);
             updateGreeting();
             updateUserDisplay();
-            recordAction("Logged into the system");
+            await recordAction("Logged into the system");
             
             if (isCurrentUserAdmin()) {
                 document.getElementById('userMgmtBtn').style.display = 'inline-block';
@@ -1910,61 +1516,35 @@ s
                 document.getElementById('syncSettingsBtn').style.display = 'inline-block';
             }
             
-            setTimeout(() => {
-                const userInfo = document.getElementById('currentUserInfo');
-                if (userInfo && !userInfo.querySelector('.change-pass-link')) {
-                    const changePassLink = document.createElement('a');
-                    changePassLink.className = 'change-pass-link';
-                    changePassLink.href = '#';
-                    changePassLink.innerHTML = ' | Change Password';
-                    changePassLink.style.fontSize = '10px';
-                    changePassLink.style.color = '#007bff';
-                    changePassLink.style.cursor = 'pointer';
-                    changePassLink.style.marginLeft = '5px';
-                    changePassLink.onclick = changePassword;
-                    userInfo.appendChild(changePassLink);
-                }
-            }, 100);
-
+            showView('home');
+            
         } else {
-            const meta = getLoginMeta(u);
-            meta.attempts++;
-
-            if (meta.attempts >= MAX_LOGIN_ATTEMPTS) {
-                meta.lockedUntil = Date.now() + (LOCK_DURATION_MINUTES * 60 * 1000);
-                saveLoginMeta(u, meta);
-
-                recordAction(`Account locked after ${MAX_LOGIN_ATTEMPTS} failed attempts: ${u}`);
-
-                alert(`Account locked!\nToo many failed attempts.\nTry again in ${LOCK_DURATION_MINUTES} minutes.`);
-            } else {
-                saveLoginMeta(u, meta);
-                alert(`Invalid Username or Password!\nAttempts left: ${MAX_LOGIN_ATTEMPTS - meta.attempts}`);
-            }
+            alert("Invalid Username or Password!");
         }
     }
 
-    function logout() {
-        const currentUser = localStorage.getItem('logged_user');
+    async function logout() {
+        const currentUser = getCurrentUser();
         if (currentUser) {
-            removeActiveSession(currentUser);
-            recordAction("Logged out");
+            await removeActiveSession(currentUser);
+            await recordAction("Logged out");
         }
         localStorage.removeItem('logged_user');
-        localStorage.removeItem('current_session');
         localStorage.removeItem('last_login');
         location.reload();
     }
 
+    // ==================== UI FUNCTIONS ====================
+
     function updateGreeting() {
         const hour = new Date().getHours();
-        const user = localStorage.getItem('logged_user') || 'User';
+        const user = getCurrentUser() || 'User';
         const msg = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
         document.getElementById('greeting').innerHTML = `<i>${msg}, ${user}</i>`;
     }
 
     function updateUserDisplay() {
-        const currentUser = localStorage.getItem('logged_user');
+        const currentUser = getCurrentUser();
         const userInfo = document.getElementById('currentUserDisplay');
         const roleBadge = document.getElementById('userRoleBadge');
         
@@ -1983,214 +1563,7 @@ s
         }
     }
 
-
-    function autoSyncToCloud() {
-        const provider = localStorage.getItem('sync_provider');
-        if (provider && provider !== SYNC_PROVIDER_MANUAL) {
-            clearTimeout(window.syncTimeout);
-            window.syncTimeout = setTimeout(() => {
-                manualSyncToCloud();
-            }, 3000);
-        }
-    }
-
-
-    function saveSupplierData() {
-        localStorage.setItem('z_suppliers', JSON.stringify(suppliers));
-        autoSyncToCloud();
-    }
-
-    function saveCategoryData() {
-        localStorage.setItem('z_categories', JSON.stringify(categories));
-        autoSyncToCloud();
-    }
-
-    function saveLinkData() {
-        localStorage.setItem('zamcom_links', JSON.stringify(links));
-        autoSyncToCloud();
-    }
-
-    function saveUserData() {
-        localStorage.setItem('z_user_accounts', JSON.stringify(userAccounts));
-        autoSyncToCloud();
-    }
-
-    function saveCertificateData() {
-        localStorage.setItem('z_certificates', JSON.stringify(certificates));
-        autoSyncToCloud();
-    }
-
-    function saveSupplierImagesData() {
-        localStorage.setItem('z_supplier_images', JSON.stringify(supplierImages));
-        autoSyncToCloud();
-    }
-
-
-    function filterEverything() {
-        const term = document.getElementById('globalSearch').value.toLowerCase().trim();
-        const homeView = document.getElementById('homeView');
-        if (term.length === 0) { showView('home'); return; }
-
-        const isHomeActive = homeView.style.display !== 'none';
-        if (isHomeActive) {
-            const defaultContent = document.getElementById('defaultHomeContent');
-            const searchSection = document.getElementById('searchResultSection');
-            const resultsBody = document.getElementById('globalSearchResultsBody');
-            defaultContent.style.display = 'none';
-            searchSection.style.display = 'block';
-
-            const sortedSuppliers = [...suppliers].sort((a, b) => {
-                const dateA = a.dateAdded ? new Date(a.dateAdded) : new Date(0);
-                const dateB = b.dateAdded ? new Date(b.dateAdded) : new Date(0);
-                return dateB - dateA;
-            });
-
-            const matches = sortedSuppliers.filter(s => 
-                s.name.toLowerCase().includes(term) || 
-                (s.tpin && s.tpin.toLowerCase().includes(term))
-            );
-
-            resultsBody.innerHTML = matches.map(s => {
-                const renewalBar = createVerticalRenewalBarHTML(s);
-                const ratingDisplay = createRatingDisplayHTML(s.rating || 0);
-                return `
-                    <tr>
-                        <td><b>${s.name}</b></td>
-                        <td><span style="background:#eee; padding:2px 5px; border-radius:4px;">${s.category}</span></td>
-                        <td>${s.person}</td>
-                        <td>${s.phone}</td>
-                        <td>${ratingDisplay}</td>
-                        <td style="text-align: center;">${renewalBar}</td>
-                        <td>
-                            <button class="btn-edit" onclick="viewSupplierCategory('${s.category}')">View Category</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        } else {
-            const tableRows = document.querySelectorAll('#supplierTableBody tr');
-            tableRows.forEach(row => {
-                const supplierName = row.cells[0] ? row.cells[0].innerText.toLowerCase() : "";
-                row.style.display = supplierName.includes(term) ? '' : 'none';
-            });
-        }
-    }
-
-    function viewSupplierCategory(catName) {
-        document.getElementById('globalSearch').value = ""; 
-        showView('detail', catName);
-    }
-
-    function checkDailySession() {
-        const lastLogin = localStorage.getItem('last_login');
-        const today = new Date().toDateString();
-        const currentUser = localStorage.getItem('logged_user');
-        const currentSession = localStorage.getItem('current_session');
-
-        updateCountdown();
-
-        if (currentUser) {
-            const sessions = getActiveSessions();
-            const userSession = sessions[currentUser];
-            if (!userSession || userSession.sessionId !== currentSession) {
-                localStorage.removeItem('logged_user');
-                localStorage.removeItem('current_session');
-                localStorage.removeItem('last_login');
-                alert("Your session has expired or you logged in from another device.");
-                document.getElementById('loginOverlay').style.display = 'flex';
-                return;
-            }
-        }
-
-        if (isSystemLocked()) {
-            if (currentUser !== "JOSEPH") {
-                localStorage.removeItem('logged_user');
-                localStorage.removeItem('current_session');
-                localStorage.removeItem('last_login');
-                document.getElementById('loginOverlay').style.display = 'flex';
-                return;
-            }
-        }
-
-        if (currentUser && lastLogin === today) {
-            updateGreeting();
-            updateUserDisplay();
-            
-            if(isCurrentUserAdmin()) {
-                document.getElementById('userMgmtBtn').style.display = 'inline-block';
-                document.getElementById('sessionsBtn').style.display = 'inline-block';
-                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-            } else {
-                document.getElementById('userMgmtBtn').style.display = 'none';
-                document.getElementById('sessionsBtn').style.display = 'none';
-                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-            }
-            
-            const user = getUser(currentUser);
-            if (user && user.enabled) {
-                document.getElementById('loginOverlay').style.display = 'none';
-            } else {
-                document.getElementById('loginOverlay').style.display = 'flex';
-            }
-        } else {
-            document.getElementById('loginOverlay').style.display = 'flex';
-        }
-    }
-
-    setInterval(updateCountdown, 1000);
-
-    function checkAutoBackup() {
-        const now = new Date();
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        const todayDate = now.toDateString();
-        const lastAutoDate = localStorage.getItem('z_last_auto_date');
-
-        if (currentHour === 16 && currentMinute === 0 && lastAutoDate !== todayDate) {
-            executeAutoBackup(todayDate);
-        }
-    }
-
-    function executeAutoBackup(dateString) {
-        const data = { 
-            categories: categories, 
-            suppliers: suppliers,
-            audit_logs: JSON.parse(localStorage.getItem('z_audit_logs')) || [],
-            supplier_edit_history: JSON.parse(localStorage.getItem('z_supplier_edit_history')) || {},
-            user_accounts: userAccounts,
-            certificates: JSON.parse(localStorage.getItem('z_certificates')) || {},
-            supplier_images: JSON.parse(localStorage.getItem('z_supplier_images')) || {}
-        };
-        
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-        const a = document.createElement('a');
-        
-        const fileName = `ZAMCOM_DAILY_BACKUP_${new Date().toISOString().slice(0,10)}.json`;
-        
-        a.href = dataStr;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        localStorage.setItem('z_last_auto_date', dateString);
-        localStorage.setItem('z_last_backup', new Date().toLocaleString());
-        recordAction("SYSTEM: Successful 16:00 Automated Backup");
-        if(document.getElementById('lastBackupDate')) displayBackupDate();
-    }
-
-    function checkMissedBackup() {
-        const now = new Date();
-        const todayDate = now.toDateString();
-        const lastAutoDate = localStorage.getItem('z_last_auto_date');
-        
-        if (now.getHours() >= 16 && lastAutoDate !== todayDate) {
-            console.log("Missed backup detected. Triggering now...");
-            executeAutoBackup(todayDate);
-        }
-    }
-
-    function showView(viewName, catName = "") {
+    async function showView(viewName, catName = "") {
         document.getElementById('globalSearch').value = "";
         document.getElementById('searchResultSection').style.display = 'none';
         document.getElementById('defaultHomeContent').style.display = 'block';
@@ -2203,70 +1576,172 @@ s
 
         if(viewName === 'home') {
             document.getElementById('homeView').style.display = 'block';
-            renderCategories();
+            await renderCategories();
         } else if(viewName === 'about') {
             document.getElementById('aboutView').style.display = 'block';
         } else if(viewName === 'contact') {
             document.getElementById('contactView').style.display = 'block';
         } else if(viewName === 'links') {
             document.getElementById('linksView').style.display = 'block';
-            displayLinks();
+            await displayLinks();
         } else if(viewName === 'detail') {
             currentCategory = catName;
             document.getElementById('categoryPageView').style.display = 'block';
             document.getElementById('categoryTitle').innerText = catName;
-            renderSuppliers();
+            await renderSuppliers();
         }
     }
 
-    function renderCategories() {
+    async function renderCategories() {
         const grid = document.getElementById('categoryGrid');
-        grid.innerHTML = categories.map(cat => {
-            const count = suppliers.filter(s => s.category === cat).length;
-            const currentUser = localStorage.getItem('logged_user');
+        const categoriesWithCount = await Promise.all(categories.map(async (cat) => {
+            const countSnapshot = await db.collection(COLLECTIONS.SUPPLIERS)
+                .where('category', '==', cat.name)
+                .get();
+            return { ...cat, count: countSnapshot.size };
+        }));
+        
+        grid.innerHTML = categoriesWithCount.map(cat => {
+            const currentUser = getCurrentUser();
             
             return `
-                <div class="grid-item" onclick="showView('detail', '${cat}')">
-                    <img src="./images/mainlogo3.png" alt="${cat}">
-                    <span>${cat} (${count})</span>
+                <div class="grid-item" onclick="showView('detail', '${cat.name}')">
+                    <img src="./images/mainlogo3.png" alt="${cat.name}">
+                    <span>${cat.name} (${cat.count})</span>
                     <div style="background:white; padding-bottom:10px; text-align:center; display:flex; justify-content:center; gap:5px;">
                         ${hasPermission(currentUser, 'edit_category') ? 
-                            `<button class="btn-edit" onclick="event.stopPropagation(); editCategory('${cat}')">Edit</button>` : ''}
+                            `<button class="btn-edit" onclick="event.stopPropagation(); editCategory('${cat.id}', '${cat.name}')">Edit</button>` : ''}
                         ${hasPermission(currentUser, 'delete_category') && isCurrentUserAdmin() ? 
-                            `<button class="btn-del" onclick="event.stopPropagation(); deleteCategory('${cat}')">Delete</button>` : ''}
+                            `<button class="btn-del" onclick="event.stopPropagation(); deleteCategoryConfirm('${cat.id}', '${cat.name}')">Delete</button>` : ''}
                     </div>
                 </div>
             `;
         }).join('');
     }
 
-    function calculateRenewalProgress(supplier) {
+    async function deleteCategoryConfirm(id, name) {
+        if (!isCurrentUserAdmin()) {
+            alert("Only administrators can delete categories!");
+            return;
+        }
+        
+        if(confirm(`Delete category "${name}"? This will not delete suppliers in this category.`)) {
+            await deleteCategory(id);
+            await renderCategories();
+        }
+    }
+
+    async function renderSuppliers() {
+        const tbody = document.getElementById('supplierTableBody');
+        
+        const filtered = suppliers.filter(s => s.category === currentCategory);
+        
+        const currentUser = getCurrentUser();
+
+        const banner = document.getElementById('complianceBanner');
         const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth();
-        const compYear = supplier.compliance?.year || currentYear;
-        
-        if (compYear !== currentYear) return 0;
-        
-        const monthsLeft = 12 - currentMonth;
-        const progress = (monthsLeft / 12) * 100;
-        
-        return Math.max(0, Math.min(100, progress));
+
+        const hasNonCompliant = filtered.some(s => {
+            if (!s.compliance) return true;
+            if (s.compliance.year !== currentYear) return true;
+
+            return !(
+                s.compliance.incorporation &&
+                s.compliance.napsa &&
+                s.compliance.tax
+            );
+        });
+
+        banner.style.display = hasNonCompliant ? 'block' : 'none';
+
+        tbody.innerHTML = filtered.map((s) => {
+            const cleanPhone = s.phone.replace(/\D/g, '');
+            const currentYear = new Date().getFullYear();
+            const comp = s.compliance || {};
+            const expired = comp.year !== currentYear;
+            const rating = s.rating || 0;
+
+            function badge(label, ok) {
+                if (expired) return `<span class="compliance-pill comp-expired">${label}</span>`;
+                return ok
+                    ? `<span class="compliance-pill comp-ok">${label}</span>`
+                    : `<span class="compliance-pill comp-bad">${label}</span>`;
+            }
+
+            const renewalBar = createVerticalRenewalBarHTML(s);
+            const ratingDisplay = createRatingDisplayHTML(rating);
+            
+            const deleteButton = isCurrentUserAdmin() ? 
+                `<button class="btn-del" onclick="deleteSupplierConfirm('${s.id}')">Delete</button>` : 
+                '';
+
+            return `
+                <tr>
+                    <td>${s.name}</td>
+                    <td>${s.person}</td>
+                    <td><a href="https://wa.me/${cleanPhone}" target="_blank">${s.phone}</a></td>
+                    <td>${s.tpin || 'N/A'}</td>
+                    <td><a href="mailto:${s.email}">${s.email}</a></td>
+                    <td>${s.website || 'N/A'}</td>
+                    <td>${ratingDisplay}</td>
+                    <td><div class="compliance-box">
+                        ${badge("COI", comp.incorporation)}
+                        ${badge("NAPSA", comp.napsa)}
+                        ${badge("TAX", comp.tax)}
+                    </div></td>
+                    <td style="text-align: center;">${renewalBar}</td>
+                    <td style="text-align: center;">
+                        <div class="document-thumbnail" onclick="openSupplierDocuments('${s.id}')">
+                            <div class="document-icon">📄</div>
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        <div class="document-thumbnail" onclick="openSupplierImages('${s.id}')">
+                            <div class="document-icon">🖼️</div>
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        <div style="font-size:9px; color:#666;">
+                            <b>${s.updatedBy || s.createdBy || 'System'}</b><br>
+                            ${s.updatedAt ? new Date(s.updatedAt).toLocaleDateString() : 
+                              s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '---'}
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        ${hasPermission(currentUser, 'edit_supplier') ? 
+                            `<button class="btn-edit" onclick="editSupplier('${s.id}')">Edit</button>` : ''}
+                        ${deleteButton}
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
 
     function createVerticalRenewalBarHTML(supplier) {
-        const progress = calculateRenewalProgress(supplier);
         const currentYear = new Date().getFullYear();
         const compYear = supplier.compliance?.year || currentYear;
         
         let barClass = 'vertical-life-bar-fill';
+        let progress = 100;
+        let displayText = '100%';
+        
+        if (compYear === currentYear) {
+            const currentMonth = new Date().getMonth();
+            const monthsLeft = 12 - currentMonth;
+            progress = (monthsLeft / 12) * 100;
+            displayText = `${Math.round(progress)}%`;
+        } else {
+            barClass += ' vertical-life-bar-expired';
+            displayText = 'EXP';
+        }
+        
         if (progress < 25) {
             barClass += ' vertical-life-bar-expired';
         } else if (progress < 50) {
             barClass += ' vertical-life-bar-expiring';
         }
         
-        const displayText = compYear !== currentYear ? 'EXP' : `${Math.round(progress)}%`;
-        const barHeight = compYear !== currentYear ? '100%' : `${progress}%`;
+        const barHeight = `${progress}%`;
         
         return `
             <div class="vertical-life-bar-container" title="Renews Dec ${compYear} - ${displayText}">
@@ -2275,8 +1750,6 @@ s
             </div>
         `;
     }
-
-    let currentRatingValue = 0;
 
     function createRatingDisplayHTML(rating) {
         const fullStars = Math.floor(rating);
@@ -2305,6 +1778,431 @@ s
         
         return starsHTML;
     }
+
+    async function deleteSupplierConfirm(id) {
+        if (!isCurrentUserAdmin()) {
+            alert("Only administrators can delete suppliers!");
+            return;
+        }
+        
+        if(confirm("Are you sure you want to delete this supplier?")) {
+            await deleteSupplier(id);
+            await renderSuppliers();
+        }
+    }
+
+    async function openModal(type, editId = null) {
+        const currentUser = getCurrentUser();
+        
+        if (type === 'category' && !hasPermission(currentUser, 'add_category')) {
+            alert("You don't have permission to add categories!");
+            return;
+        }
+        
+        if (type === 'supplier' && !hasPermission(currentUser, editId !== null ? 'edit_supplier' : 'add_supplier')) {
+            alert("You don't have permission to manage suppliers!");
+            return;
+        }
+        
+        const modal = document.getElementById('modalOverlay');
+        const fields = document.getElementById('modalFields');
+        const title = document.getElementById('modalTitle');
+        const saveBtn = document.getElementById('modalSaveBtn');
+        saveBtn.style.display = 'block';
+        modal.style.display = 'flex';
+
+        if(type === 'category') {
+            title.innerText = editId ? "Edit Category" : "New Category";
+            const category = editId ? categories.find(c => c.id === editId) : null;
+            fields.innerHTML = `<input type="text" id="field1" placeholder="Category Name" style="width:100%; padding:10px; margin-bottom:10px;" value="${category ? category.name : ''}">`;
+
+            saveBtn.onclick = async () => {
+                const name = document.getElementById('field1').value;
+                if(name) {
+                    if (editId) {
+                        await updateCategory(editId, name);
+                        await recordAction(`Updated category: ${name}`);
+                    } else {
+                        await saveCategory(name);
+                        await recordAction(`Created new category: ${name}`);
+                    }
+                    await renderCategories();
+                    closeModal();
+                }
+            };
+        } else {
+            const s = editId ? suppliers.find(sup => sup.id === editId) : {
+                name:'', 
+                person:'', 
+                phone:'', 
+                tpin:'', 
+                email:'', 
+                website:'', 
+                category:currentCategory, 
+                rating: 0,
+                compliance: {
+                    incorporation: false,
+                    napsa: false,
+                    tax: false,
+                    year: new Date().getFullYear()
+                }
+            };
+            
+            title.innerText = editId ? "Edit Supplier" : "Add New Supplier";
+            
+            fields.innerHTML = `
+                <input type="text" id="s_name" value="${s.name}" placeholder="Company Name" style="width:100%; padding:8px; margin-bottom:5px;">
+                <input type="text" id="s_person" value="${s.person}" placeholder="Specialization" style="width:100%; padding:8px; margin-bottom:5px;">
+                <input type="text" id="s_phone" value="${s.phone}" placeholder="Phone" style="width:100%; padding:8px; margin-bottom:5px;">
+                <input type="text" id="s_tpin" value="${s.tpin || ''}" placeholder="T-PIN" style="width:100%; padding:8px; margin-bottom:5px;">
+                <input type="email" id="s_email" value="${s.email}" placeholder="Email" style="width:100%; padding:8px; margin-bottom:5px;">
+                <input type="text" id="s_website" value="${s.website || ''}" placeholder="Physical Address" style="width:100%; padding:8px; margin-bottom:5px;">
+                
+                <div style="margin:10px 0;">
+                    <label style="display: block; margin-bottom: 5px;"><b>Supplier Rating (1-5 stars)</b></label>
+                    ${createRatingInputHTML(s.rating || 0)}
+                </div>
+                
+                <div style="margin:10px 0; padding:10px; border:1px solid #eee; border-radius:8px;">
+                    <b>Legal Compliance (Valid until 31 Dec)</b><br><br>
+
+                    <label>
+                        <input type="checkbox" id="c_incorp" ${s.compliance?.incorporation ? 'checked' : ''}>
+                        Certificate of Incorporation
+                    </label><br>
+
+                    <label>
+                        <input type="checkbox" id="c_napsa" ${s.compliance?.napsa ? 'checked' : ''}>
+                        NAPSA Certificate
+                    </label><br>
+
+                    <label>
+                        <input type="checkbox" id="c_tax" ${s.compliance?.tax ? 'checked' : ''}>
+                        Tax Clearance Certificate
+                    </label>
+                </div>
+
+                <select id="s_cat" style="width:100%; padding:8px; margin-bottom:5px;">
+                    ${categories.map(c => `<option ${c.name===s.category?'selected':''}>${c.name}</option>`).join('')}
+                </select>
+            `;
+
+            currentRatingValue = s.rating || 0;
+
+            saveBtn.onclick = async () => {
+                const currentYear = new Date().getFullYear();
+
+                const newSup = {
+                    name: document.getElementById('s_name').value,
+                    person: document.getElementById('s_person').value,
+                    phone: document.getElementById('s_phone').value,
+                    tpin: document.getElementById('s_tpin').value,
+                    email: document.getElementById('s_email').value,
+                    website: document.getElementById('s_website').value,
+                    category: document.getElementById('s_cat').value,
+                    rating: currentRatingValue,
+                    compliance: {
+                        incorporation: document.getElementById('c_incorp').checked,
+                        napsa: document.getElementById('c_napsa').checked,
+                        tax: document.getElementById('c_tax').checked,
+                        year: currentYear
+                    }
+                };
+                
+                if(!newSup.name) return alert("Company name required");
+                
+                if(editId) {
+                    await updateSupplier(editId, newSup);
+                    await recordAction(`Updated supplier details: ${newSup.name}`);
+                } else {
+                    await saveSupplier(newSup);
+                    await recordAction(`Added new supplier: ${newSup.name}`);
+                }
+                
+                await renderSuppliers();
+                closeModal();
+            };
+        }
+    }
+
+    function closeModal() { 
+        document.getElementById('modalOverlay').style.display = 'none'; 
+    }
+
+    // ==================== OTHER FUNCTIONS ====================
+
+    function updateDashboardStatus() {
+        const now = new Date();
+        const isLocked = isSystemLocked();
+        const dot = document.getElementById('statusDot');
+        const txt = document.getElementById('statusText');
+        const clock = document.getElementById('liveClock');
+
+        clock.innerText = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        if (isLocked) {
+            dot.className = 'status-offline';
+            txt.innerText = "SYSTEM SECURED (LOCKED)";
+            txt.style.color = "var(--danger-red)";
+        } else {
+            dot.className = 'pulse-online';
+            txt.innerText = "SYSTEM OPERATIONAL (OPEN)";
+            txt.style.color = "var(--primary-green)";
+        }
+    }
+
+    async function displayLinks() {
+        const tbody = document.getElementById('linksBody');
+        tbody.innerHTML = '';
+
+        links.forEach((link) => {
+            const deleteButton = isCurrentUserAdmin() ? 
+                `<button class="btn btn-del" onclick="deleteLinkConfirm('${link.id}')">Delete</button>` : 
+                '';
+            
+            const row = `<tr>
+                <td>${link.name}</td>
+                <td><a href="${link.url.startsWith('http') ? link.url : 'http://' + link.url}" target="_blank"><b>${link.url}</b></a></td>
+                <td><a href="mailto:${link.email}">${link.email}</a></td>
+                <td>${deleteButton}</td>
+            </tr>`;
+            tbody.innerHTML += row;
+        });
+    }
+
+    async function deleteLinkConfirm(id) {
+        if (!isCurrentUserAdmin()) {
+            alert("Only administrators can delete links!");
+            return;
+        }
+        
+        if(confirm("Are you sure you want to delete this link?")) {
+            await deleteLink(id);
+            await displayLinks();
+        }
+    }
+
+    async function openLinkModal() {
+        if (!hasPermission(getCurrentUser(), 'add_link')) {
+            alert("You don't have permission to add links!");
+            return;
+        }
+        document.getElementById('linkModal').style.display = 'flex';
+    }
+
+    function closeLinkModal() {
+        document.getElementById('linkModal').style.display = 'none';
+        document.getElementById('instName').value = '';
+        document.getElementById('instWeb').value = '';
+        document.getElementById('instEmail').value = '';
+    }
+
+    async function addLink() {
+        if (!hasPermission(getCurrentUser(), 'add_link')) {
+            alert("You don't have permission to add links!");
+            return;
+        }
+        
+        const name = document.getElementById('instName').value;
+        const url = document.getElementById('instWeb').value;
+        const email = document.getElementById('instEmail').value;
+
+        if(name && url && email) {
+            await saveLink({ name, url, email });
+            await displayLinks();
+            closeLinkModal();
+        } else {
+            alert("Please fill in all fields");
+        }
+    }
+
+    async function showAuditLogs(page = 1) {
+        if (!hasPermission(getCurrentUser(), 'view_logs')) {
+            alert("You don't have permission to view audit logs!");
+            return;
+        }
+        
+        const modal = document.getElementById('modalOverlay');
+        const fields = document.getElementById('modalFields');
+        const title = document.getElementById('modalTitle');
+        const saveBtn = document.getElementById('modalSaveBtn');
+        
+        title.innerText = "System Audit Logs";
+        modal.style.display = 'flex';
+        saveBtn.style.display = 'none';
+
+        const logs = await getAuditLogs(page, 20);
+        
+        let paginationHTML = '';
+        if (logs.length === 20) {
+            paginationHTML = `
+                <div class="pagination">
+                    <button class="page-btn" onclick="showAuditLogs(${page - 1})" ${page <= 1 ? 'disabled' : ''}>‹ Prev</button>
+                    <span style="font-size: 12px;">Page ${page}</span>
+                    <button class="page-btn" onclick="showAuditLogs(${page + 1})">Next ›</button>
+                </div>
+            `;
+        }
+        
+        fields.innerHTML = `
+            <div style="margin-bottom: 10px; font-size: 12px; color: #666;">
+                Showing latest ${logs.length} logs
+            </div>
+            <div class="audit-container">
+                ${logs.length === 0 ? '<p style="text-align:center">No logs recorded yet.</p>' : 
+                  logs.map(l => `
+                    <div class="log-entry">
+                        <span><span class="log-user">${l.user}</span>: <span class="log-action">${l.action}</span></span>
+                        <span class="log-time">${l.time}</span>
+                    </div>
+                  `).join('')}
+            </div>
+            ${paginationHTML}
+            <button onclick="closeModal();" class="btn" style="background:#777; width:100%; margin-top:15px;">Close Logs</button>
+        `;
+    }
+
+    async function toggleSessionsPanel() {
+        const panel = document.getElementById('sessionsPanel');
+        if (panel.style.display === 'block') {
+            panel.style.display = 'none';
+        } else {
+            await updateSessionsPanel();
+            panel.style.display = 'block';
+        }
+    }
+
+    async function updateSessionsPanel() {
+        const sessions = await getActiveSessions();
+        const container = document.getElementById('activeSessionsList');
+        
+        if (sessions.length === 0) {
+            container.innerHTML = '<div style="padding: 10px; text-align: center; color: #888;">No active sessions</div>';
+            return;
+        }
+        
+        let html = '';
+        sessions.forEach(session => {
+            const sessionAge = new Date() - new Date(session.lastActive);
+            const minutesAgo = Math.floor(sessionAge / (1000 * 60));
+            const timeText = minutesAgo === 0 ? 'Just now' : `${minutesAgo} min ago`;
+            
+            html += `
+                <div class="session-item">
+                    <div class="session-user">
+                        <span class="user-status status-online"></span>
+                        <strong>${session.username}</strong>
+                    </div>
+                    <div class="session-time">${timeText}</div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+
+    // ==================== INITIALIZATION ====================
+
+    const bgImages = ['./images/bgx.jpg', './images/bgx1.jpg', './images/bg.jpg', './images/bgx3.jpg', './images/bgx4.jpg', './images/bgx5.jpg', './images/bgx6.jpg', './images/bgx7.jpg', './images/bgx8.jpg', './images/bgx9.jpg', './images/bgy1.jpg', './images/bgy3.jpg', './images/bgy4.jpg', './images/bgy5.jpg'];
+    
+    function syncBG() {
+        const header = document.getElementById('headerSection');
+        if(!header) return;
+        const index = Math.floor((Math.floor(Date.now() / 1000) % (bgImages.length * 15)) / 15);
+        header.style.backgroundImage = `url(${bgImages[index]})`;
+    }
+
+    function runTimeMonitoring() {
+        const now = new Date();
+        const hrs = now.getHours();
+        const mins = now.getMinutes();
+
+        updateDashboardStatus();
+        const warningBanner = document.getElementById('timeWarning');
+        if (hrs === 16 && mins >= 30 && mins < 50) {
+            warningBanner.style.display = 'block';
+        } else {
+            warningBanner.style.display = 'none';
+        }
+
+        if (isSystemLocked() && getCurrentUser() && !isCurrentUserAdmin()) {
+            alert("SYSTEM LOCK: Access hours ended. The system will now close until 07:30 CAT.");
+            logout();
+        }
+    }
+
+    window.onload = async () => {
+        // Load all data from Firebase
+        await loadAllData();
+        
+        // Check if user is logged in
+        const currentUser = getCurrentUser();
+        const lastLogin = localStorage.getItem('last_login');
+        const today = new Date().toDateString();
+        
+        if (currentUser && lastLogin === today) {
+            updateGreeting();
+            updateUserDisplay();
+            
+            if(isCurrentUserAdmin()) {
+                document.getElementById('userMgmtBtn').style.display = 'inline-block';
+                document.getElementById('sessionsBtn').style.display = 'inline-block';
+                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+            } else {
+                document.getElementById('userMgmtBtn').style.display = 'none';
+                document.getElementById('sessionsBtn').style.display = 'none';
+                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+            }
+            
+            const user = getUser(currentUser);
+            if (user && user.enabled) {
+                document.getElementById('loginOverlay').style.display = 'none';
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+            }
+        } else {
+            document.getElementById('loginOverlay').style.display = 'flex';
+        }
+        
+        // Initialize UI
+        await showView('home');
+        
+        // Set up intervals
+        setInterval(syncBG, 1000);
+        setInterval(runTimeMonitoring, 30000);
+        setInterval(updateDashboardStatus, 1000);
+        
+        syncBG();
+        updateDashboardStatus();
+        
+        // Add event listeners
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('sessionsPanel');
+            const sessionsBtn = document.getElementById('sessionsBtn');
+            if (panel.style.display === 'block' && 
+                !panel.contains(e.target) && 
+                sessionsBtn && !sessionsBtn.contains(e.target)) {
+                panel.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeImageGallery();
+                closeDocumentViewer();
+            }
+            
+            if (document.getElementById('imageGalleryModal').style.display === 'flex') {
+                if (e.key === 'ArrowRight') {
+                    nextImage();
+                } else if (e.key === 'ArrowLeft') {
+                    prevImage();
+                }
+            }
+        });
+    };
+
+    // ==================== RATING FUNCTIONS ====================
 
     function createRatingInputHTML(currentRating = 0) {
         let starsHTML = '<div class="star-rating" id="ratingStars">';
@@ -2357,521 +2255,7 @@ s
         }
     }
 
-    function renderSuppliers() {
-        const tbody = document.getElementById('supplierTableBody');
-        
-        const filtered = suppliers
-            .filter(s => s.category === currentCategory)
-            .sort((a, b) => {
-                const dateA = a.dateAdded ? new Date(a.dateAdded) : new Date(0);
-                const dateB = b.dateAdded ? new Date(b.dateAdded) : new Date(0);
-                return dateB - dateA;
-            });
-            
-        const currentUser = localStorage.getItem('logged_user');
-
-        const banner = document.getElementById('complianceBanner');
-        const currentYear = new Date().getFullYear();
-
-        const hasNonCompliant = filtered.some(s => {
-            if (!s.compliance) return true;
-            if (s.compliance.year !== currentYear) return true;
-
-            return !(
-                s.compliance.incorporation &&
-                s.compliance.napsa &&
-                s.compliance.tax
-            );
-        });
-
-        banner.style.display = hasNonCompliant ? 'block' : 'none';
-
-        tbody.innerHTML = filtered.map((s, index) => {
-            const realIndex = suppliers.indexOf(s);
-            const cleanPhone = s.phone.replace(/\D/g, '');
-            const currentYear = new Date().getFullYear();
-            const comp = s.compliance || {};
-            const expired = comp.year !== currentYear;
-            const rating = s.rating || 0;
-
-            const editHistory = getSupplierEditHistory(realIndex);
-            const lastEdit = editHistory.length > 0 ? editHistory[0] : null;
-            const modifier = lastEdit ? 
-                `<div style="font-size:9px; color:#666;"><b>${lastEdit.user}</b><br>${lastEdit.timestamp}</div>` : 
-                (s.lastEditBy ? `<div style="font-size:9px; color:#666;"><b>${s.lastEditBy}</b><br>${s.lastEditDate}</div>` : '---');
-
-            function badge(label, ok) {
-                if (expired) return `<span class="compliance-pill comp-expired">${label}</span>`;
-                return ok
-                    ? `<span class="compliance-pill comp-ok">${label}</span>`
-                    : `<span class="compliance-pill comp-bad">${label}</span>`;
-            }
-
-            const renewalBar = createVerticalRenewalBarHTML(s);
-            const documentIcon = createDocumentIcon(realIndex);
-            const imagesPreview = createImagePreview(realIndex);
-            const ratingDisplay = createRatingDisplayHTML(rating);
-            
-            const deleteButton = isCurrentUserAdmin() ? 
-                `<button class="btn-del" onclick="deleteSupplier(${realIndex})">Delete</button>` : 
-                '';
-
-            return `
-                <tr>
-                    <td>${s.name}</td>
-                    <td>${s.person}</td>
-                    <td><a href="https://wa.me/${cleanPhone}" target="_blank">${s.phone}</a></td>
-                    <td>${s.tpin || 'N/A'}</td>
-                    <td><a href="mailto:${s.email}">${s.email}</a></td>
-                    <td>${s.website || 'N/A'}</td>
-                    <td>${ratingDisplay}</td>
-                    <td><div class="compliance-box">
-                        ${badge("COI", comp.incorporation)}
-                        ${badge("NAPSA", comp.napsa)}
-                        ${badge("TAX", comp.tax)}
-                    </div></td>
-                    <td style="text-align: center;">${renewalBar}</td>
-                    <td style="text-align: center;">${documentIcon}</td>
-                    <td style="text-align: center;">${imagesPreview}</td>
-                    <td style="text-align: center;">
-                        <div class="modified-by-container">
-                            <div class="modified-by-display" onclick="toggleHistoryDropdown(${realIndex}, event)">
-                                ${modifier}
-                                <span class="dropdown-arrow">▼</span>
-                            </div>
-                            <div id="history-dropdown-${realIndex}" class="history-dropdown"></div>
-                        </div>
-                    </td>
-                    <td style="text-align: center;">
-                        ${hasPermission(currentUser, 'edit_supplier') ? 
-                            `<button class="btn-edit" onclick="editSupplier(${realIndex})">Edit</button>` : ''}
-                        ${deleteButton}
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    function editSupplier(index) { 
-        if (!hasPermission(localStorage.getItem('logged_user'), 'edit_supplier')) {
-            alert("You don't have permission to edit suppliers!");
-            return;
-        }
-        openModal('supplier', index); 
-    }
-
-    function deleteSupplier(index) {
-        if (!isCurrentUserAdmin()) {
-            alert("Only administrators can delete suppliers!");
-            return;
-        }
-        
-        if(confirm("Are you sure you want to delete this supplier?")) {
-            const name = suppliers[index].name;
-            recordAction(`Deleted supplier: ${name}`);
-            recordSupplierEdit(index, `Deleted supplier: ${name}`);
-            suppliers.splice(index, 1);
-            saveSupplierData();
-            renderSuppliers();
-        }
-    }
-
-    function editCategory(oldName) {
-        if (!hasPermission(localStorage.getItem('logged_user'), 'edit_category')) {
-            alert("You don't have permission to edit categories!");
-            return;
-        }
-        
-        const newName = prompt("Enter new name for the category:", oldName);
-        if (newName && newName !== oldName) {
-            const index = categories.indexOf(oldName);
-            if (index !== -1) {
-                categories[index] = newName;
-                suppliers.forEach(sup => { 
-                    if (sup.category === oldName) {
-                        sup.category = newName;
-                        const supplierIndex = suppliers.indexOf(sup);
-                        recordSupplierEdit(supplierIndex, `Category changed from ${oldName} to ${newName}`);
-                    }
-                });
-                saveCategoryData();
-                saveSupplierData();
-                recordAction(`Renamed category from ${oldName} to ${newName}`);
-                renderCategories();
-            }
-        }
-    }
-
-    function deleteCategory(cat) {
-        if (!isCurrentUserAdmin()) {
-            alert("Only administrators can delete categories!");
-            return;
-        }
-        
-        if(confirm(`Delete category "${cat}" and all its suppliers?`)) {
-            recordAction(`Deleted category and all sub-data: ${cat}`);
-            categories = categories.filter(c => c !== cat);
-            suppliers = suppliers.filter(s => s.category !== cat);
-            saveCategoryData();
-            saveSupplierData();
-            renderCategories();
-        }
-    }
-
-    async function readFileAsDataURL(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-    }
-
-    function saveCertificate(supplierIndex, type, fileData, fileName) {
-        if (!certificates[supplierIndex]) {
-            certificates[supplierIndex] = {};
-        }
-        
-        certificates[supplierIndex][type] = {
-            data: fileData,
-            name: fileName,
-            uploaded: new Date().toISOString(),
-            uploadedBy: localStorage.getItem('logged_user') || 'System'
-        };
-        
-        saveCertificateData();
-    }
-
-    function removeCertificate(supplierIndex, type) {
-        if (certificates[supplierIndex]) {
-            delete certificates[supplierIndex][type];
-            saveCertificateData();
-            return true;
-        }
-        return false;
-    }
-
-    function getCertificate(supplierIndex, type) {
-        return certificates[supplierIndex]?.[type];
-    }
-
-    function renderCertificatePreview(supplierIndex, type, currentCert = null) {
-        const cert = currentCert || getCertificate(supplierIndex, type);
-        if (!cert) return '';
-        
-        const isImage = cert.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|bmp)$/);
-        const isPDF = cert.name.toLowerCase().endsWith('.pdf');
-        
-        let previewHTML = '';
-        if (isImage) {
-            previewHTML = `<img src="${cert.data}" class="certificate-thumbnail" alt="${cert.name}">`;
-        } else if (isPDF) {
-            previewHTML = `<div style="width: 100px; height: 80px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd;">
-                <span style="font-size: 24px;">📄</span>
-            </div>`;
-        } else {
-            previewHTML = `<div style="width: 100px; height: 80px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd;">
-                <span style="font-size: 24px;">📎</span>
-            </div>`;
-        }
-        
-        return `
-            <div class="certificate-item" style="position: relative;">
-                <button class="remove-certificate" onclick="removeCertificatePreview(${supplierIndex}, '${type}')">×</button>
-                ${previewHTML}
-                <div class="certificate-name">${cert.name.substring(0, 15)}${cert.name.length > 15 ? '...' : ''}</div>
-            </div>
-        `;
-    }
-
-    function removeCertificatePreview(supplierIndex, type) {
-        removeCertificate(supplierIndex, type);
-        
-        const previewContainer = document.getElementById(`cert-preview-${type}-${supplierIndex}`);
-        if (previewContainer) {
-            previewContainer.innerHTML = '';
-        }
-    }
-
-    async function handleCertificateUpload(supplierIndex, type, event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const fileData = await readFileAsDataURL(file);
-        saveCertificate(supplierIndex, type, fileData, file.name);
-        
-        const previewContainer = document.getElementById(`cert-preview-${type}-${supplierIndex}`);
-        if (previewContainer) {
-            previewContainer.innerHTML = renderCertificatePreview(supplierIndex, type, {
-                data: fileData,
-                name: file.name
-            });
-        }
-    }
-
-    function getSupplierImages(supplierIndex) {
-        return supplierImages[supplierIndex] || [];
-    }
-
-    function saveSupplierImages(supplierIndex, images) {
-        supplierImages[supplierIndex] = images;
-        saveSupplierImagesData();
-    }
-
-    function createImagePreview(supplierIndex) {
-        const images = getSupplierImages(supplierIndex);
-        const hasImages = images.length > 0;
-        
-        if (!hasImages) {
-            return '<span style="color:#999; font-size:12px;">No images</span>';
-        }
-        
-        let previewHTML = '<div class="supplier-images-preview">';
-        images.forEach((img, index) => {
-            previewHTML += `
-                <img src="${img.data}" 
-                     class="image-thumbnail" 
-                     onclick="openImageGallery(${supplierIndex}, ${index})"
-                     title="Click to view full screen">
-            `;
-        });
-        previewHTML += '</div>';
-        
-        return previewHTML;
-    }
-
-    async function handleImageUpload(supplierIndex, event) {
-        const files = Array.from(event.target.files);
-        const currentImages = getSupplierImages(supplierIndex);
-        
-        if (currentImages.length + files.length > 3) {
-            alert("Maximum 3 images allowed per supplier. You currently have " + currentImages.length + " images.");
-            return;
-        }
-        
-        for (const file of files) {
-            if (file.size > MAX_IMAGE_SIZE) {
-                alert(`File "${file.name}" exceeds 3MB limit. Please choose a smaller file.`);
-                continue;
-            }
-            
-            if (!file.type.startsWith('image/')) {
-                alert(`File "${file.name}" is not an image. Please upload image files only.`);
-                continue;
-            }
-            
-            const fileData = await readFileAsDataURL(file);
-            currentImages.push({
-                data: fileData,
-                name: file.name,
-                size: file.size,
-                type: file.type,
-                uploaded: new Date().toISOString(),
-                uploadedBy: localStorage.getItem('logged_user') || 'System'
-            });
-        }
-        
-        saveSupplierImages(supplierIndex, currentImages);
-        
-        const previewContainer = document.getElementById(`image-preview-${supplierIndex}`);
-        if (previewContainer) {
-            previewContainer.innerHTML = createImagePreview(supplierIndex);
-        }
-        
-        event.target.value = '';
-    }
-
-    function removeSupplierImage(supplierIndex, imageIndex) {
-        const images = getSupplierImages(supplierIndex);
-        if (images.length > imageIndex) {
-            images.splice(imageIndex, 1);
-            saveSupplierImages(supplierIndex, images);
-            
-            const previewContainer = document.getElementById(`image-preview-${supplierIndex}`);
-            if (previewContainer) {
-                previewContainer.innerHTML = createImagePreview(supplierIndex);
-            }
-            
-            return true;
-        }
-        return false;
-    }
-
-    function getSupplierDocuments(supplierIndex) {
-        const supplierCerts = certificates[supplierIndex];
-        if (!supplierCerts) return [];
-        
-        const docs = [];
-        const certTypes = ['incorporation', 'tax', 'napsa'];
-        
-        certTypes.forEach(type => {
-            if (supplierCerts[type]) {
-                docs.push({
-                    type: type,
-                    name: supplierCerts[type].name,
-                    data: supplierCerts[type].data,
-                    uploaded: supplierCerts[type].uploaded,
-                    uploadedBy: supplierCerts[type].uploadedBy
-                });
-            }
-        });
-        
-        return docs;
-    }
-
-    function createDocumentIcon(supplierIndex) {
-        const docs = getSupplierDocuments(supplierIndex);
-        const hasDocuments = docs.length > 0;
-        
-        if (!hasDocuments) {
-            return '<span style="color:#999; font-size:12px;">No docs</span>';
-        }
-        
-        return `
-            <div class="document-thumbnail" onclick="openDocumentViewer(${supplierIndex})">
-                <div class="document-icon">
-                    📄
-                    ${docs.length > 1 ? `<span class="document-count">${docs.length}</span>` : ''}
-                </div>
-            </div>
-        `;
-    }
-
-    function openDocumentViewer(supplierIndex) {
-        const docs = getSupplierDocuments(supplierIndex);
-        const supplier = suppliers[supplierIndex];
-        
-        if (docs.length === 0) {
-            alert("No documents uploaded for this supplier.");
-            return;
-        }
-        
-        const modal = document.getElementById('documentViewerModal');
-        const title = document.getElementById('documentViewerTitle');
-        const body = document.getElementById('documentViewerBody');
-        
-        title.textContent = `Documents - ${supplier.name}`;
-        
-        let contentHTML = '';
-        
-        if (docs.length === 1) {
-            const doc = docs[0];
-            if (doc.name.toLowerCase().endsWith('.pdf')) {
-                contentHTML = `
-                    <iframe src="${doc.data}" class="pdf-viewer"></iframe>
-                    <div style="text-align: center; margin-top: 10px; color: #666;">
-                        <small>${doc.name} • Uploaded by ${doc.uploadedBy} on ${new Date(doc.uploaded).toLocaleDateString()}</small>
-                    </div>
-                `;
-            } else {
-                contentHTML = `
-                    <img src="${doc.data}" class="document-image" alt="${doc.name}">
-                    <div style="text-align: center; margin-top: 10px; color: #666;">
-                        <small>${doc.name} • Uploaded by ${doc.uploadedBy} on ${new Date(doc.uploaded).toLocaleDateString()}</small>
-                    </div>
-                `;
-            }
-        } else {
-            contentHTML = `
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <h3>${docs.length} Documents Available</h3>
-                    <p>Click on any document to view it full screen</p>
-                </div>
-                <div class="document-thumbnail-grid">
-                    ${docs.map((doc, index) => {
-                        const isImage = doc.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|bmp)$/);
-                        const isPDF = doc.name.toLowerCase().endsWith('.pdf');
-                        
-                        let thumbnailHTML = '';
-                        if (isImage) {
-                            thumbnailHTML = `<img src="${doc.data}" alt="${doc.name}">`;
-                        } else if (isPDF) {
-                            thumbnailHTML = `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f0f0f0;">
-                                <span style="font-size: 24px;">📄</span>
-                            </div>`;
-                        } else {
-                            thumbnailHTML = `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f0f0f0;">
-                                <span style="font-size: 24px;">📎</span>
-                            </div>`;
-                        }
-                        
-                        return `
-                            <div class="document-thumbnail-item" onclick="viewSingleDocument(${supplierIndex}, ${index})">
-                                ${thumbnailHTML}
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-                <div style="margin-top: 20px; color: #666; font-size: 12px;">
-                    <p>Documents: ${docs.map(d => d.name).join(', ')}</p>
-                </div>
-            `;
-        }
-        
-        body.innerHTML = contentHTML;
-        modal.style.display = 'flex';
-    }
-
-    function viewSingleDocument(supplierIndex, docIndex) {
-        const docs = getSupplierDocuments(supplierIndex);
-        const doc = docs[docIndex];
-        const supplier = suppliers[supplierIndex];
-        
-        const modal = document.getElementById('documentViewerModal');
-        const title = document.getElementById('documentViewerTitle');
-        const body = document.getElementById('documentViewerBody');
-        
-        title.textContent = `${doc.name} - ${supplier.name}`;
-        
-        let contentHTML = '';
-        if (doc.name.toLowerCase().endsWith('.pdf')) {
-            contentHTML = `
-                <iframe src="${doc.data}" class="pdf-viewer"></iframe>
-                <div style="text-align: center; margin-top: 10px; color: #666;">
-                    <small>${doc.name} • Uploaded by ${doc.uploadedBy} on ${new Date(doc.uploaded).toLocaleDateString()}</small>
-                </div>
-                <div style="text-align: center; margin-top: 20px;">
-                    <button onclick="openDocumentViewer(${supplierIndex})" class="btn" style="background: #607d8b;">
-                        ← Back to All Documents
-                    </button>
-                </div>
-            `;
-        } else {
-            contentHTML = `
-                <img src="${doc.data}" class="document-image" alt="${doc.name}">
-                <div style="text-align: center; margin-top: 10px; color: #666;">
-                    <small>${doc.name} • Uploaded by ${doc.uploadedBy} on ${new Date(doc.uploaded).toLocaleDateString()}</small>
-                </div>
-                <div style="text-align: center; margin-top: 20px;">
-                    <button onclick="openDocumentViewer(${supplierIndex})" class="btn" style="background: #607d8b;">
-                        ← Back to All Documents
-                    </button>
-                </div>
-            `;
-        }
-        
-        body.innerHTML = contentHTML;
-    }
-
-    function closeDocumentViewer() {
-        document.getElementById('documentViewerModal').style.display = 'none';
-    }
-
-    function openImageGallery(supplierIndex, startIndex = 0) {
-        const images = getSupplierImages(supplierIndex);
-        if (images.length === 0) return;
-        
-        currentGalleryImages = images;
-        currentGalleryIndex = startIndex;
-        
-        const modal = document.getElementById('imageGalleryModal');
-        const imageElement = document.getElementById('galleryCurrentImage');
-        const counter = document.getElementById('imageCounter');
-        
-        imageElement.src = images[startIndex].data;
-        counter.textContent = `${startIndex + 1} / ${images.length}`;
-        modal.style.display = 'flex';
-    }
+    // ==================== IMAGE GALLERY FUNCTIONS ====================
 
     function closeImageGallery() {
         document.getElementById('imageGalleryModal').style.display = 'none';
@@ -2893,687 +2277,132 @@ s
         document.getElementById('imageCounter').textContent = `${currentGalleryIndex + 1} / ${currentGalleryImages.length}`;
     }
 
-    function openModal(type, editIndex = null) {
-        const currentUser = localStorage.getItem('logged_user');
-        
-        if (type === 'category' && !hasPermission(currentUser, 'add_category')) {
-            alert("You don't have permission to add categories!");
-            return;
-        }
-        
-        if (type === 'supplier' && !hasPermission(currentUser, editIndex !== null ? 'edit_supplier' : 'add_supplier')) {
-            alert("You don't have permission to manage suppliers!");
-            return;
-        }
-        
-        const modal = document.getElementById('modalOverlay');
-        const fields = document.getElementById('modalFields');
-        const title = document.getElementById('modalTitle');
-        const saveBtn = document.getElementById('modalSaveBtn');
-        saveBtn.style.display = 'block';
-        modal.style.display = 'flex';
+    // ==================== DOCUMENT VIEWER FUNCTIONS ====================
 
-        if(type === 'category') {
-            title.innerText = "New Category";
-            fields.innerHTML = `<input type="text" id="field1" placeholder="Category Name" style="width:100%; padding:10px; margin-bottom:10px;">`;
+    function closeDocumentViewer() {
+        document.getElementById('documentViewerModal').style.display = 'none';
+    }
 
-            saveBtn.onclick = () => {
-                const name = document.getElementById('field1').value;
-                if(name) {
-                    categories.push(name);
-                    saveCategoryData();
-                    recordAction(`Created new category: ${name}`);
-                    renderCategories();
-                    closeModal();
-                }
-            };
-        } else {
-            const s = editIndex !== null ? suppliers[editIndex] : {name:'', person:'', phone:'', tpin:'', email:'', website:'', category:currentCategory, rating: 0};
-            title.innerText = editIndex !== null ? "Edit Supplier" : "Add New Supplier";
-            
-            const certIncorporation = getCertificate(editIndex, 'incorporation');
-            const certTax = getCertificate(editIndex, 'tax');
-            const certNapsa = getCertificate(editIndex, 'napsa');
-            const currentImages = getSupplierImages(editIndex);
-            const hasImages = currentImages.length > 0;
-            
-            fields.innerHTML = `
-                <input type="text" id="s_name" value="${s.name}" placeholder="Company Name" style="width:100%; padding:8px; margin-bottom:5px;">
-                <input type="text" id="s_person" value="${s.person}" placeholder="Specialization" style="width:100%; padding:8px; margin-bottom:5px;">
-                <input type="text" id="s_phone" value="${s.phone}" placeholder="Phone" style="width:100%; padding:8px; margin-bottom:5px;">
-                <input type="text" id="s_tpin" value="${s.tpin || ''}" placeholder="T-PIN" style="width:100%; padding:8px; margin-bottom:5px;">
-                <input type="email" id="s_email" value="${s.email}" placeholder="Email" style="width:100%; padding:8px; margin-bottom:5px;">
-                <input type="text" id="s_website" value="${s.website || ''}" placeholder="Physical Address" style="width:100%; padding:8px; margin-bottom:5px;">
-                
-                <div style="margin:10px 0;">
-                    <label style="display: block; margin-bottom: 5px;"><b>Supplier Rating (1-5 stars)</b></label>
-                    ${createRatingInputHTML(s.rating || 0)}
-                </div>
-                
-                <div style="margin:10px 0;">
-                    <label style="display: block; margin-bottom: 5px;"><b>Supplier Images (Max 3, 3MB each)</b></label>
-                    <input type="file" id="supplier_images_${editIndex}" 
-                           accept="image/*" 
-                           multiple
-                           onchange="handleImageUpload(${editIndex}, event)"
-                           style="width: 100%; padding: 5px; margin-bottom: 5px;">
-                    <small style="color: #666;">Maximum 3 images allowed. Click to upload, click thumbnails to view full screen.</small>
-                    <div id="image-preview-${editIndex}" style="margin-top: 10px;">
-                        ${hasImages ? createImagePreview(editIndex) : '<p style="color: #999; font-size: 12px;">No images uploaded yet</p>'}
-                    </div>
-                </div>
-                
-                <div style="margin:10px 0; padding:10px; border:1px solid #eee; border-radius:8px;">
-                    <b>Legal Compliance (Valid until 31 Dec)</b><br><br>
+    // ==================== PLACEHOLDER FUNCTIONS ====================
 
-                    <label>
-                        <input type="checkbox" id="c_incorp" ${s.compliance?.incorporation ? 'checked' : ''}>
-                        Certificate of Incorporation
-                    </label>
-                    <div class="certificate-upload">
-                        <input type="file" id="cert_incorp_${editIndex}" 
-                               accept=".jpg,.jpeg,.png,.pdf" 
-                               onchange="handleCertificateUpload(${editIndex}, 'incorporation', event)"
-                               style="width: 100%; padding: 5px; margin-bottom: 5px;">
-                        <div id="cert-preview-incorporation-${editIndex}" class="certificate-preview">
-                            ${certIncorporation ? renderCertificatePreview(editIndex, 'incorporation') : ''}
-                        </div>
-                    </div>
+    // These functions need to be implemented based on your specific requirements
+    function openSupplierDocuments(supplierId) {
+        // TODO: Implement document viewer for supplier
+        alert("Document viewer for supplier " + supplierId + " - To be implemented");
+    }
 
-                    <label>
-                        <input type="checkbox" id="c_napsa" ${s.compliance?.napsa ? 'checked' : ''}>
-                        NAPSA Certificate
-                    </label>
-                    <div class="certificate-upload">
-                        <input type="file" id="cert_napsa_${editIndex}" 
-                               accept=".jpg,.jpeg,.png,.pdf" 
-                               onchange="handleCertificateUpload(${editIndex}, 'napsa', event)"
-                               style="width: 100%; padding: 5px; margin-bottom: 5px;">
-                        <div id="cert-preview-napsa-${editIndex}" class="certificate-preview">
-                            ${certNapsa ? renderCertificatePreview(editIndex, 'napsa') : ''}
-                        </div>
-                    </div>
+    function openSupplierImages(supplierId) {
+        // TODO: Implement image gallery for supplier
+        alert("Image gallery for supplier " + supplierId + " - To be implemented");
+    }
 
-                    <label>
-                        <input type="checkbox" id="c_tax" ${s.compliance?.tax ? 'checked' : ''}>
-                        Tax Clearance Certificate
-                    </label>
-                    <div class="certificate-upload">
-                        <input type="file" id="cert_tax_${editIndex}" 
-                               accept=".jpg,.jpeg,.png,.pdf" 
-                               onchange="handleCertificateUpload(${editIndex}, 'tax', event)"
-                               style="width: 100%; padding: 5px; margin-bottom: 5px;">
-                        <div id="cert-preview-tax-${editIndex}" class="certificate-preview">
-                            ${certTax ? renderCertificatePreview(editIndex, 'tax') : ''}
-                        </div>
-                    </div>
-                </div>
+    function filterEverything() {
+        // TODO: Implement search functionality
+        const term = document.getElementById('globalSearch').value.toLowerCase().trim();
+        if (term.length === 0) return;
+        alert("Search functionality - To be implemented");
+    }
 
-                <select id="s_cat" style="width:100%; padding:8px; margin-bottom:5px;">
-                    ${categories.map(c => `<option ${c===s.category?'selected':''}>${c}</option>`).join('')}
-                </select>
-            `;
+    function editSupplier(supplierId) {
+        openModal('supplier', supplierId);
+    }
 
-            currentRatingValue = s.rating || 0;
-
-            saveBtn.onclick = () => {
-                const currentUser = localStorage.getItem('logged_user') || 'System';
-                const timestamp = new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-                const currentYear = new Date().getFullYear();
-
-                const newSup = {
-                    name: document.getElementById('s_name').value,
-                    person: document.getElementById('s_person').value,
-                    phone: document.getElementById('s_phone').value,
-                    tpin: document.getElementById('s_tpin').value,
-                    email: document.getElementById('s_email').value,
-                    website: document.getElementById('s_website').value,
-                    category: document.getElementById('s_cat').value,
-                    rating: currentRatingValue,
-                    dateAdded: editIndex !== null ? s.dateAdded : new Date().toISOString(),
-
-                    compliance: {
-                        incorporation: document.getElementById('c_incorp').checked,
-                        napsa: document.getElementById('c_napsa').checked,
-                        tax: document.getElementById('c_tax').checked,
-                        year: currentYear
-                    },
-
-                    lastEditBy: currentUser,
-                    lastEditDate: timestamp
-                };
-                
-                if(!newSup.name) return alert("Company name required");
-                
-                let action = '';
-                if(editIndex !== null) {
-                    const oldSupplier = suppliers[editIndex];
-                    action = `Updated supplier details: ${newSup.name}`;
-                    recordSupplierEdit(editIndex, `Updated supplier information (${Object.keys(newSup).filter(k => newSup[k] !== oldSupplier[k]).length} fields changed)`);
-                    suppliers[editIndex] = newSup;
-                    recordAction(`Updated supplier details: ${newSup.name}`);
-                } else {
-                    action = `Added new supplier: ${newSup.name}`;
-                    newSup.dateAdded = new Date().toISOString();
-                    suppliers.unshift(newSup);
-                    const newIndex = 0;
-                    recordSupplierEdit(newIndex, `Added new supplier: ${newSup.name}`);
-                    recordAction(`Added new supplier: ${newSup.name}`);
-                }
-                
-                saveSupplierData();
-                renderSuppliers();
-                closeModal();
-            };
+    function editCategory(categoryId, categoryName) {
+        const newName = prompt("Enter new name for the category:", categoryName);
+        if (newName && newName !== categoryName) {
+            updateCategory(categoryId, newName);
         }
     }
 
-    function closeModal() { 
-        document.getElementById('modalOverlay').style.display = 'none'; 
+    function forgotPasswordSimple() {
+        const username = prompt("Enter your username:").toUpperCase();
+        if (!username) return;
+
+        const user = getUser(username);
+        
+        if (!user) {
+            alert("User not found!");
+            return;
+        }
+        
+        if (!user.email) {
+            alert("No email registered for this user. Please contact administrator.");
+            return;
+        }
+        
+        const subject = encodeURIComponent("ZAMCOM Supplier Directory - Your Password");
+        const body = encodeURIComponent(
+            `Hello ${user.username},\n\n` +
+            `Your login credentials are:\n` +
+            `Username: ${user.username}\n` +
+            `Password: ${user.password}\n\n` +
+            `Please login and change your password immediately for security.\n\n` +
+            `ZAMCOM Procurement Department`
+        );
+        
+        const mailtoLink = `mailto:${user.email}?subject=${subject}&body=${body}`;
+        
+        if (confirm(`Send password recovery email to ${user.email}?`)) {
+            window.open(mailtoLink, '_blank');
+            recordAction(`Password recovery email sent for ${username}`);
+            alert("Email client opened. Please send the email to receive your password.");
+        }
+    }
+
+    function changePassword() {
+        const currentUser = getCurrentUser();
+        if (!currentUser) {
+            alert("You must be logged in to change password.");
+            return;
+        }
+        
+        const oldPassword = prompt("Enter your current password:");
+        if (!oldPassword) return;
+        
+        const user = getUser(currentUser);
+        
+        if (!user) {
+            alert("User not found!");
+            return;
+        }
+        
+        if (user.password !== oldPassword) {
+            alert("Current password is incorrect!");
+            return;
+        }
+        
+        const newPassword = prompt("Enter new password:");
+        if (!newPassword) return;
+        
+        const confirmPassword = prompt("Confirm new password:");
+        if (newPassword !== confirmPassword) {
+            alert("Passwords don't match!");
+            return;
+        }
+        
+        // TODO: Implement password change in Firebase
+        alert("Password change functionality - To be implemented with Firebase Auth");
     }
 
     function manageUsersModal() {
-        const fields = document.getElementById('modalFields');
-        document.getElementById('modalTitle').innerText = "User Management";
-        document.getElementById('modalSaveBtn').style.display = 'none';
-        
-        const sessions = getActiveSessions();
-        
-        fields.innerHTML = `
-            <div style="margin-bottom: 20px;">
-                <h4 style="margin: 10px 0;">Current Users</h4>
-                <div style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 5px;">
-                    ${userAccounts.map(user => {
-                        const isCurrentUser = localStorage.getItem('logged_user') === user.username;
-                        const isLoggedIn = sessions[user.username];
-                        const lastLogin = user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never';
-                        return `
-                            <div style="padding: 10px; border-bottom: 1px solid #f5f5f5; display: flex; justify-content: space-between; align-items: center;">
-                                <div style="flex: 1;">
-                                    <span class="user-status ${isLoggedIn ? 'status-online' : 'status-offline'}"></span>
-                                    <strong>${user.username}</strong>
-                                    <span class="role-badge ${user.role === USER_ROLES.ADMIN ? 'role-admin' : 'role-staff'}">
-                                        ${user.role.toUpperCase()}
-                                    </span>
-                                    ${isCurrentUser ? '<span style="color: #27ae60; font-size: 10px;">(You)</span>' : ''}
-                                    <div style="font-size: 10px; color: #666; margin-top: 5px;">
-                                        <div>Email: ${user.email || 'Not set'}</div>
-                                        <div>Phone: ${user.phone || 'Not set'}</div>
-                                        <div>Last Login: ${lastLogin}</div>
-                                        <div>Password: <span style="font-family: monospace;">${user.password}</span></div>
-                                    </div>
-                                </div>
-                                <div style="display: flex; flex-direction: column; gap: 5px;">
-                                    ${user.username !== "JOSEPH" ? `
-                                        <button class="btn-edit" style="margin: 2px;" onclick="editUserContact('${user.username}')">Edit Contact</button>
-                                        <button class="btn-del" style="margin: 2px;" onclick="toggleUserStatus('${user.username}')">
-                                            ${user.enabled ? 'Disable' : 'Enable'}
-                                        </button>
-                                        <button class="btn-del" style="margin: 2px;" onclick="deleteUser('${user.username}')">Remove</button>
-                                    ` : ''}
-                                    ${isLoggedIn && !isCurrentUser ? `
-                                        <button class="btn" style="background: #9b59b6; padding: 2px 6px; margin: 2px;" onclick="forceLogoutUser('${user.username}')">Sign Out</button>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            </div>
-            
-            <div style="margin-top: 20px;">
-                <h4 style="margin: 10px 0;">Add New User</h4>
-                <input type="text" id="newUsername" placeholder="Username" style="width: 100%; padding: 8px; margin-bottom: 5px;">
-                <input type="password" id="newPassword" placeholder="Password" style="width: 100%; padding: 8px; margin-bottom: 5px;">
-                <div class="user-contact-fields">
-                    <input type="email" id="newUserEmail" placeholder="Email Address" style="width: 100%;">
-                    <input type="text" id="newUserPhone" placeholder="Phone Number" style="width: 100%;">
-                </select>
-                <button class="btn btn-add" style="width: 100%;" onclick="addNewUser()">Add User</button>
-            </div>
-        `;
-        
-        document.getElementById('modalOverlay').style.display = 'flex';
+        // TODO: Implement user management modal
+        alert("User management - To be implemented");
     }
 
-    function addNewUser() {
-        const username = document.getElementById('newUsername').value.toUpperCase().trim();
-        const password = document.getElementById('newPassword').value;
-        const email = document.getElementById('newUserEmail').value.trim();
-        const phone = document.getElementById('newUserPhone').value.trim();
-        
-        if (!username || !password) {
-            alert("Username and password are required!");
-            return;
-        }
-        
-        if (getUser(username)) {
-            alert("User already exists!");
-            return;
-        }
-        
-        userAccounts.push({
-            username: username,
-            password: password,
-            role: USER_ROLES.STAFF,
-            enabled: true,
-            lastLogin: null,
-            email: email,
-            phone: phone
-        });
-        
-        saveUserData();
-        recordAction(`Added new staff user: ${username}`);
-        manageUsersModal();
-    }
-
-    function editUserContact(username) {
-        const user = getUser(username);
-        if (!user) return;
-        
-        const newEmail = prompt(`Enter new email address for ${username}:`, user.email || '');
-        if (newEmail !== null) {
-            const newPhone = prompt(`Enter new phone number for ${username}:`, user.phone || '');
-            if (newPhone !== null) {
-                user.email = newEmail;
-                user.phone = newPhone;
-                saveUserData();
-                recordAction(`Updated contact info for user: ${username}`);
-                alert("Contact information updated successfully!");
-                manageUsersModal();
-            }
-        }
-    }
-
-    function deleteUser(username) {
-        if(username === "JOSEPH") {
-            alert("Cannot delete the primary administrator account!");
-            return;
-        }
-        
-        if(confirm(`Are you sure you want to delete user ${username}?`)) {
-            userAccounts = userAccounts.filter(u => u.username !== username);
-            saveUserData();
-            removeActiveSession(username);
-            recordAction(`Deleted user: ${username}`);
-            manageUsersModal();
-        }
-    }
-
-    function toggleUserStatus(username) {
-        if(username === "JOSEPH") {
-            alert("Cannot disable the primary administrator account!");
-            return;
-        }
-        
-        const user = getUser(username);
-        if (user) {
-            user.enabled = !user.enabled;
-            saveUserData();
-            if (!user.enabled) {
-                removeActiveSession(username);
-            }
-            recordAction(`${user.enabled ? 'Enabled' : 'Disabled'} user: ${username}`);
-            manageUsersModal();
-        }
-    }
-
-    function forceLogoutUser(username) {
-        if(confirm(`Force ${username} to logout?`)) {
-            removeActiveSession(username);
-            
-            if (localStorage.getItem('logged_user') === username) {
-                localStorage.removeItem('logged_user');
-                localStorage.removeItem('current_session');
-                localStorage.removeItem('last_login');
-                location.reload();
-            }
-            
-            recordAction(`Forced logout for user: ${username}`);
-            updateSessionsPanel();
-            manageUsersModal();
-        }
-    }
-
-    function toggleSessionsPanel() {
-        const panel = document.getElementById('sessionsPanel');
-        if (panel.style.display === 'block') {
-            panel.style.display = 'none';
-        } else {
-            updateSessionsPanel();
-            panel.style.display = 'block';
-        }
-    }
-
-    function updateSessionsPanel() {
-        const sessions = getActiveSessions();
-        const container = document.getElementById('activeSessionsList');
-        
-        if (Object.keys(sessions).length === 0) {
-            container.innerHTML = '<div style="padding: 10px; text-align: center; color: #888;">No active sessions</div>';
-            return;
-        }
-        
-        let html = '';
-        Object.entries(sessions).forEach(([username, session]) => {
-            const sessionAge = Date.now() - session.lastActive;
-            const minutesAgo = Math.floor(sessionAge / (1000 * 60));
-            const timeText = minutesAgo === 0 ? 'Just now' : `${minutesAgo} min ago`;
-            
-            html += `
-                <div class="session-item">
-                    <div class="session-user">
-                        <span class="user-status status-online"></span>
-                        <strong>${username}</strong>
-                    </div>
-                    <div class="session-time">${timeText}</div>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-    }
-
-    function displayLinks() {
-        const tbody = document.getElementById('linksBody');
-        tbody.innerHTML = '';
-
-        links.forEach((link, index) => {
-            const currentUser = localStorage.getItem('logged_user');
-            const deleteButton = isCurrentUserAdmin() ? 
-                `<button class="btn btn-del" onclick="deleteLink(${index})">Delete</button>` : 
-                '';
-            
-            const row = `<tr>
-                <td>${link.name}</td>
-                <td><a href="${link.url.startsWith('http') ? link.url : 'http://' + link.url}" target="_blank"><b>${link.url}</b></a></td>
-                <td><a href="mailto:${link.email}">${link.email}</a></td>
-                <td>${deleteButton}</td>
-            </tr>`;
-            tbody.innerHTML += row;
-        });
-        saveLinkData();
-    }
-
-    function openLinkModal() {
-        if (!hasPermission(localStorage.getItem('logged_user'), 'add_link')) {
-            alert("You don't have permission to add links!");
-            return;
-        }
-        document.getElementById('linkModal').style.display = 'flex';
-    }
-
-    function closeLinkModal() {
-        document.getElementById('linkModal').style.display = 'none';
-        document.getElementById('instName').value = '';
-        document.getElementById('instWeb').value = '';
-        document.getElementById('instEmail').value = '';
-    }
-
-    function addLink() {
-        if (!hasPermission(localStorage.getItem('logged_user'), 'add_link')) {
-            alert("You don't have permission to add links!");
-            return;
-        }
-        
-        const name = document.getElementById('instName').value;
-        const url = document.getElementById('instWeb').value;
-        const email = document.getElementById('instEmail').value;
-
-        if(name && url && email) {
-            links.push({ name, url, email });
-            saveLinkData();
-            displayLinks();
-            closeLinkModal();
-        } else {
-            alert("Please fill in all fields");
-        }
-    }
-
-    function deleteLink(index) {
-        if (!isCurrentUserAdmin()) {
-            alert("Only administrators can delete links!");
-            return;
-        }
-        
-        if(confirm("Are you sure you want to delete this link?")) {
-            links.splice(index, 1);
-            saveLinkData();
-            displayLinks();
-        }
-    }
-
-    function getAllData() {
-        return { 
-            categories: categories, 
-            suppliers: suppliers,
-            audit_logs: JSON.parse(localStorage.getItem('z_audit_logs')) || [],
-            supplier_edit_history: JSON.parse(localStorage.getItem('z_supplier_edit_history')) || {},
-            user_accounts: userAccounts,
-            certificates: JSON.parse(localStorage.getItem('z_certificates')) || {},
-            active_sessions: getActiveSessions(),
-            links: links,
-            supplier_images: JSON.parse(localStorage.getItem('z_supplier_images')) || {},
-            timestamp: new Date().toISOString()
-        };
-    }
-    
-    function loadDataIntoLocalStorage(data) {
-        if (data.categories) {
-            localStorage.setItem('z_categories', JSON.stringify(data.categories));
-            categories = data.categories;
-        }
-        if (data.suppliers) {
-            localStorage.setItem('z_suppliers', JSON.stringify(data.suppliers));
-            suppliers = data.suppliers;
-        }
-        if (data.links) {
-            localStorage.setItem('zamcom_links', JSON.stringify(data.links));
-            links = data.links;
-        }
-        if (data.user_accounts) {
-            localStorage.setItem('z_user_accounts', JSON.stringify(data.user_accounts));
-            userAccounts = data.user_accounts;
-        }
-        if (data.audit_logs) {
-            localStorage.setItem('z_audit_logs', JSON.stringify(data.audit_logs));
-        }
-        if (data.certificates) {
-            localStorage.setItem('z_certificates', JSON.stringify(data.certificates));
-            certificates = data.certificates;
-        }
-        if (data.supplier_images) {
-            localStorage.setItem('z_supplier_images', JSON.stringify(data.supplier_images));
-            supplierImages = data.supplier_images;
-        }
+    function showSyncSettings() {
+        // TODO: Implement sync settings
+        alert("Sync settings - To be implemented");
     }
 
     function exportData() {
-        const data = getAllData();
-        
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-        const a = document.createElement('a');
-        const now = new Date();
-        a.href = dataStr; 
-        a.download = `ZAMCOM_FULL_BACKUP_${now.toISOString().slice(0,10)}.json`; 
-        a.click();
-        localStorage.setItem('z_last_backup', now.toLocaleString());
-        displayBackupDate();
-        recordAction("Exported system backup including audit logs, certificates, and edit history");
-    }
-
-    function displayBackupDate() {
-        document.getElementById('lastBackupDate').innerText = localStorage.getItem('z_last_backup') || "Never";
+        // TODO: Implement data export
+        alert("Export functionality - To be implemented");
     }
 
     function importData(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const incoming = JSON.parse(e.target.result);
-                loadDataIntoLocalStorage(incoming);
-                
-                saveCategoryData();
-                saveSupplierData();
-                saveLinkData();
-                
-                recordAction("Imported system data and merged audit logs, certificates, and edit history");
-                alert("Import successful! All data, logs, certificates, and edit history have been restored.");
-                location.reload();
-            } catch (err) { 
-                console.error(err);
-                alert("Invalid File Format"); 
-            }
-        };
-        reader.readAsText(file);
+        // TODO: Implement data import
+        alert("Import functionality - To be implemented");
     }
-
-    const bgImages = ['./images/bgx.jpg', './images/bgx1.jpg', './images/bg.jpg', './images/bgx3.jpg', './images/bgx4.jpg', './images/bgx5.jpg', './images/bgx6.jpg', './images/bgx7.jpg', './images/bgx8.jpg', './images/bgx9.jpg', './images/bgy1.jpg', './images/bgy3.jpg', './images/bgy4.jpg', './images/bgy5.jpg'];
-    function syncBG() {
-        const header = document.getElementById('headerSection');
-        if(!header) return;
-        const index = Math.floor((Math.floor(Date.now() / 1000) % (bgImages.length * 15)) / 15);
-        header.style.backgroundImage = `url(${bgImages[index]})`;
-    }
-
-    function runTimeMonitoring() {
-        const now = new Date();
-        const hrs = now.getHours();
-        const mins = now.getMinutes();
-        const todayDate = now.toDateString();
-
-        updateDashboardStatus();
-        const warningBanner = document.getElementById('timeWarning');
-        if (hrs === 16 && mins >= 30 && mins < 50) {
-            warningBanner.style.display = 'block';
-        } else {
-            warningBanner.style.display = 'none';
-        }
-
-        const lastAutoDate = localStorage.getItem('z_last_auto_date');
-        if (hrs === 16 && mins === 49 && lastAutoDate !== todayDate) {
-            executeAutoBackup(todayDate);
-        }
-
-        if (isSystemLocked() && localStorage.getItem('logged_user') && !isCurrentUserAdmin()) {
-            alert("SYSTEM LOCK: Access hours ended. The system will now close until 07:30 CAT.");
-            logout();
-        }
-        
-        const currentUser = localStorage.getItem('logged_user');
-        if (currentUser) {
-            updateActiveSession(currentUser, localStorage.getItem('current_session'));
-        }
-        
-        const panel = document.getElementById('sessionsPanel');
-        if (panel.style.display === 'block') {
-            updateSessionsPanel();
-        }
-    }
-
-    function showAuditLogs(page = 1) {
-        if (!hasPermission(localStorage.getItem('logged_user'), 'view_logs')) {
-            alert("You don't have permission to view audit logs!");
-            return;
-        }
-        
-        const modal = document.getElementById('modalOverlay');
-        const fields = document.getElementById('modalFields');
-        const title = document.getElementById('modalTitle');
-        const saveBtn = document.getElementById('modalSaveBtn');
-        
-        title.innerText = "System Audit Logs";
-        modal.style.display = 'flex';
-        saveBtn.style.display = 'none';
-
-        const logs = JSON.parse(localStorage.getItem('z_audit_logs')) || [];
-        const logsPerPage = 20;
-        const totalPages = Math.ceil(logs.length / logsPerPage);
-        const startIndex = (page - 1) * logsPerPage;
-        const endIndex = startIndex + logsPerPage;
-        const pageLogs = logs.slice(startIndex, endIndex);
-        
-        let paginationHTML = '';
-        if (totalPages > 1) {
-            paginationHTML = `
-                <div class="pagination">
-                    <button class="page-btn" onclick="showAuditLogs(${page - 1})" ${page <= 1 ? 'disabled' : ''}>‹ Prev</button>
-                    <span style="font-size: 12px;">Page ${page} of ${totalPages}</span>
-                    <button class="page-btn" onclick="showAuditLogs(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>Next ›</button>
-                </div>
-            `;
-        }
-        
-        fields.innerHTML = `
-            <div style="margin-bottom: 10px; font-size: 12px; color: #666;">
-                Showing ${startIndex + 1}-${Math.min(endIndex, logs.length)} of ${logs.length} total logs
-            </div>
-            <div class="audit-container">
-                ${pageLogs.length === 0 ? '<p style="text-align:center">No logs recorded yet.</p>' : 
-                  pageLogs.map(l => `
-                    <div class="log-entry">
-                        <span><span class="log-user">${l.user}</span>: <span class="log-action">${l.action}</span></span>
-                        <span class="log-time">${l.time}</span>
-                    </div>
-                  `).join('')}
-            </div>
-            ${paginationHTML}
-            <button onclick="closeModal();" class="btn" style="background:#777; width:100%; margin-top:15px;">Close Logs</button>
-            <p style="font-size: 10px; color: #999; text-align: center; margin-top: 10px;">Audit logs are permanent and cannot be cleared.</p>
-        `;
-    }
-
-
-    window.onload = async () => {
-        checkDailySession();
-        renderCategories();
-        displayBackupDate();
-        updateUserDisplay();
-        
-        setInterval(syncBG, 1000);
-        setInterval(runTimeMonitoring, 30000);
-        setInterval(updateDashboardStatus, 1000);
-        
-        checkMissedBackup(); 
-        syncBG();
-        updateDashboardStatus();
-        
-        showView('home');
-        
-        document.addEventListener('click', (e) => {
-            const panel = document.getElementById('sessionsPanel');
-            const sessionsBtn = document.getElementById('sessionsBtn');
-            if (panel.style.display === 'block' && 
-                !panel.contains(e.target) && 
-                sessionsBtn && !sessionsBtn.contains(e.target)) {
-                panel.style.display = 'none';
-            }
-        });
-        
-        document.addEventListener('click', (e) => {
-            const docModal = document.getElementById('documentViewerModal');
-            if (docModal.style.display === 'flex' && e.target === docModal) {
-                closeDocumentViewer();
-            }
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeImageGallery();
-                closeDocumentViewer();
-            }
-            
-            if (document.getElementById('imageGalleryModal').style.display === 'flex') {
-                if (e.key === 'ArrowRight') {
-                    nextImage();
-                } else if (e.key === 'ArrowLeft') {
-                    prevImage();
-                }
-            }
-        });
-    };
 </script>
 
 <footer style="text-align:center; padding: 40px; background: #333; color: white;">
