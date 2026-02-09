@@ -1085,13 +1085,20 @@
     const SESSION_KEY = 'z_active_sessions';
     
     let userAccounts = JSON.parse(localStorage.getItem('z_user_accounts'));
-    if (!userAccounts) {
-        userAccounts = [
-            { username: "JOSEPH", password: "RIGHTJOSEPH", role: USER_ROLES.ADMIN, enabled: true, lastLogin: null, email: "zulujosephp@gmail.com", phone: "+260973031254" },
-            { username: "CHISHALA", password: "RIGHTCHISHALA", role: USER_ROLES.STAFF, enabled: true, lastLogin: null, email: "", phone: "" }
-        ];
-        localStorage.setItem('z_user_accounts', JSON.stringify(userAccounts));
-    }
+if (!userAccounts) {
+    userAccounts = [
+        { 
+            username: "JOSEPH", 
+            password: "RIGHTJOSEPH", 
+            role: "super admin", // Promoted to Super Admin
+            enabled: true, 
+            nrc: "123456/78/1", 
+            email: "zulujosephp@gmail.com" 
+        },
+        { username: "CHISHALA", password: "RIGHTCHISHALA", role: "staff", enabled: true }
+    ];
+    localStorage.setItem('z_user_accounts', JSON.stringify(userAccounts));
+}
 
     let currentGalleryImages = [];
     let currentGalleryIndex = 0;
@@ -1120,6 +1127,37 @@ let sessionData = {
     loggedUser: null,
     lastActive: Date.now()
 };
+
+function renderUserTable() {
+    const viewer = JSON.parse(localStorage.getItem('logged_user_data'));
+    let html = "";
+    userAccounts.forEach(u => {
+        // Privacy Rule: Only Joseph (Super Admin) sees NRC/Email
+        const canSee = (viewer && viewer.username === "JOSEPH");
+        html += `<tr>
+            <td>${u.username}</td>
+            <td>${canSee ? u.nrc : '********'}</td>
+            <td>${canSee ? u.email : '********'}</td>
+            <td>${u.role}</td>
+        </tr>`;
+    });
+    document.getElementById('userTableBody').innerHTML = html;
+}
+
+function showAuditLogs() {
+    const user = JSON.parse(localStorage.getItem('logged_user_data'));
+    const modalContent = document.getElementById('modalFields');
+    
+    let adminButtons = "";
+    if (user.username === "JOSEPH") {
+        adminButtons = `
+            <div style="margin-bottom:15px; display:flex; gap:10px;">
+                <button class="btn-del" onclick="clearLogs('all')">🗑️ Delete All Logs</button>
+                <button class="btn-del" onclick="clearLogs('50')">🗑️ Delete Last 50</button>
+            </div>`;
+    }
+    // ... insert this 'adminButtons' variable into your log modal HTML
+}
 
 function initTabSession() {
     const tabUser = sessionStorage.getItem('tab_logged_user');
@@ -1805,116 +1843,106 @@ s
     }
 
     function handleLogin() {
-    if (isSystemLocked()) {
-        const currentUser = document.getElementById('userIn').value.toUpperCase().trim();
-        if (currentUser !== "JOSEPH") {
-            alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
+        if (isSystemLocked()) {
+            const currentUser = document.getElementById('userIn').value.toUpperCase().trim();
+            if (currentUser !== "JOSEPH") {
+                alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
+                return;
+            }
+        }
+
+        const u = document.getElementById('userIn').value.toUpperCase().trim();
+        const p = document.getElementById('passIn').value.trim();
+
+
+        
+
+        if (!u) {
+            alert("Username required.");
             return;
         }
-    }
 
-    const u = document.getElementById('userIn').value.toUpperCase().trim();
-    const p = document.getElementById('passIn').value.trim();
-
-    if (!u) {
-        alert("Username required.");
-        return;
-    }
-
-    const user = getUser(u);
-    if (!user) {
-        alert("Invalid username or password!");
-        return;
-    }
-    
-    if (!user.enabled) {
-        alert("This account has been disabled. Please contact the administrator.");
-        return;
-    }
-
-    if (!isSessionValid(u)) {
-        alert("User is already logged in on another device. Please logout from other devices first.");
-        return;
-    }
-
-    if (isAccountLocked(u)) {
-        const mins = getRemainingLockTime(u);
-        alert(`Account locked due to multiple failed attempts.\nTry again in ${mins} minute(s).`);
-        return;
-    }
-
-    if (user.password === p) {
-        clearLoginMeta(u);
-
-        user.lastLogin = new Date().toISOString();
-        saveUserData();
-
-        const sessionId = updateActiveSession(u);
-        localStorage.setItem('logged_user', u);
-        localStorage.setItem('current_session', sessionId);
-        localStorage.setItem('last_login', new Date().toDateString());
-        
-        // FIX: Initialize the UI immediately after login
-        document.getElementById('loginOverlay').style.display = 'none';
-        
-        // Initialize all UI components
-        updateGreeting();
-        updateUserDisplay();
-        renderCategories(); // CRITICAL: Load categories
-        displayBackupDate();
-        
-        // Show the home view
-        showView('home');
-        
-        // Initialize system status
-        updateDashboardStatus();
-        syncBG();
-        
-        recordAction("Logged into the system");
-        
-        if (isCurrentUserAdmin()) {
-            document.getElementById('userMgmtBtn').style.display = 'inline-block';
-            document.getElementById('sessionsBtn').style.display = 'inline-block';
-            document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-        } else {
-            document.getElementById('userMgmtBtn').style.display = 'none';
-            document.getElementById('sessionsBtn').style.display = 'none';
-            document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+        const user = getUser(u);
+        if (!user) {
+            alert("Invalid username or password!");
+            return;
         }
         
-        setTimeout(() => {
-            const userInfo = document.getElementById('currentUserInfo');
-            if (userInfo && !userInfo.querySelector('.change-pass-link')) {
-                const changePassLink = document.createElement('a');
-                changePassLink.className = 'change-pass-link';
-                changePassLink.href = '#';
-                changePassLink.innerHTML = ' | Change Password';
-                changePassLink.style.fontSize = '10px';
-                changePassLink.style.color = '#007bff';
-                changePassLink.style.cursor = 'pointer';
-                changePassLink.style.marginLeft = '5px';
-                changePassLink.onclick = changePassword;
-                userInfo.appendChild(changePassLink);
+        if (!user.enabled) {
+            alert("This account has been disabled. Please contact the administrator.");
+            return;
+        }
+
+        if (!isSessionValid(u)) {
+            alert("User is already logged in on another device. Please logout from other devices first.");
+            return;
+        }
+
+        if (isAccountLocked(u)) {
+            const mins = getRemainingLockTime(u);
+            alert(`Account locked due to multiple failed attempts.\nTry again in ${mins} minute(s).`);
+            return;
+        }
+
+        if (user.password === p) {
+            clearLoginMeta(u);
+
+            user.lastLogin = new Date().toISOString();
+            saveUserData();
+
+            const sessionId = updateActiveSession(u);
+            localStorage.setItem('logged_user', u);
+            localStorage.setItem('current_session', sessionId);
+            localStorage.setItem('last_login', new Date().toDateString());
+            document.getElementById('loginOverlay').style.display = 'none';
+
+            updateGreeting();
+            updateUserDisplay();
+            recordAction("Logged into the system");
+            
+            if (isCurrentUserAdmin()) {
+                document.getElementById('userMgmtBtn').style.display = 'inline-block';
+                document.getElementById('sessionsBtn').style.display = 'inline-block';
+                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+            } else {
+                document.getElementById('userMgmtBtn').style.display = 'none';
+                document.getElementById('sessionsBtn').style.display = 'none';
+                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
             }
-        }, 100);
+            
+            setTimeout(() => {
+                const userInfo = document.getElementById('currentUserInfo');
+                if (userInfo && !userInfo.querySelector('.change-pass-link')) {
+                    const changePassLink = document.createElement('a');
+                    changePassLink.className = 'change-pass-link';
+                    changePassLink.href = '#';
+                    changePassLink.innerHTML = ' | Change Password';
+                    changePassLink.style.fontSize = '10px';
+                    changePassLink.style.color = '#007bff';
+                    changePassLink.style.cursor = 'pointer';
+                    changePassLink.style.marginLeft = '5px';
+                    changePassLink.onclick = changePassword;
+                    userInfo.appendChild(changePassLink);
+                }
+            }, 100);
 
-    } else {
-        const meta = getLoginMeta(u);
-        meta.attempts++;
-
-        if (meta.attempts >= MAX_LOGIN_ATTEMPTS) {
-            meta.lockedUntil = Date.now() + (LOCK_DURATION_MINUTES * 60 * 1000);
-            saveLoginMeta(u, meta);
-
-            recordAction(`Account locked after ${MAX_LOGIN_ATTEMPTS} failed attempts: ${u}`);
-
-            alert(`Account locked!\nToo many failed attempts.\nTry again in ${LOCK_DURATION_MINUTES} minutes.`);
         } else {
-            saveLoginMeta(u, meta);
-            alert(`Invalid Username or Password!\nAttempts left: ${MAX_LOGIN_ATTEMPTS - meta.attempts}`);
+            const meta = getLoginMeta(u);
+            meta.attempts++;
+
+            if (meta.attempts >= MAX_LOGIN_ATTEMPTS) {
+                meta.lockedUntil = Date.now() + (LOCK_DURATION_MINUTES * 60 * 1000);
+                saveLoginMeta(u, meta);
+
+                recordAction(`Account locked after ${MAX_LOGIN_ATTEMPTS} failed attempts: ${u}`);
+
+                alert(`Account locked!\nToo many failed attempts.\nTry again in ${LOCK_DURATION_MINUTES} minutes.`);
+            } else {
+                saveLoginMeta(u, meta);
+                alert(`Invalid Username or Password!\nAttempts left: ${MAX_LOGIN_ATTEMPTS - meta.attempts}`);
+            }
         }
     }
-}
 
     function logout() {
         const currentUser = localStorage.getItem('logged_user');
@@ -2054,54 +2082,60 @@ s
     }
 
     function checkDailySession() {
-    const lastLogin = localStorage.getItem('last_login');
-    const today = new Date().toDateString();
-    const currentUser = localStorage.getItem('logged_user');
-    const currentSession = localStorage.getItem('current_session');
+        const lastLogin = localStorage.getItem('last_login');
+        const today = new Date().toDateString();
+        const currentUser = localStorage.getItem('logged_user');
+        const currentSession = localStorage.getItem('current_session');
 
-    updateCountdown();
+        updateCountdown();
 
-    if (currentUser) {
-        const sessions = getActiveSessions();
-        const userSession = sessions[currentUser];
-        if (!userSession || userSession.sessionId !== currentSession) {
-            localStorage.removeItem('logged_user');
-            localStorage.removeItem('current_session');
-            localStorage.removeItem('last_login');
-            alert("Your session has expired or you logged in from another device.");
-            document.getElementById('loginOverlay').style.display = 'flex';
-            return;
+        if (currentUser) {
+            const sessions = getActiveSessions();
+            const userSession = sessions[currentUser];
+            if (!userSession || userSession.sessionId !== currentSession) {
+                localStorage.removeItem('logged_user');
+                localStorage.removeItem('current_session');
+                localStorage.removeItem('last_login');
+                alert("Your session has expired or you logged in from another device.");
+                document.getElementById('loginOverlay').style.display = 'flex';
+                return;
+            }
         }
-        
-        // FIX: Initialize UI for already logged-in users
-        updateGreeting();
-        updateUserDisplay();
-        renderCategories();
-        displayBackupDate();
-        showView('home');
-        updateDashboardStatus();
-        syncBG();
-        
-        if(isCurrentUserAdmin()) {
-            document.getElementById('userMgmtBtn').style.display = 'inline-block';
-            document.getElementById('sessionsBtn').style.display = 'inline-block';
-            document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+
+        if (isSystemLocked()) {
+            if (currentUser !== "JOSEPH") {
+                localStorage.removeItem('logged_user');
+                localStorage.removeItem('current_session');
+                localStorage.removeItem('last_login');
+                document.getElementById('loginOverlay').style.display = 'flex';
+                return;
+            }
+        }
+
+        if (currentUser && lastLogin === today) {
+            updateGreeting();
+            updateUserDisplay();
+            
+            if(isCurrentUserAdmin()) {
+                document.getElementById('userMgmtBtn').style.display = 'inline-block';
+                document.getElementById('sessionsBtn').style.display = 'inline-block';
+                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+            } else {
+                document.getElementById('userMgmtBtn').style.display = 'none';
+                document.getElementById('sessionsBtn').style.display = 'none';
+                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+            }
+            
+            const user = getUser(currentUser);
+            if (user && user.enabled) {
+                document.getElementById('loginOverlay').style.display = 'none';
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+            }
         } else {
-            document.getElementById('userMgmtBtn').style.display = 'none';
-            document.getElementById('sessionsBtn').style.display = 'none';
-            document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-        }
-        
-        const user = getUser(currentUser);
-        if (user && user.enabled) {
-            document.getElementById('loginOverlay').style.display = 'none';
-        } else {
             document.getElementById('loginOverlay').style.display = 'flex';
         }
-    } else {
-        document.getElementById('loginOverlay').style.display = 'flex';
     }
-}
 
     setInterval(updateCountdown, 1000);
 
@@ -3493,58 +3527,53 @@ s
 
 
     window.onload = async () => {
-    checkDailySession();
-    
-    // These will be called by checkDailySession() if user is logged in
-    // But we still need them for the login screen
-    displayBackupDate();
-    updateUserDisplay();
-    
-    setInterval(syncBG, 1000);
-    setInterval(runTimeMonitoring, 30000);
-    setInterval(updateDashboardStatus, 1000);
-    
-    checkMissedBackup(); 
-    syncBG();
-    updateDashboardStatus();
-    
-    // Only show home view if not already done by checkDailySession()
-    if (!localStorage.getItem('logged_user')) {
-        showView('home');
-    }
-    
-    document.addEventListener('click', (e) => {
-        const panel = document.getElementById('sessionsPanel');
-        const sessionsBtn = document.getElementById('sessionsBtn');
-        if (panel.style.display === 'block' && 
-            !panel.contains(e.target) && 
-            sessionsBtn && !sessionsBtn.contains(e.target)) {
-            panel.style.display = 'none';
-        }
-    });
-    
-    document.addEventListener('click', (e) => {
-        const docModal = document.getElementById('documentViewerModal');
-        if (docModal.style.display === 'flex' && e.target === docModal) {
-            closeDocumentViewer();
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closeImageGallery();
-            closeDocumentViewer();
-        }
+        checkDailySession();
+        renderCategories();
+        displayBackupDate();
+        updateUserDisplay();
         
-        if (document.getElementById('imageGalleryModal').style.display === 'flex') {
-            if (e.key === 'ArrowRight') {
-                nextImage();
-            } else if (e.key === 'ArrowLeft') {
-                prevImage();
+        setInterval(syncBG, 1000);
+        setInterval(runTimeMonitoring, 30000);
+        setInterval(updateDashboardStatus, 1000);
+        
+        checkMissedBackup(); 
+        syncBG();
+        updateDashboardStatus();
+        
+        showView('home');
+        
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('sessionsPanel');
+            const sessionsBtn = document.getElementById('sessionsBtn');
+            if (panel.style.display === 'block' && 
+                !panel.contains(e.target) && 
+                sessionsBtn && !sessionsBtn.contains(e.target)) {
+                panel.style.display = 'none';
             }
-        }
-    });
-};
+        });
+        
+        document.addEventListener('click', (e) => {
+            const docModal = document.getElementById('documentViewerModal');
+            if (docModal.style.display === 'flex' && e.target === docModal) {
+                closeDocumentViewer();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeImageGallery();
+                closeDocumentViewer();
+            }
+            
+            if (document.getElementById('imageGalleryModal').style.display === 'flex') {
+                if (e.key === 'ArrowRight') {
+                    nextImage();
+                } else if (e.key === 'ArrowLeft') {
+                    prevImage();
+                }
+            }
+        });
+    };
 </script>
 
 <footer style="text-align:center; padding: 40px; background: #333; color: white;">
