@@ -1082,6 +1082,111 @@
         appId: "1:434327330685:web:6ac7e874dc5952a89c3614"
     };
 
+    // Save this as setup-firebase.js and run it in browser console
+// AFTER you've added your Firebase config to the main HTML
+
+async function setupFirebaseCollections() {
+    try {
+        console.log("Setting up Firebase collections...");
+        
+        // Create default users
+        const defaultUsers = [
+            {
+                username: "JOSEPH",
+                password: "RIGHTJOSEPH",
+                role: "super admin",
+                enabled: true,
+                email: "zulujosephp@gmail.com",
+                nrc: "123456/78/1",
+                phone: "+260973031254",
+                createdAt: new Date().toISOString()
+            },
+            {
+                username: "CHISHALA",
+                password: "RIGHTCHISHALA",
+                role: "staff",
+                enabled: true,
+                email: "",
+                phone: "",
+                createdAt: new Date().toISOString()
+            }
+        ];
+        
+        for (const user of defaultUsers) {
+            await db.collection('users').add(user);
+            console.log("Added user:", user.username);
+        }
+        
+        // Create default categories
+        const defaultCategories = ["Stationary", "IT Equipment", "Hardware", "Marketing"];
+        
+        for (const category of defaultCategories) {
+            await db.collection('categories').add({
+                name: category,
+                createdAt: new Date().toISOString(),
+                createdBy: "System"
+            });
+            console.log("Added category:", category);
+        }
+        
+        // Create default links
+        const defaultLinks = [
+            {
+                name: "Zambia Public Procurement Authority",
+                url: "http://www.zppa.org.zm",
+                email: "info@zppa.org.zm"
+            },
+            {
+                name: "Zambia Institute of Purchasing and Supply",
+                url: "http://www.zips.org.zm",
+                email: "info@zips.org.zm"
+            }
+        ];
+        
+        for (const link of defaultLinks) {
+            await db.collection('links').add({
+                ...link,
+                createdAt: new Date().toISOString(),
+                createdBy: "System"
+            });
+            console.log("Added link:", link.name);
+        }
+        
+        // Add a sample supplier
+        const sampleSupplier = {
+            name: "Sample Supplier Ltd",
+            person: "General Supplies",
+            phone: "+260977123456",
+            tpin: "123456789",
+            email: "sample@supplier.co.zm",
+            website: "123 Cairo Road, Lusaka",
+            category: "Stationary",
+            rating: 4.5,
+            compliance: {
+                incorporation: true,
+                napsa: true,
+                tax: true,
+                year: new Date().getFullYear()
+            },
+            createdAt: new Date().toISOString(),
+            createdBy: "System",
+            updatedAt: new Date().toISOString(),
+            updatedBy: "System"
+        };
+        
+        await db.collection('suppliers').add(sampleSupplier);
+        console.log("Added sample supplier");
+        
+        console.log("✅ Setup completed successfully!");
+        
+    } catch (error) {
+        console.error("Error setting up collections:", error);
+    }
+}
+
+// Run the setup
+setupFirebaseCollections();
+
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
