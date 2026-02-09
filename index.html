@@ -176,10 +176,6 @@
             font-size: 12px;
         }
         
-        .history-item:last-child {
-            border-bottom: none;
-        }
-        
         .history-user {
             font-weight: bold;
             color: var(--primary-green);
@@ -1164,231 +1160,8 @@
         lastActive: Date.now()
     };
 
-    // Firebase initialization
-    let firebaseApp = null;
-    let firestore = null;
-    let auth = null;
+    // Firebase functions removed for simplicity - original code didn't have Firebase
     
-    async function initializeFirebase() {
-        const config = localStorage.getItem('firebase_config');
-        if (!config) return;
-        
-        try {
-            const firebaseConfig = JSON.parse(config);
-            
-            if (typeof firebase === 'undefined') {
-                console.error('Firebase SDK not loaded');
-                return;
-            }
-            
-            firebaseApp = firebase.initializeApp(firebaseConfig);
-            firestore = firebase.firestore();
-            auth = firebase.auth();
-            
-            // Enable offline persistence
-            firestore.enablePersistence()
-                .catch((err) => {
-                    console.error('Firebase offline persistence error:', err);
-                });
-                
-            console.log('Firebase initialized successfully');
-        } catch (error) {
-            console.error('Firebase initialization error:', error);
-        }
-    }
-    
-    async function saveToFirebase(collection, data) {
-        if (!firestore) return;
-        
-        try {
-            const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-            const dataWithTimestamp = {
-                ...data,
-                updatedAt: timestamp,
-                updatedBy: localStorage.getItem('logged_user') || 'system'
-            };
-            
-            await firestore.collection(collection).doc(data.id || Date.now().toString()).set(dataWithTimestamp, { merge: true });
-            return true;
-        } catch (error) {
-            console.error('Firebase save error:', error);
-            return false;
-        }
-    }
-    
-    async function syncAllDataToFirebase() {
-        if (!firestore) return;
-        
-        try {
-            // Sync users
-            for (const user of userAccounts) {
-                await saveToFirebase('users', {
-                    id: user.username,
-                    ...user,
-                    syncTime: new Date().toISOString()
-                });
-            }
-            
-            // Sync categories
-            await saveToFirebase('system_data', {
-                id: 'categories',
-                data: categories,
-                syncTime: new Date().toISOString()
-            });
-            
-            // Sync suppliers
-            await saveToFirebase('system_data', {
-                id: 'suppliers',
-                data: suppliers,
-                syncTime: new Date().toISOString()
-            });
-            
-            // Sync links
-            await saveToFirebase('system_data', {
-                id: 'links',
-                data: links,
-                syncTime: new Date().toISOString()
-            });
-            
-            // Sync certificates
-            await saveToFirebase('system_data', {
-                id: 'certificates',
-                data: certificates,
-                syncTime: new Date().toISOString()
-            });
-            
-            // Sync supplier images
-            await saveToFirebase('system_data', {
-                id: 'supplier_images',
-                data: supplierImages,
-                syncTime: new Date().toISOString()
-            });
-            
-            // Sync audit logs
-            const auditLogs = JSON.parse(localStorage.getItem('z_audit_logs')) || [];
-            await saveToFirebase('system_data', {
-                id: 'audit_logs',
-                data: auditLogs,
-                syncTime: new Date().toISOString()
-            });
-            
-            console.log('All data synced to Firebase');
-            return true;
-        } catch (error) {
-            console.error('Firebase sync error:', error);
-            return false;
-        }
-    }
-    
-    async function loadFromFirebase() {
-        if (!firestore) return null;
-        
-        try {
-            const data = {};
-            
-            // Load users
-            const usersSnapshot = await firestore.collection('users').get();
-            data.userAccounts = [];
-            usersSnapshot.forEach(doc => {
-                data.userAccounts.push(doc.data());
-            });
-            
-            // Load categories
-            const categoriesDoc = await firestore.collection('system_data').doc('categories').get();
-            if (categoriesDoc.exists) {
-                data.categories = categoriesDoc.data().data || [];
-            }
-            
-            // Load suppliers
-            const suppliersDoc = await firestore.collection('system_data').doc('suppliers').get();
-            if (suppliersDoc.exists) {
-                data.suppliers = suppliersDoc.data().data || [];
-            }
-            
-            // Load links
-            const linksDoc = await firestore.collection('system_data').doc('links').get();
-            if (linksDoc.exists) {
-                data.links = linksDoc.data().data || [];
-            }
-            
-            // Load certificates
-            const certsDoc = await firestore.collection('system_data').doc('certificates').get();
-            if (certsDoc.exists) {
-                data.certificates = certsDoc.data().data || {};
-            }
-            
-            // Load supplier images
-            const imagesDoc = await firestore.collection('system_data').doc('supplier_images').get();
-            if (imagesDoc.exists) {
-                data.supplierImages = imagesDoc.data().data || {};
-            }
-            
-            // Load audit logs
-            const logsDoc = await firestore.collection('system_data').doc('audit_logs').get();
-            if (logsDoc.exists) {
-                data.auditLogs = logsDoc.data().data || [];
-            }
-            
-            return data;
-        } catch (error) {
-            console.error('Firebase load error:', error);
-            return null;
-        }
-    }
-
-    function initTabSession() {
-        const tabUser = sessionStorage.getItem('tab_logged_user');
-        const tabSession = sessionStorage.getItem('tab_current_session');
-        
-        if (tabUser && tabSession) {
-            sessionData.loggedUser = tabUser;
-            localStorage.setItem('logged_user', tabUser);
-            localStorage.setItem('current_session', tabSession);
-        }
-        
-        broadcastSessionEvent('TAB_ACTIVATED', {
-            tabId: TAB_ID,
-            user: sessionData.loggedUser,
-            timestamp: Date.now()
-        });
-    }
-
-    function broadcastSessionEvent(type, data) {
-        SESSION_CHANNEL.postMessage({
-            type: type,
-            tabId: TAB_ID,
-            data: data,
-            timestamp: Date.now()
-        });
-    }
-
-    SESSION_CHANNEL.onmessage = function(event) {
-        const message = event.data;
-        
-        switch(message.type) {
-            case 'LOGIN':
-                if (message.tabId !== TAB_ID && message.data.user) {
-                    updateUserDisplayFromBroadcast(message.data.user);
-                }
-                break;
-                
-            case 'LOGOUT':
-                if (message.tabId !== TAB_ID) {
-                    handleRemoteLogout(message.data.user);
-                }
-                break;
-                
-            case 'TAB_ACTIVATED':
-                break;
-                
-            case 'SESSION_EXPIRED':
-                if (message.data.user === sessionData.loggedUser) {
-                    handleSessionExpired();
-                }
-                break;
-        }
-    };
-
     function showSyncSettings() {
         const fields = document.getElementById('modalFields');
         document.getElementById('modalTitle').innerText = "Sync Settings";
@@ -1409,49 +1182,8 @@
                                 <div style="font-size: 12px; color: #666;">Export JSON files and import manually. No internet required.</div>
                             </div>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 10px;">
-                            <input type="radio" name="syncProvider" value="${SYNC_PROVIDER_FIREBASE}" ${syncProvider === SYNC_PROVIDER_FIREBASE ? 'checked' : ''} onchange="updateSyncProvider('${SYNC_PROVIDER_FIREBASE}')">
-                            <div>
-                                <strong>Google Firebase (Recommended)</strong>
-                                <div style="font-size: 12px; color: #666;">Real-time sync. Easy setup with Google account.</div>
-                            </div>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 10px;">
-                            <input type="radio" name="syncProvider" value="${SYNC_PROVIDER_SUPABASE}" ${syncProvider === SYNC_PROVIDER_SUPABASE ? 'checked' : ''} onchange="updateSyncProvider('${SYNC_PROVIDER_SUPABASE}')">
-                            <div>
-                                <strong>Supabase</strong>
-                                <div style="font-size: 12px; color: #666;">PostgreSQL database with real-time features.</div>
-                            </div>
-                        </label>
                     </div>
                 </div>
-            </div>
-            
-            <div id="firebaseConfigSection" style="display: ${syncProvider === SYNC_PROVIDER_FIREBASE ? 'block' : 'none'}; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
-                <h4 style="margin-top: 0;">Firebase Setup</h4>
-                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
-                    <strong>Recommended for beginners:</strong> Create a free Firebase project at 
-                    <a href="https://firebase.google.com" target="_blank">firebase.google.com</a>, then add your config below.
-                </p>
-                <div style="margin-bottom: 10px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Firebase Configuration:</label>
-                    <textarea id="firebaseConfig" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}' 
-                              style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: monospace; font-size: 12px;">${localStorage.getItem('firebase_config') || ''}</textarea>
-                </div>
-                <button class="btn" style="background: #FFA000; width: 100%; margin-top: 10px;" onclick="saveFirebaseConfig()">Save Firebase Config</button>
-            </div>
-            
-            <div id="supabaseConfigSection" style="display: ${syncProvider === SYNC_PROVIDER_SUPABASE ? 'block' : 'none'}; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
-                <h4 style="margin-top: 0;">Supabase Setup</h4>
-                <div style="margin-bottom: 10px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Supabase URL:</label>
-                    <input type="text" id="supabaseUrl" value="${localStorage.getItem('supabase_url') || ''}" placeholder="https://your-project.supabase.co" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">API Key:</label>
-                    <input type="password" id="supabaseKey" value="${localStorage.getItem('supabase_key') || ''}" placeholder="eyJhbGciOiJIUzI1NiIsInR..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                </div>
-                <button class="btn" style="background: #3ECF8E; width: 100%; margin-top: 10px;" onclick="saveSupabaseConfig()">Save Supabase Config</button>
             </div>
             
             <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
@@ -1462,12 +1194,7 @@
             </div>
             
             <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="btn btn-add" onclick="manualSyncToCloud()" style="flex: 1;">Sync Now</button>
-                <button class="btn" onclick="loadFromCloud()" style="flex: 1; background: #4CAF50;">Load from Cloud</button>
-            </div>
-            
-            <div style="margin-top: 20px; font-size: 11px; color: #666; text-align: center;">
-                <p>Firebase is recommended for easy setup and automatic sync. It's free for small projects.</p>
+                <button class="btn btn-add" onclick="exportData()" style="flex: 1;">Export Backup</button>
             </div>
         `;
         
@@ -1477,149 +1204,9 @@
     
     function updateSyncProvider(provider) {
         localStorage.setItem('sync_provider', provider);
-        if (provider === SYNC_PROVIDER_FIREBASE) {
-            initializeFirebase();
-        }
         showSyncSettings();
     }
     
-    function saveFirebaseConfig() {
-        const config = document.getElementById('firebaseConfig').value.trim();
-        if (config) {
-            try {
-                JSON.parse(config);
-                localStorage.setItem('firebase_config', config);
-                initializeFirebase();
-                showNotification('Firebase config saved and initialized!', 'success');
-            } catch (e) {
-                showNotification('Invalid JSON format', 'error');
-            }
-        } else {
-            showNotification('Please enter Firebase config', 'error');
-        }
-    }
-    
-    function saveSupabaseConfig() {
-        const url = document.getElementById('supabaseUrl').value.trim();
-        const key = document.getElementById('supabaseKey').value.trim();
-        if (url && key) {
-            localStorage.setItem('supabase_url', url);
-            localStorage.setItem('supabase_key', key);
-            showNotification('Supabase config saved!', 'success');
-        } else {
-            showNotification('Please enter both URL and API key', 'error');
-        }
-    }
-    
-    async function manualSyncToCloud() {
-        const provider = localStorage.getItem('sync_provider') || SYNC_PROVIDER_MANUAL;
-        
-        if (provider === SYNC_PROVIDER_MANUAL) {
-            exportData();
-            return;
-        }
-        
-        try {
-            if (provider === SYNC_PROVIDER_FIREBASE) {
-                const success = await syncAllDataToFirebase();
-                if (success) {
-                    localStorage.setItem('last_sync', new Date().toLocaleString());
-                    showNotification('Data synced to Firebase!', 'success');
-                } else {
-                    showNotification('Failed to sync to Firebase', 'error');
-                }
-            } else if (provider === SYNC_PROVIDER_SUPABASE) {
-                await syncToSupabase();
-                localStorage.setItem('last_sync', new Date().toLocaleString());
-                showNotification('Data synced to Supabase!', 'success');
-            }
-        } catch (error) {
-            console.error('Sync error:', error);
-            showNotification('Failed to sync to cloud', 'error');
-        }
-    }
-    
-    async function loadFromCloud() {
-        const provider = localStorage.getItem('sync_provider') || SYNC_PROVIDER_MANUAL;
-        
-        if (provider === SYNC_PROVIDER_MANUAL) {
-            showNotification('Manual mode: Use Import feature', 'warning');
-            return;
-        }
-        
-        try {
-            let data;
-            
-            if (provider === SYNC_PROVIDER_FIREBASE) {
-                data = await loadFromFirebase();
-            } else if (provider === SYNC_PROVIDER_SUPABASE) {
-                data = await loadFromSupabase();
-            }
-            
-            if (data) {
-                if (data.userAccounts) {
-                    userAccounts = data.userAccounts;
-                    localStorage.setItem('z_user_accounts', JSON.stringify(userAccounts));
-                }
-                if (data.categories) {
-                    categories = data.categories;
-                    localStorage.setItem('z_categories', JSON.stringify(categories));
-                }
-                if (data.suppliers) {
-                    suppliers = data.suppliers;
-                    localStorage.setItem('z_suppliers', JSON.stringify(suppliers));
-                }
-                if (data.links) {
-                    links = data.links;
-                    localStorage.setItem('zamcom_links', JSON.stringify(links));
-                }
-                if (data.certificates) {
-                    certificates = data.certificates;
-                    localStorage.setItem('z_certificates', JSON.stringify(certificates));
-                }
-                if (data.supplierImages) {
-                    supplierImages = data.supplierImages;
-                    localStorage.setItem('z_supplier_images', JSON.stringify(supplierImages));
-                }
-                if (data.auditLogs) {
-                    localStorage.setItem('z_audit_logs', JSON.stringify(data.auditLogs));
-                }
-                
-                showNotification('Data loaded from cloud!', 'success');
-                
-                if (typeof renderCategories === 'function') renderCategories();
-                if (typeof displayLinks === 'function') displayLinks();
-                if (document.getElementById('categoryPageView').style.display !== 'none') {
-                    renderSuppliers();
-                }
-            }
-        } catch (error) {
-            console.error('Load error:', error);
-            showNotification('Failed to load from cloud', 'error');
-        }
-    }
-    
-    async function syncToSupabase(data) {
-        const url = localStorage.getItem('supabase_url');
-        const key = localStorage.getItem('supabase_key');
-        
-        if (!url || !key) {
-            showNotification('Supabase config not found', 'error');
-            return;
-        }
-        
-        localStorage.setItem('supabase_backup', JSON.stringify(data));
-        return true;
-    }
-    
-    async function loadFromSupabase() {
-        const backup = localStorage.getItem('supabase_backup');
-        if (backup) {
-            return JSON.parse(backup);
-        }
-        return null;
-    }
-
     function forgotPasswordSimple() {
         const username = prompt("Enter your username:").toUpperCase();
         if (!username) return;
@@ -1707,7 +1294,6 @@
             } else { alert("User not found."); }
         } else { alert("Unauthorized Access!"); }
     }
-
 
     function showNotification(message, type = 'success') {
         let notification = document.getElementById('notification');
@@ -1859,9 +1445,12 @@
         return false;
     }
 
+    // FIXED: This function was incorrectly checking lock time
     function isSystemLocked() {
         const currentUser = localStorage.getItem('logged_user');
-        if(!currentUser) return true;
+        
+        // If no user is logged in, show login screen but don't lock
+        if (!currentUser) return false;
         
         // Check if user can bypass lock time
         if (canWorkAfterLockTime(currentUser)) return false;
@@ -1871,19 +1460,22 @@
         const lockTotal = (LOCK_TIME.hr * 60) + LOCK_TIME.min;
         const openTotal = (OPEN_TIME.hr * 60) + OPEN_TIME.min;
 
+        // System is locked if current time is after lock time OR before open time
+        // But only for users who cannot bypass
         return (currentTotal >= lockTotal || currentTotal < openTotal);
     }
 
     function updateDashboardStatus() {
         const now = new Date();
         const isLocked = isSystemLocked();
+        const currentUser = localStorage.getItem('logged_user');
         const dot = document.getElementById('statusDot');
         const txt = document.getElementById('statusText');
         const clock = document.getElementById('liveClock');
 
         clock.innerText = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-        if (isLocked) {
+        if (isLocked && currentUser && !canWorkAfterLockTime(currentUser)) {
             dot.className = 'status-offline';
             txt.innerText = "SYSTEM SECURED (LOCKED)";
             txt.style.color = "var(--danger-red)";
@@ -1903,7 +1495,7 @@
         const loginUI = document.getElementById('loginFieldsContent');
         const lockMessage = document.getElementById('lockMessage');
 
-        if (isLocked) {
+        if (isLocked && currentUser && !canWorkAfterLockTime(currentUser)) {
             lockUI.style.display = 'block';
             loginUI.style.display = 'none';
 
@@ -1948,11 +1540,6 @@
         logs.unshift(entry); 
         if(logs.length > 1000) logs.pop(); 
         localStorage.setItem('z_audit_logs', JSON.stringify(logs));
-        
-        // Also sync to Firebase if available
-        if (firestore) {
-            saveToFirebase('audit_logs', entry);
-        }
     }
 
     function recordSupplierEdit(supplierIndex, action) {
@@ -2084,12 +1671,11 @@
     }
 
     function handleLogin() {
-        if (isSystemLocked()) {
-            const currentUser = document.getElementById('userIn').value.toUpperCase().trim();
-            if (!currentUser || !canWorkAfterLockTime(currentUser)) {
-                alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
-                return;
-            }
+        // Check if system is locked for this user
+        const usernameInput = document.getElementById('userIn').value.toUpperCase().trim();
+        if (isSystemLocked() && !canWorkAfterLockTime(usernameInput)) {
+            alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
+            return;
         }
 
         const u = document.getElementById('userIn').value.toUpperCase().trim();
@@ -2239,102 +1825,28 @@
         }
     }
 
-    function autoSyncToCloud() {
-        const provider = localStorage.getItem('sync_provider');
-        if (provider && provider !== SYNC_PROVIDER_MANUAL && isCurrentUserSuperAdmin()) {
-            clearTimeout(window.syncTimeout);
-            window.syncTimeout = setTimeout(() => {
-                manualSyncToCloud();
-            }, 3000);
-        }
-    }
-
     function saveSupplierData() {
         localStorage.setItem('z_suppliers', JSON.stringify(suppliers));
-        if (isCurrentUserSuperAdmin()) {
-            autoSyncToCloud();
-        }
-        // Always sync to Firebase if available
-        if (firestore) {
-            saveToFirebase('system_data', {
-                id: 'suppliers',
-                data: suppliers,
-                syncTime: new Date().toISOString()
-            });
-        }
     }
 
     function saveCategoryData() {
         localStorage.setItem('z_categories', JSON.stringify(categories));
-        if (isCurrentUserSuperAdmin()) {
-            autoSyncToCloud();
-        }
-        if (firestore) {
-            saveToFirebase('system_data', {
-                id: 'categories',
-                data: categories,
-                syncTime: new Date().toISOString()
-            });
-        }
     }
 
     function saveLinkData() {
         localStorage.setItem('zamcom_links', JSON.stringify(links));
-        if (isCurrentUserSuperAdmin()) {
-            autoSyncToCloud();
-        }
-        if (firestore) {
-            saveToFirebase('system_data', {
-                id: 'links',
-                data: links,
-                syncTime: new Date().toISOString()
-            });
-        }
     }
 
     function saveUserData() {
         localStorage.setItem('z_user_accounts', JSON.stringify(userAccounts));
-        if (isCurrentUserSuperAdmin()) {
-            autoSyncToCloud();
-        }
-        // Sync each user to Firebase
-        if (firestore) {
-            userAccounts.forEach(user => {
-                saveToFirebase('users', {
-                    id: user.username,
-                    ...user,
-                    syncTime: new Date().toISOString()
-                });
-            });
-        }
     }
 
     function saveCertificateData() {
         localStorage.setItem('z_certificates', JSON.stringify(certificates));
-        if (isCurrentUserSuperAdmin()) {
-            autoSyncToCloud();
-        }
-        if (firestore) {
-            saveToFirebase('system_data', {
-                id: 'certificates',
-                data: certificates,
-                syncTime: new Date().toISOString()
-            });
-        }
     }
 
     function saveSupplierImagesData() {
         localStorage.setItem('z_supplier_images', JSON.stringify(supplierImages));
-        if (isCurrentUserSuperAdmin()) {
-            autoSyncToCloud();
-        }
-        if (firestore) {
-            saveToFirebase('system_data', {
-                id: 'supplier_images',
-                data: supplierImages,
-                syncTime: new Date().toISOString()
-            });
-        }
     }
 
     function filterEverything() {
@@ -2413,14 +1925,13 @@
             }
         }
 
-        if (isSystemLocked()) {
-            if (!currentUser || !canWorkAfterLockTime(currentUser)) {
-                localStorage.removeItem('logged_user');
-                localStorage.removeItem('current_session');
-                localStorage.removeItem('last_login');
-                document.getElementById('loginOverlay').style.display = 'flex';
-                return;
-            }
+        // FIXED: Only log out if system is locked AND user cannot bypass
+        if (isSystemLocked() && currentUser && !canWorkAfterLockTime(currentUser)) {
+            localStorage.removeItem('logged_user');
+            localStorage.removeItem('current_session');
+            localStorage.removeItem('last_login');
+            document.getElementById('loginOverlay').style.display = 'flex';
+            return;
         }
 
         if (currentUser && lastLogin === today) {
@@ -2510,7 +2021,7 @@
         const todayDate = now.toDateString();
         const lastAutoDate = localStorage.getItem('z_last_auto_date');
         
-        if (now.getHours() >= 16 && lastAutoDate !== todayDate) {
+        if (now.getHours() >= 16 && lastAutoDate !== todayDate && isCurrentUserSuperAdmin()) {
             console.log("Missed backup detected. Triggering now...");
             executeAutoBackup(todayDate);
         }
@@ -2558,7 +2069,8 @@
                 editButton = `<button class="btn-edit" onclick="event.stopPropagation(); editCategory('${cat}')">Edit</button>`;
             }
             
-            if (isCurrentUserSuperAdmin() || isCurrentUserAdmin()) {
+            // Only SUPER_ADMIN and ADMIN can delete categories
+            if ((isCurrentUserSuperAdmin() || isCurrentUserAdmin()) && hasPermission(currentUser, 'edit_category')) {
                 deleteButton = `<button class="btn-del" onclick="event.stopPropagation(); deleteCategory('${cat}')">Delete</button>`;
             }
             
@@ -2754,6 +2266,7 @@
                 editButton = `<button class="btn-edit" onclick="editSupplier(${realIndex})">Edit</button>`;
             }
             
+            // Only SUPER_ADMIN can delete suppliers
             if (isCurrentUserSuperAdmin()) {
                 deleteButton = `<button class="btn-del" onclick="deleteSupplier(${realIndex})">Delete</button>`;
             }
@@ -3915,6 +3428,7 @@
             const currentUser = localStorage.getItem('logged_user');
             let deleteButton = '';
             
+            // Only SUPER_ADMIN and ADMIN can see delete button
             if (isCurrentUserSuperAdmin() || isCurrentUserAdmin()) {
                 deleteButton = `<button class="btn btn-del" onclick="deleteLink(${index})">Delete</button>`;
             }
@@ -4101,10 +3615,11 @@
         }
 
         const lastAutoDate = localStorage.getItem('z_last_auto_date');
-        if (hrs === 16 && mins === 49 && lastAutoDate !== todayDate) {
+        if (hrs === 16 && mins === 49 && lastAutoDate !== todayDate && isCurrentUserSuperAdmin()) {
             executeAutoBackup(todayDate);
         }
 
+        // FIXED: Only log out if system is locked AND user cannot bypass
         if (isSystemLocked() && localStorage.getItem('logged_user') && !canWorkAfterLockTime(localStorage.getItem('logged_user'))) {
             alert("SYSTEM LOCK: Access hours ended. The system will now close until 07:30 CAT.");
             logout();
@@ -4182,9 +3697,6 @@
 
 
     window.onload = async () => {
-        // Initialize Firebase if config exists
-        initializeFirebase();
-        
         checkDailySession();
         renderCategories();
         displayBackupDate();
