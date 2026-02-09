@@ -176,6 +176,10 @@
             font-size: 12px;
         }
         
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
         .history-user {
             font-weight: bold;
             color: var(--primary-green);
@@ -202,18 +206,13 @@
             margin-left: 5px;
         }
         
-        .role-super-admin {
+        .role-admin {
             background: #e74c3c;
             color: white;
         }
         
-        .role-admin {
-            background: #3498db;
-            color: white;
-        }
-        
         .role-staff {
-            background: #2ecc71;
+            background: #3498db;
             color: white;
         }
         
@@ -377,11 +376,6 @@
             background: #2ecc71;
             border-radius: 50%;
             animation: pulse 2s infinite;
-        }
-        
-        .pulse-offline {
-            background: #95a5a6;
-            border-radius: 50%;
         }
         
         @keyframes pulse {
@@ -791,14 +785,6 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        .sensitive-data {
-            background: #fff3cd;
-            padding: 3px 6px;
-            border-radius: 3px;
-            font-size: 10px;
-            color: #856404;
-        }
-
         @media (max-width: 900px) { 
             .grid-container { grid-template-columns: repeat(2, 1fr); } 
             .top-nav { flex-direction: column; }
@@ -873,7 +859,7 @@
     <button class="btn" style="background:#455A64; margin: 10px;" onclick="showAuditLogs()">📜 View Logs</button>
     <button id="userMgmtBtn" class="btn" style="background:#e67e22; margin: 10px; display:none;" onclick="manageUsersModal()">👥 User Management</button>
     <button id="sessionsBtn" class="btn" style="background:#9b59b6; margin: 10px; display:none;" onclick="toggleSessionsPanel()">👁️ Active Sessions</button>
-    <button id="syncSettingsBtn" class="btn" style="background:#2196F3; margin: 10px; display:none;" onclick="showSyncSettings()">☁️ Sync Settings</button>
+    <button id="syncSettingsBtn" class="btn" style="background:#2196F3; margin: 10px;" onclick="showSyncSettings()">☁️ Sync Settings</button>
 </ul>
 
 <div id="backupStatus" style="text-align: center; font-size: 12px; color: #666; margin: 10px 0;">
@@ -914,8 +900,8 @@
                style="padding: 10px; border-radius: 5px; border: 1px solid #ddd; width: 250px;" 
                onkeyup="filterEverything()">
 
-        <button id="exportBackupBtn" class="btn" style="background:#607d8b; display:none;" onclick="exportData()">💾 Export Backup</button>
-        <button id="importMergeBtn" class="btn" style="background:#9c27b0; display:none;" onclick="document.getElementById('importFile').click()">📥 Import & Merge</button>
+        <button class="btn" style="background:#607d8b" onclick="exportData()">💾 Export Backup</button>
+        <button class="btn" style="background:#9c27b0" onclick="document.getElementById('importFile').click()">📥 Import & Merge</button>
         <input type="file" id="importFile" style="display:none" multiple onchange="importData(event)">
     </div>
 
@@ -1092,43 +1078,21 @@
     const SYNC_PROVIDER_MANUAL = 'manual';
     
     const USER_ROLES = {
-        SUPER_ADMIN: 'super_admin',
         ADMIN: 'admin',
         STAFF: 'staff'
     };
 
-    const SESSION_KEY = 'z_active_sessions';
+    // CHANGED: Use sessionStorage for per-tab isolation
+    const TAB_SESSION_KEY = 'tab_session_data';
     
-    // Initialize user accounts with JOSEPH as SUPER_ADMIN
+    // Generate unique tab ID
+    const TAB_ID = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
     let userAccounts = JSON.parse(localStorage.getItem('z_user_accounts'));
     if (!userAccounts) {
         userAccounts = [
-            { 
-                username: "JOSEPH", 
-                password: "RIGHTJOSEPH", 
-                role: USER_ROLES.SUPER_ADMIN, 
-                enabled: true, 
-                lastLogin: null, 
-                email: "zulujosephp@gmail.com", 
-                phone: "+260973031254",
-                nrc: "",
-                institution: "ZAMCOM",
-                position: "System Owner",
-                lastActive: null
-            },
-            { 
-                username: "CHISHALA", 
-                password: "RIGHTCHISHALA", 
-                role: USER_ROLES.STAFF, 
-                enabled: true, 
-                lastLogin: null, 
-                email: "", 
-                phone: "",
-                nrc: "",
-                institution: "ZAMCOM",
-                position: "Procurement Officer",
-                lastActive: null
-            }
+            { username: "JOSEPH", password: "RIGHTJOSEPH", role: USER_ROLES.ADMIN, enabled: true, lastLogin: null, email: "zulujosephp@gmail.com", phone: "+260973031254" },
+            { username: "CHISHALA", password: "RIGHTCHISHALA", role: USER_ROLES.STAFF, enabled: true, lastLogin: null, email: "", phone: "" }
         ];
         localStorage.setItem('z_user_accounts', JSON.stringify(userAccounts));
     }
@@ -1148,20 +1112,125 @@
 
     const mainframeKey = "JATKISSEMPIRE";
 
-    const TAB_ID = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    const SESSION_CHANNEL = new BroadcastChannel('zamcom_session_channel');
-
-    const TAB_SPECIFIC_KEYS = ['logged_user', 'current_session', 'last_login'];
-    const GLOBAL_KEYS = ['z_user_accounts', 'z_categories', 'z_suppliers', 'z_audit_logs'];
-
-    let sessionData = {
+    // CHANGED: Store session data in sessionStorage for tab independence
+    let tabSessionData = {
         tabId: TAB_ID,
         loggedUser: null,
+        sessionId: null,
         lastActive: Date.now()
     };
 
-    // Firebase functions removed for simplicity - original code didn't have Firebase
+    // Initialize tab session
+    function initTabSession() {
+        // Try to restore from sessionStorage first
+        const savedSession = sessionStorage.getItem(TAB_SESSION_KEY);
+        if (savedSession) {
+            try {
+                const parsed = JSON.parse(savedSession);
+                if (parsed.tabId === TAB_ID) {
+                    tabSessionData = parsed;
+                    if (tabSessionData.loggedUser) {
+                        // Update UI to reflect logged in state
+                        updateGreeting();
+                        updateUserDisplay();
+                    }
+                }
+            } catch (e) {
+                console.error('Error restoring session:', e);
+            }
+        }
+        
+        // Save initial session
+        saveTabSession();
+    }
+
+    // Save tab session data
+    function saveTabSession() {
+        tabSessionData.lastActive = Date.now();
+        sessionStorage.setItem(TAB_SESSION_KEY, JSON.stringify(tabSessionData));
+    }
+
+    // Get active sessions (for display only)
+    function getActiveSessions() {
+        // CHANGED: Remove restriction - allow multiple devices/tabs
+        // Just return empty or dummy data for display
+        return {};
+    }
     
+    // CHANGED: Remove session validation to allow multiple logins
+    function isSessionValid(username) {
+        // Always return true to allow multiple tabs/devices
+        return true;
+    }
+
+    // CHANGED: Update tab session instead of global session
+    function updateTabSession(username) {
+        const sessionId = generateSessionId();
+        tabSessionData.loggedUser = username;
+        tabSessionData.sessionId = sessionId;
+        tabSessionData.lastActive = Date.now();
+        
+        saveTabSession();
+        return sessionId;
+    }
+    
+    function generateSessionId() {
+        return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    // CHANGED: Remove tab session instead of global session
+    function removeTabSession() {
+        tabSessionData.loggedUser = null;
+        tabSessionData.sessionId = null;
+        saveTabSession();
+    }
+
+    // Preload background images for faster loading
+    const bgImages = [
+        './images/bgx.jpg', './images/bgx1.jpg', './images/bg.jpg', 
+        './images/bgx3.jpg', './images/bgx4.jpg', './images/bgx5.jpg', 
+        './images/bgx6.jpg', './images/bgx7.jpg', './images/bgx8.jpg', 
+        './images/bgx9.jpg', './images/bgy1.jpg', './images/bgy3.jpg', 
+        './images/bgy4.jpg', './images/bgy5.jpg'
+    ];
+    
+    // Preload images for faster background rotation
+    let preloadedImages = [];
+    
+    function preloadBackgroundImages() {
+        bgImages.forEach((src, index) => {
+            const img = new Image();
+            img.src = src;
+            img.onload = function() {
+                preloadedImages[index] = img;
+                console.log(`Preloaded background image: ${src}`);
+            };
+            img.onerror = function() {
+                console.warn(`Failed to preload: ${src}`);
+            };
+        });
+    }
+    
+    // Optimized background rotation with preloaded images
+    function syncBG() {
+        const header = document.getElementById('headerSection');
+        if (!header) return;
+        
+        const index = Math.floor((Math.floor(Date.now() / 1000) % (bgImages.length * 10)) / 10);
+        
+        // Use preloaded image if available
+        if (preloadedImages[index]) {
+            header.style.backgroundImage = `url(${bgImages[index]})`;
+        } else {
+            // Fallback to regular loading
+            const img = new Image();
+            img.src = bgImages[index];
+            img.onload = function() {
+                header.style.backgroundImage = `url(${bgImages[index]})`;
+            };
+        }
+    }
+
     function showSyncSettings() {
         const fields = document.getElementById('modalFields');
         document.getElementById('modalTitle').innerText = "Sync Settings";
@@ -1182,8 +1251,49 @@
                                 <div style="font-size: 12px; color: #666;">Export JSON files and import manually. No internet required.</div>
                             </div>
                         </label>
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="radio" name="syncProvider" value="${SYNC_PROVIDER_FIREBASE}" ${syncProvider === SYNC_PROVIDER_FIREBASE ? 'checked' : ''} onchange="updateSyncProvider('${SYNC_PROVIDER_FIREBASE}')">
+                            <div>
+                                <strong>Google Firebase (Recommended)</strong>
+                                <div style="font-size: 12px; color: #666;">Real-time sync. Easy setup with Google account.</div>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="radio" name="syncProvider" value="${SYNC_PROVIDER_SUPABASE}" ${syncProvider === SYNC_PROVIDER_SUPABASE ? 'checked' : ''} onchange="updateSyncProvider('${SYNC_PROVIDER_SUPABASE}')">
+                            <div>
+                                <strong>Supabase</strong>
+                                <div style="font-size: 12px; color: #666;">PostgreSQL database with real-time features.</div>
+                            </div>
+                        </label>
                     </div>
                 </div>
+            </div>
+            
+            <div id="firebaseConfigSection" style="display: ${syncProvider === SYNC_PROVIDER_FIREBASE ? 'block' : 'none'}; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
+                <h4 style="margin-top: 0;">Firebase Setup</h4>
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                    <strong>Recommended for beginners:</strong> Create a free Firebase project at 
+                    <a href="https://firebase.google.com" target="_blank">firebase.google.com</a>, then add your config below.
+                </p>
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Firebase Configuration:</label>
+                    <textarea id="firebaseConfig" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}' 
+                              style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: monospace; font-size: 12px;">${localStorage.getItem('firebase_config') || ''}</textarea>
+                </div>
+                <button class="btn" style="background: #FFA000; width: 100%; margin-top: 10px;" onclick="saveFirebaseConfig()">Save Firebase Config</button>
+            </div>
+            
+            <div id="supabaseConfigSection" style="display: ${syncProvider === SYNC_PROVIDER_SUPABASE ? 'block' : 'none'}; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
+                <h4 style="margin-top: 0;">Supabase Setup</h4>
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Supabase URL:</label>
+                    <input type="text" id="supabaseUrl" value="${localStorage.getItem('supabase_url') || ''}" placeholder="https://your-project.supabase.co" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">API Key:</label>
+                    <input type="password" id="supabaseKey" value="${localStorage.getItem('supabase_key') || ''}" placeholder="eyJhbGciOiJIUzI1NiIsInR..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <button class="btn" style="background: #3ECF8E; width: 100%; margin-top: 10px;" onclick="saveSupabaseConfig()">Save Supabase Config</button>
             </div>
             
             <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
@@ -1194,7 +1304,12 @@
             </div>
             
             <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="btn btn-add" onclick="exportData()" style="flex: 1;">Export Backup</button>
+                <button class="btn btn-add" onclick="manualSyncToCloud()" style="flex: 1;">Sync Now</button>
+                <button class="btn" onclick="loadFromCloud()" style="flex: 1; background: #4CAF50;">Load from Cloud</button>
+            </div>
+            
+            <div style="margin-top: 20px; font-size: 11px; color: #666; text-align: center;">
+                <p>Firebase is recommended for easy setup and automatic sync. It's free for small projects.</p>
             </div>
         `;
         
@@ -1207,6 +1322,131 @@
         showSyncSettings();
     }
     
+    function saveFirebaseConfig() {
+        const config = document.getElementById('firebaseConfig').value.trim();
+        if (config) {
+            try {
+                JSON.parse(config);
+                localStorage.setItem('firebase_config', config);
+                showNotification('Firebase config saved!', 'success');
+            } catch (e) {
+                showNotification('Invalid JSON format', 'error');
+            }
+        } else {
+            showNotification('Please enter Firebase config', 'error');
+        }
+    }
+    
+    function saveSupabaseConfig() {
+        const url = document.getElementById('supabaseUrl').value.trim();
+        const key = document.getElementById('supabaseKey').value.trim();
+        if (url && key) {
+            localStorage.setItem('supabase_url', url);
+            localStorage.setItem('supabase_key', key);
+            showNotification('Supabase config saved!', 'success');
+        } else {
+            showNotification('Please enter both URL and API key', 'error');
+        }
+    }
+    
+    async function manualSyncToCloud() {
+        const provider = localStorage.getItem('sync_provider') || SYNC_PROVIDER_MANUAL;
+        
+        if (provider === SYNC_PROVIDER_MANUAL) {
+            exportData();
+            return;
+        }
+        
+        try {
+            const data = getAllData();
+            
+            if (provider === SYNC_PROVIDER_FIREBASE) {
+                await syncToFirebase(data);
+            } else if (provider === SYNC_PROVIDER_SUPABASE) {
+                await syncToSupabase(data);
+            }
+            
+            localStorage.setItem('last_sync', new Date().toLocaleString());
+            showNotification('Data synced to cloud!', 'success');
+        } catch (error) {
+            console.error('Sync error:', error);
+            showNotification('Failed to sync to cloud', 'error');
+        }
+    }
+    
+    async function loadFromCloud() {
+        const provider = localStorage.getItem('sync_provider') || SYNC_PROVIDER_MANUAL;
+        
+        if (provider === SYNC_PROVIDER_MANUAL) {
+            showNotification('Manual mode: Use Import feature', 'warning');
+            return;
+        }
+        
+        try {
+            let data;
+            
+            if (provider === SYNC_PROVIDER_FIREBASE) {
+                data = await loadFromFirebase();
+            } else if (provider === SYNC_PROVIDER_SUPABASE) {
+                data = await loadFromSupabase();
+            }
+            
+            if (data) {
+                loadDataIntoLocalStorage(data);
+                showNotification('Data loaded from cloud!', 'success');
+                
+                if (typeof renderCategories === 'function') renderCategories();
+                if (typeof displayLinks === 'function') displayLinks();
+                if (document.getElementById('categoryPageView').style.display !== 'none') {
+                    renderSuppliers();
+                }
+            }
+        } catch (error) {
+            console.error('Load error:', error);
+            showNotification('Failed to load from cloud', 'error');
+        }
+    }
+    
+    async function syncToFirebase(data) {
+        const config = localStorage.getItem('firebase_config');
+        if (!config) {
+            showNotification('Firebase config not found', 'error');
+            return;
+        }
+        
+        localStorage.setItem('firebase_backup', JSON.stringify(data));
+        return true;
+    }
+    
+    async function loadFromFirebase() {
+        const backup = localStorage.getItem('firebase_backup');
+        if (backup) {
+            return JSON.parse(backup);
+        }
+        return null;
+    }
+    
+    async function syncToSupabase(data) {
+        const url = localStorage.getItem('supabase_url');
+        const key = localStorage.getItem('supabase_key');
+        
+        if (!url || !key) {
+            showNotification('Supabase config not found', 'error');
+            return;
+        }
+        
+        localStorage.setItem('supabase_backup', JSON.stringify(data));
+        return true;
+    }
+    
+    async function loadFromSupabase() {
+        const backup = localStorage.getItem('supabase_backup');
+        if (backup) {
+            return JSON.parse(backup);
+        }
+        return null;
+    }
+
     function forgotPasswordSimple() {
         const username = prompt("Enter your username:").toUpperCase();
         if (!username) return;
@@ -1243,7 +1483,7 @@
     }
 
     function changePassword() {
-        const currentUser = localStorage.getItem('logged_user');
+        const currentUser = tabSessionData.loggedUser;
         if (!currentUser) {
             alert("You must be logged in to change password.");
             return;
@@ -1319,39 +1559,12 @@
         return userAccounts.find(u => u.username === username.toUpperCase());
     }
 
-    // Updated permission system based on hierarchy
     function hasPermission(username, permission) {
         const user = getUser(username);
         if (!user || !user.enabled) return false;
         
-        // SUPER_ADMIN has all permissions
-        if (user.role === USER_ROLES.SUPER_ADMIN) return true;
+        if (user.role === USER_ROLES.ADMIN) return true;
         
-        // ADMIN permissions
-        if (user.role === USER_ROLES.ADMIN) {
-            const adminPermissions = [
-                'add_category',
-                'edit_category',
-                'add_supplier',
-                'edit_supplier',
-                'view_suppliers',
-                'view_categories',
-                'view_logs',
-                'add_link',
-                'edit_link',
-                'view_users',
-                'add_staff_user',
-                'edit_user',
-                'toggle_user_status',
-                'view_sessions',
-                'search_suppliers',
-                'search_categories',
-                'bypass_lock_time'
-            ];
-            return adminPermissions.includes(permission);
-        }
-        
-        // STAFF permissions
         if (user.role === USER_ROLES.STAFF) {
             const staffPermissions = [
                 'add_category',
@@ -1360,11 +1573,11 @@
                 'edit_supplier',
                 'view_suppliers',
                 'view_categories',
-                'view_users',
+                'export_data',
+                'import_data',
+                'view_logs',
                 'add_link',
-                'view_sessions',
-                'search_suppliers',
-                'search_categories'
+                'edit_link'
             ];
             return staffPermissions.includes(permission);
         }
@@ -1373,15 +1586,11 @@
     }
 
     function getCurrentUserRole() {
-        const currentUser = localStorage.getItem('logged_user');
+        const currentUser = tabSessionData.loggedUser;
         if (!currentUser) return null;
         
         const user = getUser(currentUser);
         return user ? user.role : null;
-    }
-
-    function isCurrentUserSuperAdmin() {
-        return getCurrentUserRole() === USER_ROLES.SUPER_ADMIN;
     }
 
     function isCurrentUserAdmin() {
@@ -1392,90 +1601,28 @@
         return getCurrentUserRole() === USER_ROLES.STAFF;
     }
 
-    function canWorkAfterLockTime(username) {
-        const user = getUser(username);
-        if (!user) return false;
-        
-        // SUPER_ADMIN and ADMIN can work after lock time
-        return user.role === USER_ROLES.SUPER_ADMIN || user.role === USER_ROLES.ADMIN;
-    }
-
-    function getActiveSessions() {
-        return JSON.parse(localStorage.getItem(SESSION_KEY)) || {};
-    }
-    
-    function updateActiveSession(username, sessionId = null) {
-        const sessions = getActiveSessions();
-        const sessionIdToUse = sessionId || generateSessionId();
-        
-        sessions[username] = {
-            sessionId: sessionIdToUse,
-            lastActive: Date.now(),
-            ip: 'local',
-            role: getUser(username)?.role || 'unknown'
-        };
-        
-        localStorage.setItem(SESSION_KEY, JSON.stringify(sessions));
-        return sessionIdToUse;
-    }
-    
-    function removeActiveSession(username) {
-        const sessions = getActiveSessions();
-        delete sessions[username];
-        localStorage.setItem(SESSION_KEY, JSON.stringify(sessions));
-    }
-    
-    function generateSessionId() {
-        return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
-    
-    function isSessionValid(username) {
-        const sessions = getActiveSessions();
-        const session = sessions[username];
-        if (!session) return true;
-        
-        const sessionAge = Date.now() - session.lastActive;
-        const MAX_SESSION_AGE = 24 * 60 * 60 * 1000;
-        
-        if (sessionAge > MAX_SESSION_AGE) {
-            removeActiveSession(username);
-            return true;
-        }
-        
-        return false;
-    }
-
-    // FIXED: This function was incorrectly checking lock time
     function isSystemLocked() {
-        const currentUser = localStorage.getItem('logged_user');
-        
-        // If no user is logged in, show login screen but don't lock
-        if (!currentUser) return false;
-        
-        // Check if user can bypass lock time
-        if (canWorkAfterLockTime(currentUser)) return false;
+        const currentUser = tabSessionData.loggedUser;
+        if(currentUser === "JOSEPH") return false;
         
         const now = new Date();
         const currentTotal = (now.getHours() * 60) + now.getMinutes();
         const lockTotal = (LOCK_TIME.hr * 60) + LOCK_TIME.min;
         const openTotal = (OPEN_TIME.hr * 60) + OPEN_TIME.min;
 
-        // System is locked if current time is after lock time OR before open time
-        // But only for users who cannot bypass
         return (currentTotal >= lockTotal || currentTotal < openTotal);
     }
 
     function updateDashboardStatus() {
         const now = new Date();
         const isLocked = isSystemLocked();
-        const currentUser = localStorage.getItem('logged_user');
         const dot = document.getElementById('statusDot');
         const txt = document.getElementById('statusText');
         const clock = document.getElementById('liveClock');
 
         clock.innerText = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-        if (isLocked && currentUser && !canWorkAfterLockTime(currentUser)) {
+        if (isLocked) {
             dot.className = 'status-offline';
             txt.innerText = "SYSTEM SECURED (LOCKED)";
             txt.style.color = "var(--danger-red)";
@@ -1489,19 +1636,18 @@
     function updateCountdown() {
         const now = new Date();
         const isLocked = isSystemLocked();
-        const currentUser = localStorage.getItem('logged_user');
+        const currentUser = tabSessionData.loggedUser;
         
         const lockUI = document.getElementById('lockStatusContent');
         const loginUI = document.getElementById('loginFieldsContent');
         const lockMessage = document.getElementById('lockMessage');
 
-        if (isLocked && currentUser && !canWorkAfterLockTime(currentUser)) {
+        if (isLocked) {
             lockUI.style.display = 'block';
             loginUI.style.display = 'none';
 
-            // Check if user can bypass lock time
-            if (currentUser && canWorkAfterLockTime(currentUser)) {
-                lockMessage.innerHTML = "<strong>🔓 LOCK BYPASS:</strong> You can bypass system lock due to your role.";
+            if (currentUser === "JOSEPH") {
+                lockMessage.innerHTML = "<strong>🔓 ADMIN OVERRIDE:</strong> You can bypass system lock.";
                 lockMessage.style.color = "var(--primary-green)";
             } else {
                 lockMessage.innerHTML = "System access is restricted to authorized personnel during operational hours.";
@@ -1531,7 +1677,7 @@
 
     function recordAction(action) {
         let logs = JSON.parse(localStorage.getItem('z_audit_logs')) || [];
-        const user = localStorage.getItem('logged_user') || 'System';
+        const user = tabSessionData.loggedUser || 'System';
         const entry = {
             user: user,
             action: action,
@@ -1545,7 +1691,7 @@
     function recordSupplierEdit(supplierIndex, action) {
         let editHistory = JSON.parse(localStorage.getItem('z_supplier_edit_history')) || {};
         const supplierId = supplierIndex;
-        const user = localStorage.getItem('logged_user') || 'System';
+        const user = tabSessionData.loggedUser || 'System';
         const timestamp = new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
         
         if (!editHistory[supplierId]) {
@@ -1671,11 +1817,12 @@
     }
 
     function handleLogin() {
-        // Check if system is locked for this user
-        const usernameInput = document.getElementById('userIn').value.toUpperCase().trim();
-        if (isSystemLocked() && !canWorkAfterLockTime(usernameInput)) {
-            alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
-            return;
+        if (isSystemLocked()) {
+            const currentUser = document.getElementById('userIn').value.toUpperCase().trim();
+            if (currentUser !== "JOSEPH") {
+                alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
+                return;
+            }
         }
 
         const u = document.getElementById('userIn').value.toUpperCase().trim();
@@ -1697,10 +1844,11 @@
             return;
         }
 
-        if (!isSessionValid(u)) {
-            alert("User is already logged in on another device. Please logout from other devices first.");
-            return;
-        }
+        // CHANGED: Remove session validation to allow multiple logins
+        // if (!isSessionValid(u)) {
+        //     alert("User is already logged in on another device. Please logout from other devices first.");
+        //     return;
+        // }
 
         if (isAccountLocked(u)) {
             const mins = getRemainingLockTime(u);
@@ -1712,38 +1860,24 @@
             clearLoginMeta(u);
 
             user.lastLogin = new Date().toISOString();
-            user.lastActive = new Date().toISOString();
             saveUserData();
 
-            const sessionId = updateActiveSession(u);
-            localStorage.setItem('logged_user', u);
-            localStorage.setItem('current_session', sessionId);
-            localStorage.setItem('last_login', new Date().toDateString());
+            // CHANGED: Update tab session instead of global session
+            const sessionId = updateTabSession(u);
             document.getElementById('loginOverlay').style.display = 'none';
 
             updateGreeting();
             updateUserDisplay();
             recordAction("Logged into the system");
             
-            // Show/hide buttons based on role
-            if (isCurrentUserSuperAdmin()) {
+            if (isCurrentUserAdmin()) {
                 document.getElementById('userMgmtBtn').style.display = 'inline-block';
                 document.getElementById('sessionsBtn').style.display = 'inline-block';
                 document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-                document.getElementById('exportBackupBtn').style.display = 'inline-block';
-                document.getElementById('importMergeBtn').style.display = 'inline-block';
-            } else if (isCurrentUserAdmin()) {
-                document.getElementById('userMgmtBtn').style.display = 'inline-block';
-                document.getElementById('sessionsBtn').style.display = 'inline-block';
-                document.getElementById('syncSettingsBtn').style.display = 'none';
-                document.getElementById('exportBackupBtn').style.display = 'none';
-                document.getElementById('importMergeBtn').style.display = 'none';
-            } else if (isCurrentUserStaff()) {
+            } else {
                 document.getElementById('userMgmtBtn').style.display = 'none';
-                document.getElementById('sessionsBtn').style.display = 'inline-block';
-                document.getElementById('syncSettingsBtn').style.display = 'none';
-                document.getElementById('exportBackupBtn').style.display = 'none';
-                document.getElementById('importMergeBtn').style.display = 'none';
+                document.getElementById('sessionsBtn').style.display = 'none';
+                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
             }
             
             setTimeout(() => {
@@ -1781,26 +1915,24 @@
     }
 
     function logout() {
-        const currentUser = localStorage.getItem('logged_user');
+        const currentUser = tabSessionData.loggedUser;
         if (currentUser) {
-            removeActiveSession(currentUser);
+            // CHANGED: Remove tab session only
+            removeTabSession();
             recordAction("Logged out");
         }
-        localStorage.removeItem('logged_user');
-        localStorage.removeItem('current_session');
-        localStorage.removeItem('last_login');
         location.reload();
     }
 
     function updateGreeting() {
         const hour = new Date().getHours();
-        const user = localStorage.getItem('logged_user') || 'User';
+        const user = tabSessionData.loggedUser || 'User';
         const msg = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
         document.getElementById('greeting').innerHTML = `<i>${msg}, ${user}</i>`;
     }
 
     function updateUserDisplay() {
-        const currentUser = localStorage.getItem('logged_user');
+        const currentUser = tabSessionData.loggedUser;
         const userInfo = document.getElementById('currentUserDisplay');
         const roleBadge = document.getElementById('userRoleBadge');
         
@@ -1809,14 +1941,8 @@
             userInfo.textContent = currentUser;
             
             if (user) {
-                roleBadge.textContent = user.role.toUpperCase().replace('_', ' ');
-                if (user.role === USER_ROLES.SUPER_ADMIN) {
-                    roleBadge.className = 'role-badge role-super-admin';
-                } else if (user.role === USER_ROLES.ADMIN) {
-                    roleBadge.className = 'role-badge role-admin';
-                } else {
-                    roleBadge.className = 'role-badge role-staff';
-                }
+                roleBadge.textContent = user.role.toUpperCase();
+                roleBadge.className = user.role === USER_ROLES.ADMIN ? 'role-badge role-admin' : 'role-badge role-staff';
                 roleBadge.style.display = 'inline-block';
             }
         } else {
@@ -1825,28 +1951,44 @@
         }
     }
 
+    function autoSyncToCloud() {
+        const provider = localStorage.getItem('sync_provider');
+        if (provider && provider !== SYNC_PROVIDER_MANUAL) {
+            clearTimeout(window.syncTimeout);
+            window.syncTimeout = setTimeout(() => {
+                manualSyncToCloud();
+            }, 3000);
+        }
+    }
+
     function saveSupplierData() {
         localStorage.setItem('z_suppliers', JSON.stringify(suppliers));
+        autoSyncToCloud();
     }
 
     function saveCategoryData() {
         localStorage.setItem('z_categories', JSON.stringify(categories));
+        autoSyncToCloud();
     }
 
     function saveLinkData() {
         localStorage.setItem('zamcom_links', JSON.stringify(links));
+        autoSyncToCloud();
     }
 
     function saveUserData() {
         localStorage.setItem('z_user_accounts', JSON.stringify(userAccounts));
+        autoSyncToCloud();
     }
 
     function saveCertificateData() {
         localStorage.setItem('z_certificates', JSON.stringify(certificates));
+        autoSyncToCloud();
     }
 
     function saveSupplierImagesData() {
         localStorage.setItem('z_supplier_images', JSON.stringify(supplierImages));
+        autoSyncToCloud();
     }
 
     function filterEverything() {
@@ -1905,58 +2047,30 @@
     }
 
     function checkDailySession() {
-        const lastLogin = localStorage.getItem('last_login');
-        const today = new Date().toDateString();
-        const currentUser = localStorage.getItem('logged_user');
-        const currentSession = localStorage.getItem('current_session');
+        const currentUser = tabSessionData.loggedUser;
 
         updateCountdown();
 
-        if (currentUser) {
-            const sessions = getActiveSessions();
-            const userSession = sessions[currentUser];
-            if (!userSession || userSession.sessionId !== currentSession) {
-                localStorage.removeItem('logged_user');
-                localStorage.removeItem('current_session');
-                localStorage.removeItem('last_login');
-                alert("Your session has expired or you logged in from another device.");
+        if (isSystemLocked()) {
+            if (currentUser !== "JOSEPH") {
+                removeTabSession();
                 document.getElementById('loginOverlay').style.display = 'flex';
                 return;
             }
         }
 
-        // FIXED: Only log out if system is locked AND user cannot bypass
-        if (isSystemLocked() && currentUser && !canWorkAfterLockTime(currentUser)) {
-            localStorage.removeItem('logged_user');
-            localStorage.removeItem('current_session');
-            localStorage.removeItem('last_login');
-            document.getElementById('loginOverlay').style.display = 'flex';
-            return;
-        }
-
-        if (currentUser && lastLogin === today) {
+        if (currentUser) {
             updateGreeting();
             updateUserDisplay();
             
-            // Show/hide buttons based on role
-            if (isCurrentUserSuperAdmin()) {
+            if(isCurrentUserAdmin()) {
                 document.getElementById('userMgmtBtn').style.display = 'inline-block';
                 document.getElementById('sessionsBtn').style.display = 'inline-block';
                 document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-                document.getElementById('exportBackupBtn').style.display = 'inline-block';
-                document.getElementById('importMergeBtn').style.display = 'inline-block';
-            } else if (isCurrentUserAdmin()) {
-                document.getElementById('userMgmtBtn').style.display = 'inline-block';
-                document.getElementById('sessionsBtn').style.display = 'inline-block';
-                document.getElementById('syncSettingsBtn').style.display = 'none';
-                document.getElementById('exportBackupBtn').style.display = 'none';
-                document.getElementById('importMergeBtn').style.display = 'none';
-            } else if (isCurrentUserStaff()) {
+            } else {
                 document.getElementById('userMgmtBtn').style.display = 'none';
-                document.getElementById('sessionsBtn').style.display = 'inline-block';
-                document.getElementById('syncSettingsBtn').style.display = 'none';
-                document.getElementById('exportBackupBtn').style.display = 'none';
-                document.getElementById('importMergeBtn').style.display = 'none';
+                document.getElementById('sessionsBtn').style.display = 'none';
+                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
             }
             
             const user = getUser(currentUser);
@@ -1985,10 +2099,6 @@
     }
 
     function executeAutoBackup(dateString) {
-        // Only SUPER_ADMIN (JOSEPH) gets auto backup
-        const currentUser = localStorage.getItem('logged_user');
-        if (!isCurrentUserSuperAdmin()) return;
-        
         const data = { 
             categories: categories, 
             suppliers: suppliers,
@@ -2021,7 +2131,7 @@
         const todayDate = now.toDateString();
         const lastAutoDate = localStorage.getItem('z_last_auto_date');
         
-        if (now.getHours() >= 16 && lastAutoDate !== todayDate && isCurrentUserSuperAdmin()) {
+        if (now.getHours() >= 16 && lastAutoDate !== todayDate) {
             console.log("Missed backup detected. Triggering now...");
             executeAutoBackup(todayDate);
         }
@@ -2060,27 +2170,17 @@
         const grid = document.getElementById('categoryGrid');
         grid.innerHTML = categories.map(cat => {
             const count = suppliers.filter(s => s.category === cat).length;
-            const currentUser = localStorage.getItem('logged_user');
-            
-            let editButton = '';
-            let deleteButton = '';
-            
-            if (hasPermission(currentUser, 'edit_category')) {
-                editButton = `<button class="btn-edit" onclick="event.stopPropagation(); editCategory('${cat}')">Edit</button>`;
-            }
-            
-            // Only SUPER_ADMIN and ADMIN can delete categories
-            if ((isCurrentUserSuperAdmin() || isCurrentUserAdmin()) && hasPermission(currentUser, 'edit_category')) {
-                deleteButton = `<button class="btn-del" onclick="event.stopPropagation(); deleteCategory('${cat}')">Delete</button>`;
-            }
+            const currentUser = tabSessionData.loggedUser;
             
             return `
                 <div class="grid-item" onclick="showView('detail', '${cat}')">
                     <img src="./images/mainlogo3.png" alt="${cat}">
                     <span>${cat} (${count})</span>
                     <div style="background:white; padding-bottom:10px; text-align:center; display:flex; justify-content:center; gap:5px;">
-                        ${editButton}
-                        ${deleteButton}
+                        ${hasPermission(currentUser, 'edit_category') ? 
+                            `<button class="btn-edit" onclick="event.stopPropagation(); editCategory('${cat}')">Edit</button>` : ''}
+                        ${hasPermission(currentUser, 'delete_category') && isCurrentUserAdmin() ? 
+                            `<button class="btn-del" onclick="event.stopPropagation(); deleteCategory('${cat}')">Delete</button>` : ''}
                     </div>
                 </div>
             `;
@@ -2215,7 +2315,7 @@
                 return dateB - dateA;
             });
             
-        const currentUser = localStorage.getItem('logged_user');
+        const currentUser = tabSessionData.loggedUser;
 
         const banner = document.getElementById('complianceBanner');
         const currentYear = new Date().getFullYear();
@@ -2259,17 +2359,9 @@
             const imagesPreview = createImagePreview(realIndex);
             const ratingDisplay = createRatingDisplayHTML(rating);
             
-            let editButton = '';
-            let deleteButton = '';
-            
-            if (hasPermission(currentUser, 'edit_supplier')) {
-                editButton = `<button class="btn-edit" onclick="editSupplier(${realIndex})">Edit</button>`;
-            }
-            
-            // Only SUPER_ADMIN can delete suppliers
-            if (isCurrentUserSuperAdmin()) {
-                deleteButton = `<button class="btn-del" onclick="deleteSupplier(${realIndex})">Delete</button>`;
-            }
+            const deleteButton = isCurrentUserAdmin() ? 
+                `<button class="btn-del" onclick="deleteSupplier(${realIndex})">Delete</button>` : 
+                '';
 
             return `
                 <tr>
@@ -2298,7 +2390,8 @@
                         </div>
                     </td>
                     <td style="text-align: center;">
-                        ${editButton}
+                        ${hasPermission(currentUser, 'edit_supplier') ? 
+                            `<button class="btn-edit" onclick="editSupplier(${realIndex})">Edit</button>` : ''}
                         ${deleteButton}
                     </td>
                 </tr>
@@ -2307,7 +2400,7 @@
     }
 
     function editSupplier(index) { 
-        if (!hasPermission(localStorage.getItem('logged_user'), 'edit_supplier')) {
+        if (!hasPermission(tabSessionData.loggedUser, 'edit_supplier')) {
             alert("You don't have permission to edit suppliers!");
             return;
         }
@@ -2315,8 +2408,8 @@
     }
 
     function deleteSupplier(index) {
-        if (!isCurrentUserSuperAdmin()) {
-            alert("Only super administrators can delete suppliers!");
+        if (!isCurrentUserAdmin()) {
+            alert("Only administrators can delete suppliers!");
             return;
         }
         
@@ -2331,7 +2424,7 @@
     }
 
     function editCategory(oldName) {
-        if (!hasPermission(localStorage.getItem('logged_user'), 'edit_category')) {
+        if (!hasPermission(tabSessionData.loggedUser, 'edit_category')) {
             alert("You don't have permission to edit categories!");
             return;
         }
@@ -2357,7 +2450,7 @@
     }
 
     function deleteCategory(cat) {
-        if (!isCurrentUserSuperAdmin() && !isCurrentUserAdmin()) {
+        if (!isCurrentUserAdmin()) {
             alert("Only administrators can delete categories!");
             return;
         }
@@ -2390,7 +2483,7 @@
             data: fileData,
             name: fileName,
             uploaded: new Date().toISOString(),
-            uploadedBy: localStorage.getItem('logged_user') || 'System'
+            uploadedBy: tabSessionData.loggedUser || 'System'
         };
         
         saveCertificateData();
@@ -2521,7 +2614,7 @@
                 size: file.size,
                 type: file.type,
                 uploaded: new Date().toISOString(),
-                uploadedBy: localStorage.getItem('logged_user') || 'System'
+                uploadedBy: tabSessionData.loggedUser || 'System'
             });
         }
         
@@ -2748,7 +2841,7 @@
     }
 
     function openModal(type, editIndex = null) {
-        const currentUser = localStorage.getItem('logged_user');
+        const currentUser = tabSessionData.loggedUser;
         
         if (type === 'category' && !hasPermission(currentUser, 'add_category')) {
             alert("You don't have permission to add categories!");
@@ -2871,7 +2964,7 @@
             currentRatingValue = s.rating || 0;
 
             saveBtn.onclick = () => {
-                const currentUser = localStorage.getItem('logged_user') || 'System';
+                const currentUser = tabSessionData.loggedUser || 'System';
                 const timestamp = new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
                 const currentYear = new Date().getFullYear();
 
@@ -2932,132 +3025,38 @@
         document.getElementById('modalSaveBtn').style.display = 'none';
         
         const sessions = getActiveSessions();
-        const currentUser = localStorage.getItem('logged_user');
-        const currentUserObj = getUser(currentUser);
         
         fields.innerHTML = `
             <div style="margin-bottom: 20px;">
                 <h4 style="margin: 10px 0;">Current Users</h4>
                 <div style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 5px;">
                     ${userAccounts.map(user => {
-                        const isCurrentUser = currentUser === user.username;
-                        const isLoggedIn = sessions[user.username];
+                        const isCurrentUser = tabSessionData.loggedUser === user.username;
                         const lastLogin = user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never';
-                        const lastActive = user.lastActive ? new Date(user.lastActive).toLocaleString() : 'Never';
-                        
-                        // Determine what information to show based on viewer's role
-                        let userInfoHTML = '';
-                        
-                        if (isCurrentUserSuperAdmin()) {
-                            // SUPER_ADMIN sees all information
-                            userInfoHTML = `
-                                <div style="font-size: 10px; color: #666; margin-top: 5px;">
-                                    <div>Email: ${user.email || 'Not set'}</div>
-                                    <div>Phone: ${user.phone || 'Not set'}</div>
-                                    <div>NRC: ${user.nrc || 'Not set'}</div>
-                                    <div>Institution: ${user.institution || 'Not set'}</div>
-                                    <div>Position: ${user.position || 'Not set'}</div>
-                                    <div>Password: <span style="font-family: monospace;">${user.password}</span></div>
-                                    <div>Last Login: ${lastLogin}</div>
-                                    <div>Last Active: ${lastActive}</div>
-                                </div>
-                            `;
-                        } else if (isCurrentUserAdmin()) {
-                            // ADMIN sees limited information
-                            if (user.role === USER_ROLES.SUPER_ADMIN) {
-                                // For SUPER_ADMIN, only show name and phone
-                                userInfoHTML = `
-                                    <div style="font-size: 10px; color: #666; margin-top: 5px;">
-                                        <div>Phone: ${user.phone || 'Not set'}</div>
-                                        <div class="sensitive-data">NRC: Restricted</div>
-                                        <div class="sensitive-data">Email: Restricted</div>
-                                        <div class="sensitive-data">Password: Restricted</div>
-                                        <div>Last Login: ${lastLogin}</div>
-                                    </div>
-                                `;
-                            } else {
-                                // For other users, show all except sensitive data
-                                userInfoHTML = `
-                                    <div style="font-size: 10px; color: #666; margin-top: 5px;">
-                                        <div>Email: ${user.email || 'Not set'}</div>
-                                        <div>Phone: ${user.phone || 'Not set'}</div>
-                                        <div>Institution: ${user.institution || 'Not set'}</div>
-                                        <div>Position: ${user.position || 'Not set'}</div>
-                                        <div class="sensitive-data">NRC: Restricted</div>
-                                        <div class="sensitive-data">Password: Restricted</div>
-                                        <div>Last Login: ${lastLogin}</div>
-                                    </div>
-                                `;
-                            }
-                        } else if (isCurrentUserStaff()) {
-                            // STAFF sees very limited information
-                            if (user.role === USER_ROLES.SUPER_ADMIN) {
-                                // For SUPER_ADMIN, only show name and phone
-                                userInfoHTML = `
-                                    <div style="font-size: 10px; color: #666; margin-top: 5px;">
-                                        <div>Phone: ${user.phone || 'Not set'}</div>
-                                        <div class="sensitive-data">All other details restricted</div>
-                                    </div>
-                                `;
-                            } else {
-                                // For ADMIN and other STAFF, show basic info
-                                userInfoHTML = `
-                                    <div style="font-size: 10px; color: #666; margin-top: 5px;">
-                                        <div>Institution: ${user.institution || 'Not set'}</div>
-                                        <div>Position: ${user.position || 'Not set'}</div>
-                                        <div class="sensitive-data">Contact details restricted</div>
-                                        <div class="sensitive-data">Password: Restricted</div>
-                                    </div>
-                                `;
-                            }
-                        }
-                        
-                        let actionButtons = '';
-                        if (isCurrentUserSuperAdmin()) {
-                            // SUPER_ADMIN can do everything
-                            actionButtons = `
-                                ${user.username !== "JOSEPH" ? `
-                                    <button class="btn-edit" style="margin: 2px;" onclick="editUserFull('${user.username}')">Edit</button>
-                                    <button class="btn-del" style="margin: 2px;" onclick="toggleUserStatus('${user.username}')">
-                                        ${user.enabled ? 'Disable' : 'Enable'}
-                                    </button>
-                                    <button class="btn-del" style="margin: 2px;" onclick="deleteUser('${user.username}')">Remove</button>
-                                    <button class="btn" style="background: #9b59b6; padding: 2px 6px; margin: 2px;" onclick="changeUserRole('${user.username}')">Change Role</button>
-                                ` : ''}
-                                ${isLoggedIn && !isCurrentUser ? `
-                                    <button class="btn" style="background: #9b59b6; padding: 2px 6px; margin: 2px;" onclick="forceLogoutUser('${user.username}')">Sign Out</button>
-                                ` : ''}
-                            `;
-                        } else if (isCurrentUserAdmin()) {
-                            // ADMIN can manage STAFF users only
-                            if (user.role === USER_ROLES.STAFF) {
-                                actionButtons = `
-                                    <button class="btn-edit" style="margin: 2px;" onclick="editUserContact('${user.username}')">Edit Contact</button>
-                                    <button class="btn-del" style="margin: 2px;" onclick="toggleUserStatus('${user.username}')">
-                                        ${user.enabled ? 'Disable' : 'Enable'}
-                                    </button>
-                                    ${isLoggedIn && !isCurrentUser ? `
-                                        <button class="btn" style="background: #9b59b6; padding: 2px 6px; margin: 2px;" onclick="forceLogoutUser('${user.username}')">Sign Out</button>
-                                    ` : ''}
-                                `;
-                            }
-                        }
-                        // STAFF users don't get any action buttons
-                        
                         return `
                             <div style="padding: 10px; border-bottom: 1px solid #f5f5f5; display: flex; justify-content: space-between; align-items: center;">
                                 <div style="flex: 1;">
-                                    <span class="user-status ${isLoggedIn ? 'pulse-online' : 'pulse-offline'}"></span>
+                                    <span class="user-status ${isCurrentUser ? 'status-online' : 'status-offline'}"></span>
                                     <strong>${user.username}</strong>
-                                    <span class="role-badge ${user.role === USER_ROLES.SUPER_ADMIN ? 'role-super-admin' : user.role === USER_ROLES.ADMIN ? 'role-admin' : 'role-staff'}">
-                                        ${user.role.toUpperCase().replace('_', ' ')}
+                                    <span class="role-badge ${user.role === USER_ROLES.ADMIN ? 'role-admin' : 'role-staff'}">
+                                        ${user.role.toUpperCase()}
                                     </span>
                                     ${isCurrentUser ? '<span style="color: #27ae60; font-size: 10px;">(You)</span>' : ''}
-                                    ${!user.enabled ? '<span style="color: #e74c3c; font-size: 10px; margin-left: 5px;">(Disabled)</span>' : ''}
-                                    ${userInfoHTML}
+                                    <div style="font-size: 10px; color: #666; margin-top: 5px;">
+                                        <div>Email: ${user.email || 'Not set'}</div>
+                                        <div>Phone: ${user.phone || 'Not set'}</div>
+                                        <div>Last Login: ${lastLogin}</div>
+                                        <div>Password: <span style="font-family: monospace;">${user.password}</span></div>
+                                    </div>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 5px;">
-                                    ${actionButtons}
+                                    ${user.username !== "JOSEPH" ? `
+                                        <button class="btn-edit" style="margin: 2px;" onclick="editUserContact('${user.username}')">Edit Contact</button>
+                                        <button class="btn-del" style="margin: 2px;" onclick="toggleUserStatus('${user.username}')">
+                                            ${user.enabled ? 'Disable' : 'Enable'}
+                                        </button>
+                                        <button class="btn-del" style="margin: 2px;" onclick="deleteUser('${user.username}')">Remove</button>
+                                    ` : ''}
                                 </div>
                             </div>
                         `;
@@ -3065,65 +3064,30 @@
                 </div>
             </div>
             
-            ${(isCurrentUserSuperAdmin() || isCurrentUserAdmin()) ? `
             <div style="margin-top: 20px;">
                 <h4 style="margin: 10px 0;">Add New User</h4>
                 <input type="text" id="newUsername" placeholder="Username" style="width: 100%; padding: 8px; margin-bottom: 5px;">
                 <input type="password" id="newPassword" placeholder="Password" style="width: 100%; padding: 8px; margin-bottom: 5px;">
                 <div class="user-contact-fields">
-                    <input type="text" id="newUserNrc" placeholder="NRC Number" style="width: 100%;">
                     <input type="email" id="newUserEmail" placeholder="Email Address" style="width: 100%;">
                     <input type="text" id="newUserPhone" placeholder="Phone Number" style="width: 100%;">
-                    <input type="text" id="newUserInstitution" placeholder="Institution" style="width: 100%;">
-                    <input type="text" id="newUserPosition" placeholder="Position" style="width: 100%;">
-                    ${isCurrentUserSuperAdmin() ? `
-                        <select id="newUserRole" style="width: 100%; padding: 8px; margin-top: 5px;">
-                            <option value="${USER_ROLES.STAFF}">Staff</option>
-                            <option value="${USER_ROLES.ADMIN}">Admin</option>
-                            <option value="${USER_ROLES.SUPER_ADMIN}">Super Admin</option>
-                        </select>
-                    ` : `
-                        <select id="newUserRole" style="width: 100%; padding: 8px; margin-top: 5px;">
-                            <option value="${USER_ROLES.STAFF}">Staff</option>
-                        </select>
-                    `}
                 </div>
+                <select id="newUserRole" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+                    <option value="${USER_ROLES.STAFF}">Staff</option>
+                    <option value="${USER_ROLES.ADMIN}">Admin</option>
+                </select>
                 <button class="btn btn-add" style="width: 100%;" onclick="addNewUser()">Add User</button>
             </div>
-            ` : ''}
-            
-            ${isCurrentUserSuperAdmin() ? `
-            <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px;">
-                <h4 style="margin: 10px 0; color: #856404;">Audit Log Management</h4>
-                <p style="font-size: 12px; color: #856404; margin-bottom: 10px;">
-                    <strong>Warning:</strong> These actions cannot be undone.
-                </p>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn-del" style="flex: 1;" onclick="deleteAllAuditLogs()">Delete All Audit Logs</button>
-                    <button class="btn-del" style="flex: 1; background: #ff9800;" onclick="deleteLast50AuditLogs()">Delete Last 50 Logs</button>
-                </div>
-            </div>
-            ` : ''}
         `;
         
         document.getElementById('modalOverlay').style.display = 'flex';
     }
 
     function addNewUser() {
-        const currentUser = localStorage.getItem('logged_user');
-        
-        if (!hasPermission(currentUser, 'add_staff_user') && !isCurrentUserSuperAdmin()) {
-            alert("You don't have permission to add users!");
-            return;
-        }
-        
         const username = document.getElementById('newUsername').value.toUpperCase().trim();
         const password = document.getElementById('newPassword').value;
-        const nrc = document.getElementById('newUserNrc').value.trim();
         const email = document.getElementById('newUserEmail').value.trim();
         const phone = document.getElementById('newUserPhone').value.trim();
-        const institution = document.getElementById('newUserInstitution').value.trim();
-        const position = document.getElementById('newUserPosition').value.trim();
         const role = document.getElementById('newUserRole').value;
         
         if (!username || !password) {
@@ -3136,88 +3100,24 @@
             return;
         }
         
-        // Check role permissions
-        if (role === USER_ROLES.SUPER_ADMIN && !isCurrentUserSuperAdmin()) {
-            alert("Only Super Admin can create Super Admin users!");
-            return;
-        }
-        
-        if (role === USER_ROLES.ADMIN && !isCurrentUserSuperAdmin()) {
-            alert("Only Super Admin can create Admin users!");
-            return;
-        }
-        
-        const newUser = {
+        userAccounts.push({
             username: username,
             password: password,
             role: role,
             enabled: true,
             lastLogin: null,
-            lastActive: null,
             email: email,
-            phone: phone,
-            nrc: nrc,
-            institution: institution,
-            position: position
-        };
+            phone: phone
+        });
         
-        userAccounts.push(newUser);
         saveUserData();
         recordAction(`Added new ${role} user: ${username}`);
         manageUsersModal();
     }
 
-    function editUserFull(username) {
-        if (!isCurrentUserSuperAdmin()) {
-            alert("Only Super Admin can edit full user details!");
-            return;
-        }
-        
-        const user = getUser(username);
-        if (!user) return;
-        
-        const newEmail = prompt(`Enter new email address for ${username}:`, user.email || '');
-        if (newEmail !== null) {
-            const newPhone = prompt(`Enter new phone number for ${username}:`, user.phone || '');
-            if (newPhone !== null) {
-                const newNrc = prompt(`Enter new NRC number for ${username}:`, user.nrc || '');
-                if (newNrc !== null) {
-                    const newInstitution = prompt(`Enter new institution for ${username}:`, user.institution || '');
-                    if (newInstitution !== null) {
-                        const newPosition = prompt(`Enter new position for ${username}:`, user.position || '');
-                        if (newPosition !== null) {
-                            user.email = newEmail;
-                            user.phone = newPhone;
-                            user.nrc = newNrc;
-                            user.institution = newInstitution;
-                            user.position = newPosition;
-                            saveUserData();
-                            recordAction(`Updated full details for user: ${username}`);
-                            alert("User information updated successfully!");
-                            manageUsersModal();
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     function editUserContact(username) {
-        const currentUser = localStorage.getItem('logged_user');
-        
-        if (!hasPermission(currentUser, 'edit_user') && !isCurrentUserSuperAdmin()) {
-            alert("You don't have permission to edit user details!");
-            return;
-        }
-        
         const user = getUser(username);
         if (!user) return;
-        
-        // ADMIN can only edit STAFF users
-        if (isCurrentUserAdmin() && user.role !== USER_ROLES.STAFF) {
-            alert("Admin can only edit Staff user details!");
-            return;
-        }
         
         const newEmail = prompt(`Enter new email address for ${username}:`, user.email || '');
         if (newEmail !== null) {
@@ -3233,132 +3133,36 @@
         }
     }
 
-    function changeUserRole(username) {
-        if (!isCurrentUserSuperAdmin()) {
-            alert("Only Super Admin can change user roles!");
-            return;
-        }
-        
-        const user = getUser(username);
-        if (!user) return;
-        
-        if (username === "JOSEPH") {
-            alert("Cannot change role of primary Super Admin!");
-            return;
-        }
-        
-        const newRole = prompt(`Enter new role for ${username} (super_admin, admin, staff):`, user.role);
-        if (newRole && [USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.STAFF].includes(newRole)) {
-            user.role = newRole;
-            saveUserData();
-            recordAction(`Changed role for ${username} to ${newRole}`);
-            alert("User role updated successfully!");
-            manageUsersModal();
-        }
-    }
-
     function deleteUser(username) {
-        if (!isCurrentUserSuperAdmin()) {
-            alert("Only Super Admin can delete users!");
-            return;
-        }
-        
         if(username === "JOSEPH") {
-            alert("Cannot delete the primary Super Admin account!");
+            alert("Cannot delete the primary administrator account!");
             return;
         }
         
         if(confirm(`Are you sure you want to delete user ${username}?`)) {
             userAccounts = userAccounts.filter(u => u.username !== username);
             saveUserData();
-            removeActiveSession(username);
             recordAction(`Deleted user: ${username}`);
             manageUsersModal();
         }
     }
 
     function toggleUserStatus(username) {
-        const currentUser = localStorage.getItem('logged_user');
-        
-        if (!hasPermission(currentUser, 'toggle_user_status') && !isCurrentUserSuperAdmin()) {
-            alert("You don't have permission to enable/disable users!");
-            return;
-        }
-        
         if(username === "JOSEPH") {
-            alert("Cannot disable the primary Super Admin account!");
+            alert("Cannot disable the primary administrator account!");
             return;
         }
         
         const user = getUser(username);
-        if (!user) return;
-        
-        // ADMIN can only toggle STAFF users
-        if (isCurrentUserAdmin() && user.role !== USER_ROLES.STAFF) {
-            alert("Admin can only enable/disable Staff users!");
-            return;
-        }
-        
-        user.enabled = !user.enabled;
-        saveUserData();
-        if (!user.enabled) {
-            removeActiveSession(username);
-        }
-        recordAction(`${user.enabled ? 'Enabled' : 'Disabled'} user: ${username}`);
-        manageUsersModal();
-    }
-
-    function deleteAllAuditLogs() {
-        if (!isCurrentUserSuperAdmin()) {
-            alert("Only Super Admin can delete audit logs!");
-            return;
-        }
-        
-        if (confirm("Are you sure you want to delete ALL audit logs? This action cannot be undone.")) {
-            localStorage.setItem('z_audit_logs', JSON.stringify([]));
-            recordAction("Deleted ALL audit logs");
-            alert("All audit logs have been deleted.");
+        if (user) {
+            user.enabled = !user.enabled;
+            saveUserData();
+            recordAction(`${user.enabled ? 'Enabled' : 'Disabled'} user: ${username}`);
             manageUsersModal();
         }
     }
 
-    function deleteLast50AuditLogs() {
-        if (!isCurrentUserSuperAdmin()) {
-            alert("Only Super Admin can delete audit logs!");
-            return;
-        }
-        
-        if (confirm("Are you sure you want to delete the last 50 audit logs?")) {
-            let logs = JSON.parse(localStorage.getItem('z_audit_logs')) || [];
-            if (logs.length > 50) {
-                logs = logs.slice(50);
-            } else {
-                logs = [];
-            }
-            localStorage.setItem('z_audit_logs', JSON.stringify(logs));
-            recordAction("Deleted last 50 audit logs");
-            alert("Last 50 audit logs have been deleted.");
-            manageUsersModal();
-        }
-    }
-
-    function forceLogoutUser(username) {
-        if(confirm(`Force ${username} to logout?`)) {
-            removeActiveSession(username);
-            
-            if (localStorage.getItem('logged_user') === username) {
-                localStorage.removeItem('logged_user');
-                localStorage.removeItem('current_session');
-                localStorage.removeItem('last_login');
-                location.reload();
-            }
-            
-            recordAction(`Forced logout for user: ${username}`);
-            updateSessionsPanel();
-            manageUsersModal();
-        }
-    }
-
+    // CHANGED: Remove force logout function since we allow multiple logins
     function toggleSessionsPanel() {
         const panel = document.getElementById('sessionsPanel');
         if (panel.style.display === 'block') {
@@ -3370,52 +3174,30 @@
     }
 
     function updateSessionsPanel() {
-        const sessions = getActiveSessions();
+        // CHANGED: Show current tab session only
         const container = document.getElementById('activeSessionsList');
         
-        if (Object.keys(sessions).length === 0) {
-            container.innerHTML = '<div style="padding: 10px; text-align: center; color: #888;">No active sessions</div>';
+        if (!tabSessionData.loggedUser) {
+            container.innerHTML = '<div style="padding: 10px; text-align: center; color: #888;">No active sessions in this tab</div>';
             return;
         }
         
-        let html = '';
-        Object.entries(sessions).forEach(([username, session]) => {
-            const user = getUser(username);
-            const sessionAge = Date.now() - session.lastActive;
-            const minutesAgo = Math.floor(sessionAge / (1000 * 60));
-            const timeText = minutesAgo === 0 ? 'Just now' : `${minutesAgo} min ago`;
-            const hoursAgo = Math.floor(sessionAge / (1000 * 60 * 60));
-            
-            let lastActiveText = '';
-            if (user && user.lastActive) {
-                const lastActiveDate = new Date(user.lastActive);
-                const lastActiveAge = Date.now() - lastActiveDate.getTime();
-                const lastActiveHours = Math.floor(lastActiveAge / (1000 * 60 * 60));
-                const lastActiveMinutes = Math.floor((lastActiveAge % (1000 * 60 * 60)) / (1000 * 60));
-                
-                if (lastActiveHours > 0) {
-                    lastActiveText = `Last active: ${lastActiveHours}h ${lastActiveMinutes}m ago`;
-                } else {
-                    lastActiveText = `Last active: ${lastActiveMinutes}m ago`;
-                }
-            }
-            
-            html += `
-                <div class="session-item">
-                    <div class="session-user">
-                        <span class="user-status ${session.lastActive > Date.now() - 300000 ? 'pulse-online' : 'pulse-offline'}"></span>
-                        <div>
-                            <strong>${username}</strong>
-                            <div style="font-size: 9px; color: #666;">
-                                ${user ? user.role.toUpperCase().replace('_', ' ') : 'Unknown Role'}
-                                ${lastActiveText}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="session-time">${timeText}</div>
+        const sessionAge = Date.now() - tabSessionData.lastActive;
+        const minutesAgo = Math.floor(sessionAge / (1000 * 60));
+        const timeText = minutesAgo === 0 ? 'Just now' : `${minutesAgo} min ago`;
+        
+        const html = `
+            <div class="session-item">
+                <div class="session-user">
+                    <span class="user-status status-online"></span>
+                    <strong>${tabSessionData.loggedUser} (This Tab)</strong>
                 </div>
-            `;
-        });
+                <div class="session-time">${timeText}</div>
+            </div>
+            <div style="padding: 10px; font-size: 11px; color: #666; text-align: center;">
+                Multiple device/tab logins are now allowed
+            </div>
+        `;
         
         container.innerHTML = html;
     }
@@ -3425,14 +3207,10 @@
         tbody.innerHTML = '';
 
         links.forEach((link, index) => {
-            const currentUser = localStorage.getItem('logged_user');
-            let deleteButton = '';
-            
-            // Only SUPER_ADMIN and ADMIN can see delete button
-            if (isCurrentUserSuperAdmin() || isCurrentUserAdmin()) {
-                deleteButton = `<button class="btn btn-del" onclick="deleteLink(${index})">Delete</button>`;
-            }
-            // STAFF users don't see delete button
+            const currentUser = tabSessionData.loggedUser;
+            const deleteButton = isCurrentUserAdmin() ? 
+                `<button class="btn btn-del" onclick="deleteLink(${index})">Delete</button>` : 
+                '';
             
             const row = `<tr>
                 <td>${link.name}</td>
@@ -3446,7 +3224,7 @@
     }
 
     function openLinkModal() {
-        if (!hasPermission(localStorage.getItem('logged_user'), 'add_link')) {
+        if (!hasPermission(tabSessionData.loggedUser, 'add_link')) {
             alert("You don't have permission to add links!");
             return;
         }
@@ -3461,7 +3239,7 @@
     }
 
     function addLink() {
-        if (!hasPermission(localStorage.getItem('logged_user'), 'add_link')) {
+        if (!hasPermission(tabSessionData.loggedUser, 'add_link')) {
             alert("You don't have permission to add links!");
             return;
         }
@@ -3481,7 +3259,7 @@
     }
 
     function deleteLink(index) {
-        if (!isCurrentUserSuperAdmin() && !isCurrentUserAdmin()) {
+        if (!isCurrentUserAdmin()) {
             alert("Only administrators can delete links!");
             return;
         }
@@ -3501,7 +3279,6 @@
             supplier_edit_history: JSON.parse(localStorage.getItem('z_supplier_edit_history')) || {},
             user_accounts: userAccounts,
             certificates: JSON.parse(localStorage.getItem('z_certificates')) || {},
-            active_sessions: getActiveSessions(),
             links: links,
             supplier_images: JSON.parse(localStorage.getItem('z_supplier_images')) || {},
             timestamp: new Date().toISOString()
@@ -3539,12 +3316,6 @@
     }
 
     function exportData() {
-        // Only SUPER_ADMIN can export data
-        if (!isCurrentUserSuperAdmin()) {
-            alert("Only Super Admin can export backup data!");
-            return;
-        }
-        
         const data = getAllData();
         
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
@@ -3563,12 +3334,6 @@
     }
 
     function importData(event) {
-        // Only SUPER_ADMIN can import data
-        if (!isCurrentUserSuperAdmin()) {
-            alert("Only Super Admin can import backup data!");
-            return;
-        }
-        
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
@@ -3592,14 +3357,6 @@
         reader.readAsText(file);
     }
 
-    const bgImages = ['./images/bgx.jpg', './images/bgx1.jpg', './images/bg.jpg', './images/bgx3.jpg', './images/bgx4.jpg', './images/bgx5.jpg', './images/bgx6.jpg', './images/bgx7.jpg', './images/bgx8.jpg', './images/bgx9.jpg', './images/bgy1.jpg', './images/bgy3.jpg', './images/bgy4.jpg', './images/bgy5.jpg'];
-    function syncBG() {
-        const header = document.getElementById('headerSection');
-        if(!header) return;
-        const index = Math.floor((Math.floor(Date.now() / 1000) % (bgImages.length * 15)) / 15);
-        header.style.backgroundImage = `url(${bgImages[index]})`;
-    }
-
     function runTimeMonitoring() {
         const now = new Date();
         const hrs = now.getHours();
@@ -3615,26 +3372,19 @@
         }
 
         const lastAutoDate = localStorage.getItem('z_last_auto_date');
-        if (hrs === 16 && mins === 49 && lastAutoDate !== todayDate && isCurrentUserSuperAdmin()) {
+        if (hrs === 16 && mins === 49 && lastAutoDate !== todayDate) {
             executeAutoBackup(todayDate);
         }
 
-        // FIXED: Only log out if system is locked AND user cannot bypass
-        if (isSystemLocked() && localStorage.getItem('logged_user') && !canWorkAfterLockTime(localStorage.getItem('logged_user'))) {
+        if (isSystemLocked() && tabSessionData.loggedUser && !isCurrentUserAdmin()) {
             alert("SYSTEM LOCK: Access hours ended. The system will now close until 07:30 CAT.");
             logout();
         }
         
-        const currentUser = localStorage.getItem('logged_user');
-        if (currentUser) {
-            updateActiveSession(currentUser, localStorage.getItem('current_session'));
-            
-            // Update user's last active time
-            const user = getUser(currentUser);
-            if (user) {
-                user.lastActive = new Date().toISOString();
-                saveUserData();
-            }
+        // Update tab session timestamp
+        if (tabSessionData.loggedUser) {
+            tabSessionData.lastActive = Date.now();
+            saveTabSession();
         }
         
         const panel = document.getElementById('sessionsPanel');
@@ -3644,7 +3394,7 @@
     }
 
     function showAuditLogs(page = 1) {
-        if (!hasPermission(localStorage.getItem('logged_user'), 'view_logs')) {
+        if (!hasPermission(tabSessionData.loggedUser, 'view_logs')) {
             alert("You don't have permission to view audit logs!");
             return;
         }
@@ -3695,12 +3445,15 @@
         `;
     }
 
-
     window.onload = async () => {
+        initTabSession();
         checkDailySession();
         renderCategories();
         displayBackupDate();
         updateUserDisplay();
+        
+        // Preload background images for faster loading
+        preloadBackgroundImages();
         
         setInterval(syncBG, 1000);
         setInterval(runTimeMonitoring, 30000);
