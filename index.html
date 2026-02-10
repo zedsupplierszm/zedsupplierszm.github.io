@@ -1282,77 +1282,134 @@
     }
 
     async function handleLogin() {
-        if (isSystemLocked()) {
-            const currentUser = document.getElementById('userIn').value.toUpperCase().trim();
-            if (currentUser !== "JOSEPH") {
-                alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
-                return;
-            }
-        }
-
-        const u = document.getElementById('userIn').value.toUpperCase().trim();
-        const p = document.getElementById('passIn').value.trim();
-
-        if (!u) {
-            alert("Username required.");
+    if (isSystemLocked()) {
+        const currentUser = document.getElementById('userIn').value.toUpperCase().trim();
+        if (currentUser !== "JOSEPH") {
+            alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
             return;
-        }
-
-        try {
-            // Search for user in Firebase
-            const usersSnapshot = await db.collection(COLLECTIONS.USERS)
-                .where('username', '==', u)
-                .limit(1)
-                .get();
-            
-            if (usersSnapshot.empty) {
-                alert("Invalid username or password!");
-                return;
-            }
-            
-            const userDoc = usersSnapshot.docs[0];
-            const user = userDoc.data();
-            
-            if (!user.enabled) {
-                alert("This account has been disabled. Please contact the administrator.");
-                return;
-            }
-
-            if (user.password === p) {
-                // Successful login
-                localStorage.setItem('logged_user', u);
-                localStorage.setItem('last_login', new Date().toDateString());
-                document.getElementById('loginOverlay').style.display = 'none';
-
-                // Update user accounts array
-                userAccounts = await getAllUsers();
-                
-                updateGreeting();
-                updateUserDisplay();
-                
-                // Show admin buttons if user is admin
-                if (isCurrentUserAdmin()) {
-                    document.getElementById('userMgmtBtn').style.display = 'inline-block';
-                    document.getElementById('sessionsBtn').style.display = 'inline-block';
-                    document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-                } else {
-                    document.getElementById('userMgmtBtn').style.display = 'none';
-                    document.getElementById('sessionsBtn').style.display = 'none';
-                    document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-                }
-                
-                // Show home view
-                showView('home');
-                
-            } else {
-                alert("Invalid Username or Password!");
-            }
-        } catch (error) {
-            console.error("Login error:", error);
-            alert("Login failed. Please check your connection.");
         }
     }
 
+    const u = document.getElementById('userIn').value.toUpperCase().trim();
+    const p = document.getElementById('passIn').value.trim();
+
+    if (!u) {
+        alert("Username required.");
+        return;
+    }
+
+    try {
+        console.log("Attempting login for user:", u);
+        
+        // Search for user in Firebase - FIXED QUERY
+        const usersRef = db.collection(COLLECTIONS.USERS);
+        const query = usersRef.where('username', '==', u);
+        const querySnapshot = await query.get();
+        
+        console.log("Query result size:", querySnapshot.size);
+        
+        if (querySnapshot.empty) {
+            alert("Invalid username or password!");
+            return;
+        }
+        
+        // Get the first matching document
+        const userDoc = querySnapshot.docs[0];
+        const user = userDoc.data();
+        console.log("Found user:", user.username, "Role:", user.role);
+        
+        if (!user.enabled) {
+            alert("This account has been disabled. Please contact the administrator.");
+            return;
+        }
+
+        if (user.password === p) {
+            // Successful login
+            console.log("Login successful for:", u);
+            localStorage.setItem('logged_user', u);
+            localStorage.setItem('last_login', new Date().toDateString());
+            document.getElementById('loginOverlay').style.display = 'none';
+
+            // Update user accounts array
+            userAccounts = await getAllUsers();
+            
+            updateGreeting();
+            updateUserDisplay();
+            
+            // Show admin buttons if user is admin
+            if (isCurrentUserAdmin()) {
+                document.getElementById('userMgmtBtn').style.display = 'inline-block';
+                document.getElementById('sessionsBtn').style.display = 'inline-block';
+                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+            } else {
+                document.getElementById('userMgmtBtn').style.display = 'none';
+                document.getElementById('sessionsBtn').style.display = 'none';
+                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+            }
+            
+            // Show home view
+            showView('home');
+            
+        } else {
+            console.log("Password mismatch");
+            alert("Invalid Username or Password!");
+        }
+    } catch (error) {
+        console.error("Login error details:", error);
+        console.error("Error code:", error.code);
+        console.error("Error message:", error.message);
+        
+        // More specific error message
+        if (error.code === 'permission-denied') {
+            alert("Database permission denied. Please check Firebase rules.");
+        } else if (error.code === 'unavailable') {
+            alert("Network error. Please check your internet connection.");
+        } else {
+            alert("Login failed. Error: " + error.message);
+        }
+    }
+}
+
+async function testFirebaseConnection() {
+    try {
+        console.log("Testing Firebase connection...");
+        
+        // Try to read from users collection
+        const usersSnapshot = await db.collection(COLLECTIONS.USERS).limit(1).get();
+        console.log("Read test:", usersSnapshot.empty ? "No users found" : "Users found");
+        
+        // Try to write a test document
+        const testRef = db.collection('connection_tests').doc();
+        await testRef.set({
+            timestamp: new Date().toISOString(),
+            test: true
+        });
+        console.log("Write test: SUCCESS");
+        
+        // Clean up test document
+        await testRef.delete();
+        console.log("Cleanup test: SUCCESS");
+        
+        return true;
+    } catch (error) {
+        console.error("Firebase test failed:", error);
+        return false;
+    }
+}
+
+// Call this in initializeApp:
+async function initializeApp() {
+    console.log("Initializing app...");
+    
+    // Test Firebase connection
+    const connectionOk = await testFirebaseConnection();
+    if (!connectionOk) {
+        alert("Cannot connect to database. Please check your internet connection and Firebase configuration.");
+        return;
+    }
+    
+    // ... rest of your code
+}
     async function logout() {
         const currentUser = getCurrentUser();
         localStorage.removeItem('logged_user');
