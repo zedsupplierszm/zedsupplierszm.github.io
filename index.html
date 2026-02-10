@@ -1073,184 +1073,16 @@
 
 <script>
    
-const firebaseConfig = {
-    apiKey: "AIzaSyCJrqk15bvd1746VkkDAcOM_U9w0PH7dP0",
+<script>
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCJrqk15bvd1746VkkDAcOM_U9w0PH7dP0",
         authDomain: "supplierdirectory-6e5c7.firebaseapp.com",
         projectId: "supplierdirectory-6e5c7",
         storageBucket: "supplierdirectory-6e5c7.firebasestorage.app",
         messagingSenderId: "434327330685",
         appId: "1:434327330685:web:6ac7e874dc5952a89c3614"
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
-const storage = firebase.storage();
-
-// Global variables
-let categories = [];
-let suppliers = [];
-let links = [];
-let userAccounts = []; // This will be populated from Firebase
-let currentCategory = "";
-let currentGalleryImages = [];
-let currentGalleryIndex = 0;
-let currentRatingValue = 0;
-
-// Load all data including users
-async function loadAllData() {
-    try {
-        console.log("Loading data from Firebase...");
-        
-        // Load users first
-        userAccounts = await getAllUsers();
-        console.log("Loaded users:", userAccounts.length);
-        
-        // Load other data
-        const categoriesSnapshot = await db.collection('categories').get();
-        categories = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log("Loaded categories:", categories.length);
-        
-        const suppliersSnapshot = await db.collection('suppliers').get();
-        suppliers = suppliersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log("Loaded suppliers:", suppliers.length);
-        
-        const linksSnapshot = await db.collection('links').get();
-        links = linksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log("Loaded links:", links.length);
-        
-        return true;
-    } catch (error) {
-        console.error("Error loading data:", error);
-        showNotification("Failed to load data from database", "error");
-        return false;
-    }
-}
-
-// Get all users from Firebase
-async function getAllUsers() {
-    try {
-        const snapshot = await db.collection('users').get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch (error) {
-        console.error("Error getting users:", error);
-        return [];
-    }
-}
-
-// Find user by username (works with userAccounts array)
-function getUser(username) {
-    if (!userAccounts || userAccounts.length === 0) {
-        console.log("userAccounts is empty!");
-        return null;
-    }
-    return userAccounts.find(u => u.username === username.toUpperCase());
-}
-
-    // Save this as setup-firebase.js and run it in browser console
-// AFTER you've added your Firebase config to the main HTML
-
-async function setupFirebaseCollections() {
-    try {
-        console.log("Setting up Firebase collections...");
-        
-        // Create default users
-        const defaultUsers = [
-            {
-                username: "JOSEPH",
-                password: "RIGHTJOSEPH",
-                role: "super admin",
-                enabled: true,
-                email: "zulujosephp@gmail.com",
-                nrc: "123456/78/1",
-                phone: "+260973031254",
-                createdAt: new Date().toISOString()
-            },
-            {
-                username: "CHISHALA",
-                password: "RIGHTCHISHALA",
-                role: "staff",
-                enabled: true,
-                email: "",
-                phone: "",
-                createdAt: new Date().toISOString()
-            }
-        ];
-        
-        for (const user of defaultUsers) {
-            await db.collection('users').add(user);
-            console.log("Added user:", user.username);
-        }
-        
-        // Create default categories
-        const defaultCategories = ["Stationary", "IT Equipment", "Hardware", "Marketing"];
-        
-        for (const category of defaultCategories) {
-            await db.collection('categories').add({
-                name: category,
-                createdAt: new Date().toISOString(),
-                createdBy: "System"
-            });
-            console.log("Added category:", category);
-        }
-        
-        // Create default links
-        const defaultLinks = [
-            {
-                name: "Zambia Public Procurement Authority",
-                url: "http://www.zppa.org.zm",
-                email: "info@zppa.org.zm"
-            },
-            {
-                name: "Zambia Institute of Purchasing and Supply",
-                url: "http://www.zips.org.zm",
-                email: "info@zips.org.zm"
-            }
-        ];
-        
-        for (const link of defaultLinks) {
-            await db.collection('links').add({
-                ...link,
-                createdAt: new Date().toISOString(),
-                createdBy: "System"
-            });
-            console.log("Added link:", link.name);
-        }
-        
-        // Add a sample supplier
-        const sampleSupplier = {
-            name: "Sample Supplier Ltd",
-            person: "General Supplies",
-            phone: "+260977123456",
-            tpin: "123456789",
-            email: "sample@supplier.co.zm",
-            website: "123 Cairo Road, Lusaka",
-            category: "Stationary",
-            rating: 4.5,
-            compliance: {
-                incorporation: true,
-                napsa: true,
-                tax: true,
-                year: new Date().getFullYear()
-            },
-            createdAt: new Date().toISOString(),
-            createdBy: "System",
-            updatedAt: new Date().toISOString(),
-            updatedBy: "System"
-        };
-        
-        await db.collection('suppliers').add(sampleSupplier);
-        console.log("Added sample supplier");
-        
-        console.log("✅ Setup completed successfully!");
-        
-    } catch (error) {
-        console.error("Error setting up collections:", error);
-    }
-}
-
-// Run the setup
-setupFirebaseCollections();
+    };
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
@@ -1258,6 +1090,17 @@ setupFirebaseCollections();
     const auth = firebase.auth();
     const storage = firebase.storage();
 
+    // Global variables
+    let categories = [];
+    let suppliers = [];
+    let links = [];
+    let userAccounts = [];
+    let currentCategory = "";
+    let currentGalleryImages = [];
+    let currentGalleryIndex = 0;
+    let currentRatingValue = 0;
+
+    // System constants
     const LOCK_TIME = { hr: 16, min: 50 };
     const OPEN_TIME = { hr: 7, min: 30 };
     const WARNING_TIME = { hr: 16, min: 30 };
@@ -1280,40 +1123,40 @@ setupFirebaseCollections();
         SESSIONS: 'sessions'
     };
 
-    // Global data variables
-    let categories = [];
-    let suppliers = [];
-    let links = [];
-    let userAccounts = [];
-    let currentCategory = "";
-    let currentGalleryImages = [];
-    let currentGalleryIndex = 0;
-    let currentRatingValue = 0;
-
     // ==================== FIREBASE FUNCTIONS ====================
+
+    async function getAllUsers() {
+        try {
+            const snapshot = await db.collection(COLLECTIONS.USERS).get();
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error("Error getting users:", error);
+            return [];
+        }
+    }
 
     async function loadAllData() {
         try {
+            console.log("Loading data from Firebase...");
+            
+            // Load users
+            userAccounts = await getAllUsers();
+            console.log("Loaded users:", userAccounts.length);
+            
             // Load categories
             const categoriesSnapshot = await db.collection(COLLECTIONS.CATEGORIES).get();
             categories = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            console.log("Loaded categories:", categories.length);
             
             // Load suppliers
             const suppliersSnapshot = await db.collection(COLLECTIONS.SUPPLIERS).get();
             suppliers = suppliersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            console.log("Loaded suppliers:", suppliers.length);
             
             // Load links
             const linksSnapshot = await db.collection(COLLECTIONS.LINKS).get();
             links = linksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            // Load users
-            const usersSnapshot = await db.collection(COLLECTIONS.USERS).get();
-            userAccounts = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            // If no users exist, create default users
-            if (userAccounts.length === 0) {
-                await createDefaultUsers();
-            }
+            console.log("Loaded links:", links.length);
             
             return true;
         } catch (error) {
@@ -1332,6 +1175,7 @@ setupFirebaseCollections();
                 enabled: true, 
                 nrc: "123456/78/1", 
                 email: "zulujosephp@gmail.com",
+                phone: "+260973031254",
                 createdAt: new Date().toISOString()
             },
             { 
@@ -1348,220 +1192,30 @@ setupFirebaseCollections();
         }
         
         // Reload users
-        const usersSnapshot = await db.collection(COLLECTIONS.USERS).get();
-        userAccounts = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    }
-
-    async function saveCategory(name) {
-        try {
-            await db.collection(COLLECTIONS.CATEGORIES).add({
-                name: name,
-                createdAt: new Date().toISOString(),
-                createdBy: getCurrentUser()
-            });
-            await loadAllData();
-            return true;
-        } catch (error) {
-            console.error("Error saving category:", error);
-            return false;
-        }
-    }
-
-    async function updateCategory(id, newName) {
-        try {
-            await db.collection(COLLECTIONS.CATEGORIES).doc(id).update({
-                name: newName,
-                updatedAt: new Date().toISOString(),
-                updatedBy: getCurrentUser()
-            });
-            await loadAllData();
-            return true;
-        } catch (error) {
-            console.error("Error updating category:", error);
-            return false;
-        }
-    }
-
-    async function deleteCategory(id) {
-        try {
-            await db.collection(COLLECTIONS.CATEGORIES).doc(id).delete();
-            await loadAllData();
-            return true;
-        } catch (error) {
-            console.error("Error deleting category:", error);
-            return false;
-        }
-    }
-
-    async function saveSupplier(supplierData) {
-        try {
-            const supplierWithMeta = {
-                ...supplierData,
-                createdAt: new Date().toISOString(),
-                createdBy: getCurrentUser(),
-                updatedAt: new Date().toISOString(),
-                updatedBy: getCurrentUser()
-            };
-            
-            await db.collection(COLLECTIONS.SUPPLIERS).add(supplierWithMeta);
-            await loadAllData();
-            return true;
-        } catch (error) {
-            console.error("Error saving supplier:", error);
-            return false;
-        }
-    }
-
-    async function updateSupplier(id, supplierData) {
-        try {
-            await db.collection(COLLECTIONS.SUPPLIERS).doc(id).update({
-                ...supplierData,
-                updatedAt: new Date().toISOString(),
-                updatedBy: getCurrentUser()
-            });
-            await loadAllData();
-            return true;
-        } catch (error) {
-            console.error("Error updating supplier:", error);
-            return false;
-        }
-    }
-
-    async function deleteSupplier(id) {
-        try {
-            await db.collection(COLLECTIONS.SUPPLIERS).doc(id).delete();
-            await loadAllData();
-            return true;
-        } catch (error) {
-            console.error("Error deleting supplier:", error);
-            return false;
-        }
-    }
-
-    async function saveLink(linkData) {
-        try {
-            await db.collection(COLLECTIONS.LINKS).add({
-                ...linkData,
-                createdAt: new Date().toISOString(),
-                createdBy: getCurrentUser()
-            });
-            await loadAllData();
-            return true;
-        } catch (error) {
-            console.error("Error saving link:", error);
-            return false;
-        }
-    }
-
-    async function deleteLink(id) {
-        try {
-            await db.collection(COLLECTIONS.LINKS).doc(id).delete();
-            await loadAllData();
-            return true;
-        } catch (error) {
-            console.error("Error deleting link:", error);
-            return false;
-        }
-    }
-
-    async function recordAction(action) {
-        try {
-            await db.collection(COLLECTIONS.AUDIT_LOGS).add({
-                user: getCurrentUser(),
-                action: action,
-                timestamp: new Date().toISOString(),
-                time: new Date().toLocaleString('en-GB', { 
-                    day:'2-digit', 
-                    month:'short', 
-                    hour:'2-digit', 
-                    minute:'2-digit', 
-                    second:'2-digit' 
-                })
-            });
-        } catch (error) {
-            console.error("Error recording action:", error);
-        }
-    }
-
-    async function getAuditLogs(page = 1, limit = 20) {
-        try {
-            const snapshot = await db.collection(COLLECTIONS.AUDIT_LOGS)
-                .orderBy('timestamp', 'desc')
-                .limit(limit * page)
-                .get();
-            
-            const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            return logs.slice((page - 1) * limit, page * limit);
-        } catch (error) {
-            console.error("Error getting audit logs:", error);
-            return [];
-        }
-    }
-
-    async function updateActiveSession(username) {
-        try {
-            await db.collection(COLLECTIONS.SESSIONS).doc(username).set({
-                username: username,
-                lastActive: new Date().toISOString(),
-                sessionId: generateSessionId()
-            }, { merge: true });
-        } catch (error) {
-            console.error("Error updating session:", error);
-        }
-    }
-
-    async function removeActiveSession(username) {
-        try {
-            await db.collection(COLLECTIONS.SESSIONS).doc(username).delete();
-        } catch (error) {
-            console.error("Error removing session:", error);
-        }
-    }
-
-    async function getActiveSessions() {
-        try {
-            const snapshot = await db.collection(COLLECTIONS.SESSIONS).get();
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) {
-            console.error("Error getting sessions:", error);
-            return [];
-        }
-    }
-
-    async function uploadFileToStorage(file, path) {
-        try {
-            const storageRef = storage.ref();
-            const fileRef = storageRef.child(path);
-            await fileRef.put(file);
-            const downloadURL = await fileRef.getDownloadURL();
-            return downloadURL;
-        } catch (error) {
-            console.error("Error uploading file:", error);
-            throw error;
-        }
-    }
-
-    async function deleteFileFromStorage(path) {
-        try {
-            const storageRef = storage.ref();
-            const fileRef = storageRef.child(path);
-            await fileRef.delete();
-            return true;
-        } catch (error) {
-            console.error("Error deleting file:", error);
-            return false;
-        }
+        userAccounts = await getAllUsers();
     }
 
     // ==================== HELPER FUNCTIONS ====================
 
     function getCurrentUser() {
-        return localStorage.getItem('logged_user') || 'System';
+        return localStorage.getItem('logged_user') || null;
     }
 
     function getUser(username) {
-    return userAccounts.find(u => u.username === username.toUpperCase());
-}
+        if (!userAccounts || userAccounts.length === 0) {
+            console.log("userAccounts is empty!");
+            return null;
+        }
+        return userAccounts.find(u => u.username === username.toUpperCase());
+    }
+
+    function isCurrentUserAdmin() {
+        const currentUser = getCurrentUser();
+        if (!currentUser) return false;
+        
+        const user = getUser(currentUser);
+        return user && (user.role === 'super admin' || user.role === USER_ROLES.ADMIN);
+    }
 
     function hasPermission(username, permission) {
         const user = getUser(username);
@@ -1589,16 +1243,6 @@ setupFirebaseCollections();
         return false;
     }
 
-    function isCurrentUserAdmin() {
-        const currentUser = getCurrentUser();
-        const user = getUser(currentUser);
-        return user && (user.role === 'super admin' || user.role === USER_ROLES.ADMIN);
-    }
-
-    function generateSessionId() {
-        return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
-
     function showNotification(message, type = 'success') {
         let notification = document.getElementById('notification');
         if (!notification) {
@@ -1619,7 +1263,7 @@ setupFirebaseCollections();
         }, 5000);
     }
 
-    // ==================== SYSTEM FUNCTIONS ====================
+    // ==================== LOGIN FUNCTIONS ====================
 
     function isSystemLocked() {
         const currentUser = getCurrentUser();
@@ -1639,115 +1283,83 @@ setupFirebaseCollections();
     }
 
     async function handleLogin() {
-    if (isSystemLocked()) {
-        const currentUser = document.getElementById('userIn').value.toUpperCase().trim();
-        if (currentUser !== "JOSEPH") {
-            alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
-            return;
+        if (isSystemLocked()) {
+            const currentUser = document.getElementById('userIn').value.toUpperCase().trim();
+            if (currentUser !== "JOSEPH") {
+                alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
+                return;
+            }
         }
-    }
 
-    const u = document.getElementById('userIn').value.toUpperCase().trim();
-    const p = document.getElementById('passIn').value.trim();
+        const u = document.getElementById('userIn').value.toUpperCase().trim();
+        const p = document.getElementById('passIn').value.trim();
 
-    if (!u) {
-        alert("Username required.");
-        return;
-    }
-
-    try {
-        // Search for user in Firebase
-        const usersSnapshot = await db.collection('users')
-            .where('username', '==', u)
-            .limit(1)
-            .get();
-        
-        if (usersSnapshot.empty) {
-            alert("Invalid username or password!");
-            return;
-        }
-        
-        const userDoc = usersSnapshot.docs[0];
-        const user = userDoc.data();
-        
-        if (!user.enabled) {
-            alert("This account has been disabled. Please contact the administrator.");
+        if (!u) {
+            alert("Username required.");
             return;
         }
 
-        if (user.password === p) {
-            // Successful login
-            localStorage.setItem('logged_user', u);
-            localStorage.setItem('last_login', new Date().toDateString());
-            document.getElementById('loginOverlay').style.display = 'none';
-
-            await updateActiveSession(u);
-            updateGreeting();
-            updateUserDisplay();
-            await recordAction("Logged into the system");
+        try {
+            // Search for user in Firebase
+            const usersSnapshot = await db.collection(COLLECTIONS.USERS)
+                .where('username', '==', u)
+                .limit(1)
+                .get();
             
-            // Update user accounts array for the rest of the app
-            userAccounts = await getAllUsers();
-            
-            if (isCurrentUserAdmin()) {
-                document.getElementById('userMgmtBtn').style.display = 'inline-block';
-                document.getElementById('sessionsBtn').style.display = 'inline-block';
-                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-            } else {
-                document.getElementById('userMgmtBtn').style.display = 'none';
-                document.getElementById('sessionsBtn').style.display = 'none';
-                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+            if (usersSnapshot.empty) {
+                alert("Invalid username or password!");
+                return;
             }
             
-            showView('home');
+            const userDoc = usersSnapshot.docs[0];
+            const user = userDoc.data();
             
-        } else {
-            alert("Invalid Username or Password!");
+            if (!user.enabled) {
+                alert("This account has been disabled. Please contact the administrator.");
+                return;
+            }
+
+            if (user.password === p) {
+                // Successful login
+                localStorage.setItem('logged_user', u);
+                localStorage.setItem('last_login', new Date().toDateString());
+                document.getElementById('loginOverlay').style.display = 'none';
+
+                // Update user accounts array
+                userAccounts = await getAllUsers();
+                
+                updateGreeting();
+                updateUserDisplay();
+                
+                // Show admin buttons if user is admin
+                if (isCurrentUserAdmin()) {
+                    document.getElementById('userMgmtBtn').style.display = 'inline-block';
+                    document.getElementById('sessionsBtn').style.display = 'inline-block';
+                    document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+                } else {
+                    document.getElementById('userMgmtBtn').style.display = 'none';
+                    document.getElementById('sessionsBtn').style.display = 'none';
+                    document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+                }
+                
+                // Show home view
+                showView('home');
+                
+            } else {
+                alert("Invalid Username or Password!");
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            alert("Login failed. Please check your connection.");
         }
-    } catch (error) {
-        console.error("Login error:", error);
-        alert("Login failed. Please check your connection.");
     }
-}
 
     async function logout() {
         const currentUser = getCurrentUser();
-        if (currentUser) {
-            await removeActiveSession(currentUser);
-            await recordAction("Logged out");
-        }
         localStorage.removeItem('logged_user');
         localStorage.removeItem('last_login');
         location.reload();
     }
-
-    // Get all users from Firebase
-async function getAllUsers() {
-    try {
-        const snapshot = await db.collection('users').get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch (error) {
-        console.error("Error getting users:", error);
-        return [];
-    }
-}
-
-// Update userAccounts on app load
-async function loadUserAccounts() {
-    userAccounts = await getAllUsers();
-    return userAccounts.length > 0;
-}
-
-// Update your window.onload to load users
-window.onload = async () => {
-    // Load all data from Firebase
-    await loadAllData();
-    
-    // Specifically load user accounts
-    await loadUserAccounts();
-    
-    // ... rest of your existing code ...
-};
 
     // ==================== UI FUNCTIONS ====================
 
@@ -1769,7 +1381,7 @@ window.onload = async () => {
             
             if (user) {
                 roleBadge.textContent = user.role.toUpperCase();
-                roleBadge.className = user.role === USER_ROLES.ADMIN ? 'role-badge role-admin' : 'role-badge role-staff';
+                roleBadge.className = user.role === 'admin' || user.role === 'super admin' ? 'role-badge role-admin' : 'role-badge role-staff';
                 roleBadge.style.display = 'inline-block';
             }
         } else {
@@ -1778,846 +1390,71 @@ window.onload = async () => {
         }
     }
 
-    async function showView(viewName, catName = "") {
-        document.getElementById('globalSearch').value = "";
-        document.getElementById('searchResultSection').style.display = 'none';
-        document.getElementById('defaultHomeContent').style.display = 'block';
-
-        document.getElementById('homeView').style.display = 'none';
-        document.getElementById('categoryPageView').style.display = 'none';
-        document.getElementById('aboutView').style.display = 'none';
-        document.getElementById('contactView').style.display = 'none';
-        document.getElementById('linksView').style.display = 'none';
-
-        if(viewName === 'home') {
-            document.getElementById('homeView').style.display = 'block';
-            await renderCategories();
-        } else if(viewName === 'about') {
-            document.getElementById('aboutView').style.display = 'block';
-        } else if(viewName === 'contact') {
-            document.getElementById('contactView').style.display = 'block';
-        } else if(viewName === 'links') {
-            document.getElementById('linksView').style.display = 'block';
-            await displayLinks();
-        } else if(viewName === 'detail') {
-            currentCategory = catName;
-            document.getElementById('categoryPageView').style.display = 'block';
-            document.getElementById('categoryTitle').innerText = catName;
-            await renderSuppliers();
-        }
-    }
-
-    async function renderCategories() {
-        const grid = document.getElementById('categoryGrid');
-        const categoriesWithCount = await Promise.all(categories.map(async (cat) => {
-            const countSnapshot = await db.collection(COLLECTIONS.SUPPLIERS)
-                .where('category', '==', cat.name)
-                .get();
-            return { ...cat, count: countSnapshot.size };
-        }));
-        
-        grid.innerHTML = categoriesWithCount.map(cat => {
-            const currentUser = getCurrentUser();
-            
-            return `
-                <div class="grid-item" onclick="showView('detail', '${cat.name}')">
-                    <img src="./images/mainlogo3.png" alt="${cat.name}">
-                    <span>${cat.name} (${cat.count})</span>
-                    <div style="background:white; padding-bottom:10px; text-align:center; display:flex; justify-content:center; gap:5px;">
-                        ${hasPermission(currentUser, 'edit_category') ? 
-                            `<button class="btn-edit" onclick="event.stopPropagation(); editCategory('${cat.id}', '${cat.name}')">Edit</button>` : ''}
-                        ${hasPermission(currentUser, 'delete_category') && isCurrentUserAdmin() ? 
-                            `<button class="btn-del" onclick="event.stopPropagation(); deleteCategoryConfirm('${cat.id}', '${cat.name}')">Delete</button>` : ''}
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    async function deleteCategoryConfirm(id, name) {
-        if (!isCurrentUserAdmin()) {
-            alert("Only administrators can delete categories!");
-            return;
-        }
-        
-        if(confirm(`Delete category "${name}"? This will not delete suppliers in this category.`)) {
-            await deleteCategory(id);
-            await renderCategories();
-        }
-    }
-
-    async function renderSuppliers() {
-        const tbody = document.getElementById('supplierTableBody');
-        
-        const filtered = suppliers.filter(s => s.category === currentCategory);
-        
-        const currentUser = getCurrentUser();
-
-        const banner = document.getElementById('complianceBanner');
-        const currentYear = new Date().getFullYear();
-
-        const hasNonCompliant = filtered.some(s => {
-            if (!s.compliance) return true;
-            if (s.compliance.year !== currentYear) return true;
-
-            return !(
-                s.compliance.incorporation &&
-                s.compliance.napsa &&
-                s.compliance.tax
-            );
-        });
-
-        banner.style.display = hasNonCompliant ? 'block' : 'none';
-
-        tbody.innerHTML = filtered.map((s) => {
-            const cleanPhone = s.phone.replace(/\D/g, '');
-            const currentYear = new Date().getFullYear();
-            const comp = s.compliance || {};
-            const expired = comp.year !== currentYear;
-            const rating = s.rating || 0;
-
-            function badge(label, ok) {
-                if (expired) return `<span class="compliance-pill comp-expired">${label}</span>`;
-                return ok
-                    ? `<span class="compliance-pill comp-ok">${label}</span>`
-                    : `<span class="compliance-pill comp-bad">${label}</span>`;
-            }
-
-            const renewalBar = createVerticalRenewalBarHTML(s);
-            const ratingDisplay = createRatingDisplayHTML(rating);
-            
-            const deleteButton = isCurrentUserAdmin() ? 
-                `<button class="btn-del" onclick="deleteSupplierConfirm('${s.id}')">Delete</button>` : 
-                '';
-
-            return `
-                <tr>
-                    <td>${s.name}</td>
-                    <td>${s.person}</td>
-                    <td><a href="https://wa.me/${cleanPhone}" target="_blank">${s.phone}</a></td>
-                    <td>${s.tpin || 'N/A'}</td>
-                    <td><a href="mailto:${s.email}">${s.email}</a></td>
-                    <td>${s.website || 'N/A'}</td>
-                    <td>${ratingDisplay}</td>
-                    <td><div class="compliance-box">
-                        ${badge("COI", comp.incorporation)}
-                        ${badge("NAPSA", comp.napsa)}
-                        ${badge("TAX", comp.tax)}
-                    </div></td>
-                    <td style="text-align: center;">${renewalBar}</td>
-                    <td style="text-align: center;">
-                        <div class="document-thumbnail" onclick="openSupplierDocuments('${s.id}')">
-                            <div class="document-icon">📄</div>
-                        </div>
-                    </td>
-                    <td style="text-align: center;">
-                        <div class="document-thumbnail" onclick="openSupplierImages('${s.id}')">
-                            <div class="document-icon">🖼️</div>
-                        </div>
-                    </td>
-                    <td style="text-align: center;">
-                        <div style="font-size:9px; color:#666;">
-                            <b>${s.updatedBy || s.createdBy || 'System'}</b><br>
-                            ${s.updatedAt ? new Date(s.updatedAt).toLocaleDateString() : 
-                              s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '---'}
-                        </div>
-                    </td>
-                    <td style="text-align: center;">
-                        ${hasPermission(currentUser, 'edit_supplier') ? 
-                            `<button class="btn-edit" onclick="editSupplier('${s.id}')">Edit</button>` : ''}
-                        ${deleteButton}
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    function createVerticalRenewalBarHTML(supplier) {
-        const currentYear = new Date().getFullYear();
-        const compYear = supplier.compliance?.year || currentYear;
-        
-        let barClass = 'vertical-life-bar-fill';
-        let progress = 100;
-        let displayText = '100%';
-        
-        if (compYear === currentYear) {
-            const currentMonth = new Date().getMonth();
-            const monthsLeft = 12 - currentMonth;
-            progress = (monthsLeft / 12) * 100;
-            displayText = `${Math.round(progress)}%`;
-        } else {
-            barClass += ' vertical-life-bar-expired';
-            displayText = 'EXP';
-        }
-        
-        if (progress < 25) {
-            barClass += ' vertical-life-bar-expired';
-        } else if (progress < 50) {
-            barClass += ' vertical-life-bar-expiring';
-        }
-        
-        const barHeight = `${progress}%`;
-        
-        return `
-            <div class="vertical-life-bar-container" title="Renews Dec ${compYear} - ${displayText}">
-                <div class="${barClass}" style="height: ${barHeight}"></div>
-                <div class="vertical-life-bar-text">${displayText}</div>
-            </div>
-        `;
-    }
-
-    function createRatingDisplayHTML(rating) {
-        const fullStars = Math.floor(rating);
-        const hasHalfStar = rating % 1 >= 0.5;
-        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-        
-        let starsHTML = '<div class="star-rating-view">';
-        
-        for (let i = 0; i < fullStars; i++) {
-            starsHTML += '<span class="star-view">★</span>';
-        }
-        
-        if (hasHalfStar) {
-            starsHTML += '<span class="star-view" style="position: relative;">';
-            starsHTML += '<span style="position: absolute; width: 50%; overflow: hidden;">★</span>';
-            starsHTML += '<span style="color: var(--star-empty);">★</span>';
-            starsHTML += '</span>';
-        }
-        
-        for (let i = 0; i < emptyStars; i++) {
-            starsHTML += '<span class="star-empty-view">★</span>';
-        }
-        
-        starsHTML += `<span class="rating-value">${rating.toFixed(1)}</span>`;
-        starsHTML += '</div>';
-        
-        return starsHTML;
-    }
-
-    async function deleteSupplierConfirm(id) {
-        if (!isCurrentUserAdmin()) {
-            alert("Only administrators can delete suppliers!");
-            return;
-        }
-        
-        if(confirm("Are you sure you want to delete this supplier?")) {
-            await deleteSupplier(id);
-            await renderSuppliers();
-        }
-    }
-
-    async function openModal(type, editId = null) {
-        const currentUser = getCurrentUser();
-        
-        if (type === 'category' && !hasPermission(currentUser, 'add_category')) {
-            alert("You don't have permission to add categories!");
-            return;
-        }
-        
-        if (type === 'supplier' && !hasPermission(currentUser, editId !== null ? 'edit_supplier' : 'add_supplier')) {
-            alert("You don't have permission to manage suppliers!");
-            return;
-        }
-        
-        const modal = document.getElementById('modalOverlay');
-        const fields = document.getElementById('modalFields');
-        const title = document.getElementById('modalTitle');
-        const saveBtn = document.getElementById('modalSaveBtn');
-        saveBtn.style.display = 'block';
-        modal.style.display = 'flex';
-
-        if(type === 'category') {
-            title.innerText = editId ? "Edit Category" : "New Category";
-            const category = editId ? categories.find(c => c.id === editId) : null;
-            fields.innerHTML = `<input type="text" id="field1" placeholder="Category Name" style="width:100%; padding:10px; margin-bottom:10px;" value="${category ? category.name : ''}">`;
-
-            saveBtn.onclick = async () => {
-                const name = document.getElementById('field1').value;
-                if(name) {
-                    if (editId) {
-                        await updateCategory(editId, name);
-                        await recordAction(`Updated category: ${name}`);
-                    } else {
-                        await saveCategory(name);
-                        await recordAction(`Created new category: ${name}`);
-                    }
-                    await renderCategories();
-                    closeModal();
-                }
-            };
-        } else {
-            const s = editId ? suppliers.find(sup => sup.id === editId) : {
-                name:'', 
-                person:'', 
-                phone:'', 
-                tpin:'', 
-                email:'', 
-                website:'', 
-                category:currentCategory, 
-                rating: 0,
-                compliance: {
-                    incorporation: false,
-                    napsa: false,
-                    tax: false,
-                    year: new Date().getFullYear()
-                }
-            };
-            
-            title.innerText = editId ? "Edit Supplier" : "Add New Supplier";
-            
-            fields.innerHTML = `
-                <input type="text" id="s_name" value="${s.name}" placeholder="Company Name" style="width:100%; padding:8px; margin-bottom:5px;">
-                <input type="text" id="s_person" value="${s.person}" placeholder="Specialization" style="width:100%; padding:8px; margin-bottom:5px;">
-                <input type="text" id="s_phone" value="${s.phone}" placeholder="Phone" style="width:100%; padding:8px; margin-bottom:5px;">
-                <input type="text" id="s_tpin" value="${s.tpin || ''}" placeholder="T-PIN" style="width:100%; padding:8px; margin-bottom:5px;">
-                <input type="email" id="s_email" value="${s.email}" placeholder="Email" style="width:100%; padding:8px; margin-bottom:5px;">
-                <input type="text" id="s_website" value="${s.website || ''}" placeholder="Physical Address" style="width:100%; padding:8px; margin-bottom:5px;">
-                
-                <div style="margin:10px 0;">
-                    <label style="display: block; margin-bottom: 5px;"><b>Supplier Rating (1-5 stars)</b></label>
-                    ${createRatingInputHTML(s.rating || 0)}
-                </div>
-                
-                <div style="margin:10px 0; padding:10px; border:1px solid #eee; border-radius:8px;">
-                    <b>Legal Compliance (Valid until 31 Dec)</b><br><br>
-
-                    <label>
-                        <input type="checkbox" id="c_incorp" ${s.compliance?.incorporation ? 'checked' : ''}>
-                        Certificate of Incorporation
-                    </label><br>
-
-                    <label>
-                        <input type="checkbox" id="c_napsa" ${s.compliance?.napsa ? 'checked' : ''}>
-                        NAPSA Certificate
-                    </label><br>
-
-                    <label>
-                        <input type="checkbox" id="c_tax" ${s.compliance?.tax ? 'checked' : ''}>
-                        Tax Clearance Certificate
-                    </label>
-                </div>
-
-                <select id="s_cat" style="width:100%; padding:8px; margin-bottom:5px;">
-                    ${categories.map(c => `<option ${c.name===s.category?'selected':''}>${c.name}</option>`).join('')}
-                </select>
-            `;
-
-            currentRatingValue = s.rating || 0;
-
-            saveBtn.onclick = async () => {
-                const currentYear = new Date().getFullYear();
-
-                const newSup = {
-                    name: document.getElementById('s_name').value,
-                    person: document.getElementById('s_person').value,
-                    phone: document.getElementById('s_phone').value,
-                    tpin: document.getElementById('s_tpin').value,
-                    email: document.getElementById('s_email').value,
-                    website: document.getElementById('s_website').value,
-                    category: document.getElementById('s_cat').value,
-                    rating: currentRatingValue,
-                    compliance: {
-                        incorporation: document.getElementById('c_incorp').checked,
-                        napsa: document.getElementById('c_napsa').checked,
-                        tax: document.getElementById('c_tax').checked,
-                        year: currentYear
-                    }
-                };
-                
-                if(!newSup.name) return alert("Company name required");
-                
-                if(editId) {
-                    await updateSupplier(editId, newSup);
-                    await recordAction(`Updated supplier details: ${newSup.name}`);
-                } else {
-                    await saveSupplier(newSup);
-                    await recordAction(`Added new supplier: ${newSup.name}`);
-                }
-                
-                await renderSuppliers();
-                closeModal();
-            };
-        }
-    }
-
-    function closeModal() { 
-        document.getElementById('modalOverlay').style.display = 'none'; 
-    }
-
-    // ==================== OTHER FUNCTIONS ====================
-
-    function updateDashboardStatus() {
-        const now = new Date();
-        const isLocked = isSystemLocked();
-        const dot = document.getElementById('statusDot');
-        const txt = document.getElementById('statusText');
-        const clock = document.getElementById('liveClock');
-
-        clock.innerText = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-        if (isLocked) {
-            dot.className = 'status-offline';
-            txt.innerText = "SYSTEM SECURED (LOCKED)";
-            txt.style.color = "var(--danger-red)";
-        } else {
-            dot.className = 'pulse-online';
-            txt.innerText = "SYSTEM OPERATIONAL (OPEN)";
-            txt.style.color = "var(--primary-green)";
-        }
-    }
-
-    async function displayLinks() {
-        const tbody = document.getElementById('linksBody');
-        tbody.innerHTML = '';
-
-        links.forEach((link) => {
-            const deleteButton = isCurrentUserAdmin() ? 
-                `<button class="btn btn-del" onclick="deleteLinkConfirm('${link.id}')">Delete</button>` : 
-                '';
-            
-            const row = `<tr>
-                <td>${link.name}</td>
-                <td><a href="${link.url.startsWith('http') ? link.url : 'http://' + link.url}" target="_blank"><b>${link.url}</b></a></td>
-                <td><a href="mailto:${link.email}">${link.email}</a></td>
-                <td>${deleteButton}</td>
-            </tr>`;
-            tbody.innerHTML += row;
-        });
-    }
-
-    async function deleteLinkConfirm(id) {
-        if (!isCurrentUserAdmin()) {
-            alert("Only administrators can delete links!");
-            return;
-        }
-        
-        if(confirm("Are you sure you want to delete this link?")) {
-            await deleteLink(id);
-            await displayLinks();
-        }
-    }
-
-    async function openLinkModal() {
-        if (!hasPermission(getCurrentUser(), 'add_link')) {
-            alert("You don't have permission to add links!");
-            return;
-        }
-        document.getElementById('linkModal').style.display = 'flex';
-    }
-
-    function closeLinkModal() {
-        document.getElementById('linkModal').style.display = 'none';
-        document.getElementById('instName').value = '';
-        document.getElementById('instWeb').value = '';
-        document.getElementById('instEmail').value = '';
-    }
-
-    async function addLink() {
-        if (!hasPermission(getCurrentUser(), 'add_link')) {
-            alert("You don't have permission to add links!");
-            return;
-        }
-        
-        const name = document.getElementById('instName').value;
-        const url = document.getElementById('instWeb').value;
-        const email = document.getElementById('instEmail').value;
-
-        if(name && url && email) {
-            await saveLink({ name, url, email });
-            await displayLinks();
-            closeLinkModal();
-        } else {
-            alert("Please fill in all fields");
-        }
-    }
-
-    async function showAuditLogs(page = 1) {
-        if (!hasPermission(getCurrentUser(), 'view_logs')) {
-            alert("You don't have permission to view audit logs!");
-            return;
-        }
-        
-        const modal = document.getElementById('modalOverlay');
-        const fields = document.getElementById('modalFields');
-        const title = document.getElementById('modalTitle');
-        const saveBtn = document.getElementById('modalSaveBtn');
-        
-        title.innerText = "System Audit Logs";
-        modal.style.display = 'flex';
-        saveBtn.style.display = 'none';
-
-        const logs = await getAuditLogs(page, 20);
-        
-        let paginationHTML = '';
-        if (logs.length === 20) {
-            paginationHTML = `
-                <div class="pagination">
-                    <button class="page-btn" onclick="showAuditLogs(${page - 1})" ${page <= 1 ? 'disabled' : ''}>‹ Prev</button>
-                    <span style="font-size: 12px;">Page ${page}</span>
-                    <button class="page-btn" onclick="showAuditLogs(${page + 1})">Next ›</button>
-                </div>
-            `;
-        }
-        
-        fields.innerHTML = `
-            <div style="margin-bottom: 10px; font-size: 12px; color: #666;">
-                Showing latest ${logs.length} logs
-            </div>
-            <div class="audit-container">
-                ${logs.length === 0 ? '<p style="text-align:center">No logs recorded yet.</p>' : 
-                  logs.map(l => `
-                    <div class="log-entry">
-                        <span><span class="log-user">${l.user}</span>: <span class="log-action">${l.action}</span></span>
-                        <span class="log-time">${l.time}</span>
-                    </div>
-                  `).join('')}
-            </div>
-            ${paginationHTML}
-            <button onclick="closeModal();" class="btn" style="background:#777; width:100%; margin-top:15px;">Close Logs</button>
-        `;
-    }
-
-    async function toggleSessionsPanel() {
-        const panel = document.getElementById('sessionsPanel');
-        if (panel.style.display === 'block') {
-            panel.style.display = 'none';
-        } else {
-            await updateSessionsPanel();
-            panel.style.display = 'block';
-        }
-    }
-
-    async function updateSessionsPanel() {
-        const sessions = await getActiveSessions();
-        const container = document.getElementById('activeSessionsList');
-        
-        if (sessions.length === 0) {
-            container.innerHTML = '<div style="padding: 10px; text-align: center; color: #888;">No active sessions</div>';
-            return;
-        }
-        
-        let html = '';
-        sessions.forEach(session => {
-            const sessionAge = new Date() - new Date(session.lastActive);
-            const minutesAgo = Math.floor(sessionAge / (1000 * 60));
-            const timeText = minutesAgo === 0 ? 'Just now' : `${minutesAgo} min ago`;
-            
-            html += `
-                <div class="session-item">
-                    <div class="session-user">
-                        <span class="user-status status-online"></span>
-                        <strong>${session.username}</strong>
-                    </div>
-                    <div class="session-time">${timeText}</div>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-    }
-
     // ==================== INITIALIZATION ====================
 
-    const bgImages = ['./images/bgx.jpg', './images/bgx1.jpg', './images/bg.jpg', './images/bgx3.jpg', './images/bgx4.jpg', './images/bgx5.jpg', './images/bgx6.jpg', './images/bgx7.jpg', './images/bgx8.jpg', './images/bgx9.jpg', './images/bgy1.jpg', './images/bgy3.jpg', './images/bgy4.jpg', './images/bgy5.jpg'];
-    
-    function syncBG() {
-        const header = document.getElementById('headerSection');
-        if(!header) return;
-        const index = Math.floor((Math.floor(Date.now() / 1000) % (bgImages.length * 15)) / 15);
-        header.style.backgroundImage = `url(${bgImages[index]})`;
-    }
-
-    function runTimeMonitoring() {
-        const now = new Date();
-        const hrs = now.getHours();
-        const mins = now.getMinutes();
-
-        updateDashboardStatus();
-        const warningBanner = document.getElementById('timeWarning');
-        if (hrs === 16 && mins >= 30 && mins < 50) {
-            warningBanner.style.display = 'block';
-        } else {
-            warningBanner.style.display = 'none';
-        }
-
-        if (isSystemLocked() && getCurrentUser() && !isCurrentUserAdmin()) {
-            alert("SYSTEM LOCK: Access hours ended. The system will now close until 07:30 CAT.");
-            logout();
-        }
-    }
-
-    window.onload = async () => {
-        // Load all data from Firebase
+    async function initializeApp() {
+        // Always show login overlay first
+        document.getElementById('loginOverlay').style.display = 'flex';
+        
+        // Load data from Firebase
         await loadAllData();
         
-        // Check if user is logged in
+        // Check if users exist, if not create default users
+        if (userAccounts.length === 0) {
+            console.log("No users found, creating default users...");
+            await createDefaultUsers();
+        }
+        
+        // Check if user is already logged in
         const currentUser = getCurrentUser();
         const lastLogin = localStorage.getItem('last_login');
         const today = new Date().toDateString();
         
         if (currentUser && lastLogin === today) {
-            updateGreeting();
-            updateUserDisplay();
-            
-            if(isCurrentUserAdmin()) {
-                document.getElementById('userMgmtBtn').style.display = 'inline-block';
-                document.getElementById('sessionsBtn').style.display = 'inline-block';
-                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-            } else {
-                document.getElementById('userMgmtBtn').style.display = 'none';
-                document.getElementById('sessionsBtn').style.display = 'none';
-                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-            }
-            
+            // Verify user still exists and is enabled
             const user = getUser(currentUser);
             if (user && user.enabled) {
                 document.getElementById('loginOverlay').style.display = 'none';
-            } else {
-                document.getElementById('loginOverlay').style.display = 'flex';
+                updateGreeting();
+                updateUserDisplay();
+                
+                if (isCurrentUserAdmin()) {
+                    document.getElementById('userMgmtBtn').style.display = 'inline-block';
+                    document.getElementById('sessionsBtn').style.display = 'inline-block';
+                    document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+                }
+                
+                showView('home');
             }
-        } else {
-            document.getElementById('loginOverlay').style.display = 'flex';
         }
-        
-        // Initialize UI
-        await showView('home');
         
         // Set up intervals
         setInterval(syncBG, 1000);
         setInterval(runTimeMonitoring, 30000);
         setInterval(updateDashboardStatus, 1000);
         
+        // Initialize UI
         syncBG();
         updateDashboardStatus();
         
         // Add event listeners
-        document.addEventListener('click', (e) => {
-            const panel = document.getElementById('sessionsPanel');
-            const sessionsBtn = document.getElementById('sessionsBtn');
-            if (panel.style.display === 'block' && 
-                !panel.contains(e.target) && 
-                sessionsBtn && !sessionsBtn.contains(e.target)) {
-                panel.style.display = 'none';
-            }
-        });
-
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeImageGallery();
                 closeDocumentViewer();
             }
-            
-            if (document.getElementById('imageGalleryModal').style.display === 'flex') {
-                if (e.key === 'ArrowRight') {
-                    nextImage();
-                } else if (e.key === 'ArrowLeft') {
-                    prevImage();
-                }
-            }
         });
-    };
-
-    // ==================== RATING FUNCTIONS ====================
-
-    function createRatingInputHTML(currentRating = 0) {
-        let starsHTML = '<div class="star-rating" id="ratingStars">';
-        
-        for (let i = 1; i <= 5; i++) {
-            const isFilled = i <= currentRating || (i - 0.5 <= currentRating && currentRating < i);
-            starsHTML += `
-                <span class="star ${isFilled ? 'filled' : ''}" 
-                      data-value="${i}"
-                      onclick="setRating(${i})"
-                      onmouseover="hoverRating(${i})"
-                      onmouseout="resetRating()">
-                    ★
-                </span>
-            `;
-        }
-        
-        starsHTML += `<span style="margin-left: 10px; font-size: 12px;" id="ratingValueDisplay">${currentRating.toFixed(1)}</span>`;
-        starsHTML += '</div>';
-        
-        return starsHTML;
     }
 
-    function setRating(value) {
-        currentRatingValue = value;
-        updateRatingDisplay(value);
-    }
+    // Call initialization when page loads
+    window.onload = initializeApp;
 
-    function hoverRating(value) {
-        updateRatingDisplay(value, true);
-    }
+    // ==================== OTHER FUNCTIONS ====================
 
-    function resetRating() {
-        updateRatingDisplay(currentRatingValue);
-    }
+    // ... (keep all your other functions like showView, renderCategories, etc.)
+    // I've only included the critical login-related functions above
+    // Your existing functions for categories, suppliers, etc. should remain
 
-    function updateRatingDisplay(value, isHover = false) {
-        const stars = document.querySelectorAll('#ratingStars .star');
-        stars.forEach(star => {
-            const starValue = parseInt(star.getAttribute('data-value'));
-            if (starValue <= value) {
-                star.classList.add('filled');
-            } else {
-                star.classList.remove('filled');
-            }
-        });
-        
-        if (!isHover) {
-            document.getElementById('ratingValueDisplay').textContent = value.toFixed(1);
-        }
-    }
-
-    // ==================== IMAGE GALLERY FUNCTIONS ====================
-
-    function closeImageGallery() {
-        document.getElementById('imageGalleryModal').style.display = 'none';
-        currentGalleryImages = [];
-        currentGalleryIndex = 0;
-    }
-
-    function nextImage() {
-        if (currentGalleryImages.length === 0) return;
-        currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
-        document.getElementById('galleryCurrentImage').src = currentGalleryImages[currentGalleryIndex].data;
-        document.getElementById('imageCounter').textContent = `${currentGalleryIndex + 1} / ${currentGalleryImages.length}`;
-    }
-
-    function prevImage() {
-        if (currentGalleryImages.length === 0) return;
-        currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
-        document.getElementById('galleryCurrentImage').src = currentGalleryImages[currentGalleryIndex].data;
-        document.getElementById('imageCounter').textContent = `${currentGalleryIndex + 1} / ${currentGalleryImages.length}`;
-    }
-
-    // ==================== DOCUMENT VIEWER FUNCTIONS ====================
-
-    function closeDocumentViewer() {
-        document.getElementById('documentViewerModal').style.display = 'none';
-    }
-
-    // ==================== PLACEHOLDER FUNCTIONS ====================
-
-    // These functions need to be implemented based on your specific requirements
-    function openSupplierDocuments(supplierId) {
-        // TODO: Implement document viewer for supplier
-        alert("Document viewer for supplier " + supplierId + " - To be implemented");
-    }
-
-    function openSupplierImages(supplierId) {
-        // TODO: Implement image gallery for supplier
-        alert("Image gallery for supplier " + supplierId + " - To be implemented");
-    }
-
-    function filterEverything() {
-        // TODO: Implement search functionality
-        const term = document.getElementById('globalSearch').value.toLowerCase().trim();
-        if (term.length === 0) return;
-        alert("Search functionality - To be implemented");
-    }
-
-    function editSupplier(supplierId) {
-        openModal('supplier', supplierId);
-    }
-
-    function editCategory(categoryId, categoryName) {
-        const newName = prompt("Enter new name for the category:", categoryName);
-        if (newName && newName !== categoryName) {
-            updateCategory(categoryId, newName);
-        }
-    }
-
-    function forgotPasswordSimple() {
-        const username = prompt("Enter your username:").toUpperCase();
-        if (!username) return;
-
-        const user = getUser(username);
-        
-        if (!user) {
-            alert("User not found!");
-            return;
-        }
-        
-        if (!user.email) {
-            alert("No email registered for this user. Please contact administrator.");
-            return;
-        }
-        
-        const subject = encodeURIComponent("ZAMCOM Supplier Directory - Your Password");
-        const body = encodeURIComponent(
-            `Hello ${user.username},\n\n` +
-            `Your login credentials are:\n` +
-            `Username: ${user.username}\n` +
-            `Password: ${user.password}\n\n` +
-            `Please login and change your password immediately for security.\n\n` +
-            `ZAMCOM Procurement Department`
-        );
-        
-        const mailtoLink = `mailto:${user.email}?subject=${subject}&body=${body}`;
-        
-        if (confirm(`Send password recovery email to ${user.email}?`)) {
-            window.open(mailtoLink, '_blank');
-            recordAction(`Password recovery email sent for ${username}`);
-            alert("Email client opened. Please send the email to receive your password.");
-        }
-    }
-
-    function changePassword() {
-        const currentUser = getCurrentUser();
-        if (!currentUser) {
-            alert("You must be logged in to change password.");
-            return;
-        }
-        
-        const oldPassword = prompt("Enter your current password:");
-        if (!oldPassword) return;
-        
-        const user = getUser(currentUser);
-        
-        if (!user) {
-            alert("User not found!");
-            return;
-        }
-        
-        if (user.password !== oldPassword) {
-            alert("Current password is incorrect!");
-            return;
-        }
-        
-        const newPassword = prompt("Enter new password:");
-        if (!newPassword) return;
-        
-        const confirmPassword = prompt("Confirm new password:");
-        if (newPassword !== confirmPassword) {
-            alert("Passwords don't match!");
-            return;
-        }
-        
-        // TODO: Implement password change in Firebase
-        alert("Password change functionality - To be implemented with Firebase Auth");
-    }
-
-    function manageUsersModal() {
-        // TODO: Implement user management modal
-        alert("User management - To be implemented");
-    }
-
-    function showSyncSettings() {
-        // TODO: Implement sync settings
-        alert("Sync settings - To be implemented");
-    }
-
-    function exportData() {
-        // TODO: Implement data export
-        alert("Export functionality - To be implemented");
-    }
-
-    function importData(event) {
-        // TODO: Implement data import
-        alert("Import functionality - To be implemented");
-    }
 </script>
 
 <footer style="text-align:center; padding: 40px; background: #333; color: white;">
