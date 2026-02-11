@@ -805,7 +805,7 @@
     ⚠️ SYSTEM ALERT: Scheduled lockout at 16:50. Please save your work!
 </div>
 
-<div id="loginOverlay">
+<div id="loginOverlay" style="display: none;">
     <div class="login-card">
         <img src="./images/mainlogo.png" width="100">
         
@@ -818,6 +818,10 @@
             <p style="font-size: 12px; color: #888;">Operating Hours: 07:30 - 16:50 CAT</p>
             <p id="lockMessage" style="font-size: 12px; color: #666; margin-top: 10px;"></p>
         </div>
+        <div id="loadingSpinner" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000;">
+    <div class="spinner"></div>
+    <p>Verifying session...</p>
+</div>
 
         <div id="loginFieldsContent">
             <h2>System Login</h2>
@@ -840,6 +844,11 @@
         <button class="gallery-nav gallery-next" onclick="nextImage()">›</button>
         <div class="image-counter" id="imageCounter">1 / 1</div>
     </div>
+</div>
+
+<div id="loadingSpinner" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); text-align: center;">
+    <i class="fas fa-spinner fa-spin fa-3x" style="color: #3498db;"></i>
+    <p style="margin-top: 10px;">Verifying session...</p>
 </div>
 
 <div class="topmenu" id="headerSection">
@@ -1680,19 +1689,28 @@
     }
 
     function logout() {
-        localStorage.removeItem('logged_user');
-        localStorage.removeItem('last_login');
-        
-        const loginOverlay = document.getElementById('loginOverlay');
-        if (loginOverlay) {
-            loginOverlay.style.display = 'flex';
-            
-            // Clear login form
-            const usernameField = document.getElementById('userIn');
-            const passwordField = document.getElementById('passIn');
-            if (usernameField) usernameField.value = '';
-            if (passwordField) passwordField.value = '';
-        }
+    localStorage.removeItem('logged_user');
+    localStorage.removeItem('last_login');
+    
+    // Hide all app views (they will stay hidden until next login)
+    const views = ['homeView', 'categoryPageView', 'aboutView', 'contactView', 'linksView'];
+    views.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    
+    // Show login overlay
+    const loginOverlay = document.getElementById('loginOverlay');
+    if (loginOverlay) loginOverlay.style.display = 'flex';
+    
+    // Clear form fields
+    const userIn = document.getElementById('userIn');
+    const passIn = document.getElementById('passIn');
+    if (userIn) userIn.value = '';
+    if (passIn) passIn.value = '';
+    
+    showNotification('Logged out successfully', 'success');
+}
         
         // Hide all views
         showView('home'); // This will hide views but home will be empty
@@ -1909,64 +1927,90 @@
     // ==================== INITIALIZATION ====================
 
     async function initializeApp() {
-        console.log("Initializing app...");
-        
-        // Always show login overlay first
-        const loginOverlay = document.getElementById('loginOverlay');
-        if (loginOverlay) {
-            loginOverlay.style.display = 'flex';
-        }
-        
-        // Load initial data
+    console.log("Initializing app...");
+    
+    // Get references
+    const loginOverlay = document.getElementById('loginOverlay');
+    const loadingSpinner = document.getElementById('loadingSpinner'); // Optional
+    
+    // 1. Check for existing session token in localStorage (synchronous)
+    const savedUser = localStorage.getItem('logged_user');
+    const lastLogin = localStorage.getItem('last_login');
+    const today = new Date().toDateString();
+    
+    // 2. If no token or last login not today → show login overlay immediately
+    if (!savedUser || lastLogin !== today) {
+        if (loginOverlay) loginOverlay.style.display = 'flex';
+        // Load background data in background, but don't wait for it
+        loadAllData().then(() => initializeFirestoreCollections());
+        // Start background processes
+        startBackgroundTasks();
+        return;
+    }
+    
+    // 3. We have a potential session – show loading indicator (optional)
+    if (loadingSpinner) loadingSpinner.classList.add('active');
+    
+    try {
+        // 4. Load essential data (users first to verify)
         await loadAllData();
-        
-        // Create default users if none exist
-        if (userAccounts.length === 0) {
-            console.log("No users found, creating default users...");
-            await createDefaultUsers();
-            await loadAllData(); // Reload after creating
-        }
-        
-        // Initialize collections
         await initializeFirestoreCollections();
         
-        // Check for existing valid session
-        const currentUser = getCurrentUser();
-        const lastLogin = localStorage.getItem('last_login');
-        const today = new Date().toDateString();
-        
-        if (currentUser && lastLogin === today) {
-            const user = getUser(currentUser);
-            if (user && user.enabled) {
-                console.log("Valid session found for user:", currentUser);
-                
-                // Hide login overlay for valid session
-                if (loginOverlay) {
-                    loginOverlay.style.display = 'none';
-                }
-                
-                // Update UI
-                updateGreeting();
-                updateUserDisplay();
-                
-                // Show admin buttons if applicable
-                const isAdmin = isCurrentUserAdmin();
-                const userMgmtBtn = document.getElementById('userMgmtBtn');
-                const sessionsBtn = document.getElementById('sessionsBtn');
-                const syncSettingsBtn = document.getElementById('syncSettingsBtn');
-                
-                if (userMgmtBtn) userMgmtBtn.style.display = isAdmin ? 'inline-block' : 'none';
-                if (sessionsBtn) sessionsBtn.style.display = isAdmin ? 'inline-block' : 'none';
-                if (syncSettingsBtn) syncSettingsBtn.style.display = 'inline-block';
-                
-                // Show home view
-                showView('home');
-            } else {
-                // Invalid user or disabled account - clear session
-                localStorage.removeItem('logged_user');
-                localStorage.removeItem('last_login');
-            }
+        // 5. Verify the saved user still exists and is enabled
+        const user = getUser(savedUser);
+        if (user && user.enabled) {
+            // Valid session – show the app
+            console.log("Valid session restored for:", savedUser);
+            
+            // Hide login overlay (it's already hidden, but ensure it stays hidden)
+            if (loginOverlay) loginOverlay.style.display = 'none';
+            
+            // Update UI
+            updateGreeting();
+            updateUserDisplay();
+            
+            // Show admin buttons
+            const isAdmin = isCurrentUserAdmin();
+            const userMgmtBtn = document.getElementById('userMgmtBtn');
+            const sessionsBtn = document.getElementById('sessionsBtn');
+            const syncSettingsBtn = document.getElementById('syncSettingsBtn');
+            
+            if (userMgmtBtn) userMgmtBtn.style.display = isAdmin ? 'inline-block' : 'none';
+            if (sessionsBtn) sessionsBtn.style.display = isAdmin ? 'inline-block' : 'none';
+            if (syncSettingsBtn) syncSettingsBtn.style.display = 'inline-block';
+            
+            // Show home view (this will set display:block on the appropriate elements)
+            showView('home');
+        } else {
+            // Invalid or disabled user – clear storage and show login
+            console.log("Stored session invalid, clearing...");
+            localStorage.removeItem('logged_user');
+            localStorage.removeItem('last_login');
+            if (loginOverlay) loginOverlay.style.display = 'flex';
         }
+    } catch (error) {
+        console.error("Session validation failed:", error);
+        // On error, force re-login
+        localStorage.removeItem('logged_user');
+        localStorage.removeItem('last_login');
+        if (loginOverlay) loginOverlay.style.display = 'flex';
+    } finally {
+        // Hide loading spinner
+        if (loadingSpinner) loadingSpinner.classList.remove('active');
+    }
+    
+    // Start background processes (clock, background rotation)
+    startBackgroundTasks();
+}
+
+// Extract background processes to avoid duplication
+function startBackgroundTasks() {
+    setInterval(syncBG, 5000);
+    setInterval(runTimeMonitoring, 30000);
+    setInterval(updateDashboardStatus, 1000);
+    syncBG();
+    updateDashboardStatus();
+}
         
         // Start background processes
         setInterval(syncBG, 5000);
