@@ -1162,6 +1162,22 @@
         SESSIONS: 'sessions'
     };
 
+    async function ensureDefaultUsers() {
+    try {
+        const usersSnapshot = await db.collection(COLLECTIONS.USERS).limit(1).get();
+        
+        if (usersSnapshot.empty) {
+            console.log("Creating default users...");
+            await createDefaultUsers();
+            return true;
+        }
+        return true;
+    } catch (error) {
+        console.error("Error ensuring default users:", error);
+        return false;
+    }
+}
+
     // ==================== FIREBASE FUNCTIONS ====================
 
     async function getAllUsers() {
@@ -1623,93 +1639,103 @@
     }
 
     async function handleLogin() {
-        const usernameField = document.getElementById('userIn');
-        const passwordField = document.getElementById('passIn');
-        
-        if (!usernameField || !passwordField) {
-            alert("Login form not found!");
+    const usernameField = document.getElementById('userIn');
+    const passwordField = document.getElementById('passIn');
+    
+    if (!usernameField || !passwordField) {
+        alert("Login form not found!");
+        return;
+    }
+
+    if (isSystemLocked()) {
+        const currentUser = usernameField.value.toUpperCase().trim();
+        if (currentUser !== "JOSEPH") {
+            alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
             return;
-        }
-
-        if (isSystemLocked()) {
-            const currentUser = usernameField.value.toUpperCase().trim();
-            if (currentUser !== "JOSEPH") {
-                alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
-                return;
-            }
-        }
-
-        const u = usernameField.value.toUpperCase().trim();
-        const p = passwordField.value.trim();
-
-        if (!u) {
-            alert("Username required.");
-            return;
-        }
-
-        try {
-            console.log("Attempting login for user:", u);
-            
-            const usersRef = db.collection(COLLECTIONS.USERS);
-            const query = usersRef.where('username', '==', u);
-            const querySnapshot = await query.get();
-            
-            if (querySnapshot.empty) {
-                console.log("User not found:", u);
-                alert("Invalid username or password!");
-                return;
-            }
-            
-            const userDoc = querySnapshot.docs[0];
-            const user = userDoc.data();
-            
-            if (!user.enabled) {
-                alert("This account has been disabled. Please contact the administrator.");
-                return;
-            }
-
-            if (user.password === p) {
-                console.log("Login successful for user:", u);
-                
-                // Set session
-                localStorage.setItem('logged_user', u);
-                localStorage.setItem('last_login', new Date().toDateString());
-                
-                // Hide login overlay
-                const loginOverlay = document.getElementById('loginOverlay');
-                if (loginOverlay) {
-                    loginOverlay.style.display = 'none';
-                }
-
-                // Load all data
-                await loadAllData();
-                await initializeFirestoreCollections();
-                
-                // Update UI
-                updateGreeting();
-                updateUserDisplay();
-                
-                // Show admin buttons if applicable
-                const isAdmin = isCurrentUserAdmin();
-                const userMgmtBtn = document.getElementById('userMgmtBtn');
-                const sessionsBtn = document.getElementById('sessionsBtn');
-                const syncSettingsBtn = document.getElementById('syncSettingsBtn');
-                
-                if (userMgmtBtn) userMgmtBtn.style.display = isAdmin ? 'inline-block' : 'none';
-                if (sessionsBtn) sessionsBtn.style.display = isAdmin ? 'inline-block' : 'none';
-                if (syncSettingsBtn) syncSettingsBtn.style.display = 'inline-block';
-                
-                
-                showNotification(`Welcome, ${u}!`, 'success');
-            } else {
-                console.log("Invalid password for user:", u);
-                alert("Invalid Username or Password!");
-            }
-        } catch (error) {
-            console.error("Login error:", error);
-            alert("Login failed. Error: " + error.message);
         }
     }
+
+    const u = usernameField.value.toUpperCase().trim();
+    const p = passwordField.value.trim();
+
+    if (!u) {
+        alert("Username required.");
+        return;
+    }
+
+    if (!p) {
+        alert("Password required.");
+        return;
+    }
+
+    try {
+        console.log("Attempting login for user:", u);
+        
+        // First ensure default users exist
+        await ensureDefaultUsers();
+        
+        // Now try to find the user
+        const usersRef = db.collection(COLLECTIONS.USERS);
+        const query = usersRef.where('username', '==', u);
+        const querySnapshot = await query.get();
+        
+        if (querySnapshot.empty) {
+            console.log("User not found:", u);
+            alert("Invalid username or password!");
+            return;
+        }
+        
+        const userDoc = querySnapshot.docs[0];
+        const user = userDoc.data();
+        
+        if (!user.enabled) {
+            alert("This account has been disabled. Please contact the administrator.");
+            return;
+        }
+
+        if (user.password === p) {
+            console.log("Login successful for user:", u);
+            
+            // Set session
+            localStorage.setItem('logged_user', u);
+            localStorage.setItem('last_login', new Date().toDateString());
+            
+            // Hide login overlay
+            const loginOverlay = document.getElementById('loginOverlay');
+            if (loginOverlay) {
+                loginOverlay.style.display = 'none';
+            }
+
+            // Load all data
+            await loadAllData();
+            
+            // Update UI
+            updateGreeting();
+            updateUserDisplay();
+            
+            // Show admin buttons if applicable
+            const isAdmin = isCurrentUserAdmin();
+            const userMgmtBtn = document.getElementById('userMgmtBtn');
+            const sessionsBtn = document.getElementById('sessionsBtn');
+            const syncSettingsBtn = document.getElementById('syncSettingsBtn');
+            
+            if (userMgmtBtn) userMgmtBtn.style.display = isAdmin ? 'inline-block' : 'none';
+            if (sessionsBtn) sessionsBtn.style.display = isAdmin ? 'inline-block' : 'none';
+            if (syncSettingsBtn) syncSettingsBtn.style.display = 'inline-block';
+            
+            // Show home view
+            showView('home');
+            
+            showNotification(`Welcome, ${u}!`, 'success');
+        } else {
+            console.log("Invalid password for user:", u);
+            alert("Invalid username or password!");
+        }
+    } catch (error) {
+        console.error("Login error:", error);
+        alert("Login failed. Please check your connection and try again. Error: " + error.message);
+    }
+}
 
     function logout() {
     localStorage.removeItem('logged_user');
@@ -1947,21 +1973,24 @@
     
     const loginOverlay = document.getElementById('loginOverlay');
     
-    // Check for existing session
-    const savedUser = localStorage.getItem('logged_user');
-    const lastLogin = localStorage.getItem('last_login');
-    const today = new Date().toDateString();
-    
-    if (!savedUser || lastLogin !== today) {
-        // No valid session - show login
-        if (loginOverlay) loginOverlay.style.display = 'flex';
-        // Load data in background
-        loadAllData().then(() => initializeFirestoreCollections());
-        startBackgroundTasks();
-        return;
-    }
-    
     try {
+        // Ensure default users exist first
+        await ensureDefaultUsers();
+        
+        // Check for existing session
+        const savedUser = localStorage.getItem('logged_user');
+        const lastLogin = localStorage.getItem('last_login');
+        const today = new Date().toDateString();
+        
+        if (!savedUser || lastLogin !== today) {
+            // No valid session - show login
+            if (loginOverlay) loginOverlay.style.display = 'flex';
+            // Load data in background
+            loadAllData().then(() => initializeFirestoreCollections());
+            startBackgroundTasks();
+            return;
+        }
+        
         // Load data and verify session
         await loadAllData();
         await initializeFirestoreCollections();
@@ -1990,9 +2019,8 @@
             if (loginOverlay) loginOverlay.style.display = 'flex';
         }
     } catch (error) {
-        console.error("Session validation failed:", error);
-        localStorage.removeItem('logged_user');
-        localStorage.removeItem('last_login');
+        console.error("Initialization error:", error);
+        // Show login on error
         if (loginOverlay) loginOverlay.style.display = 'flex';
     }
     
