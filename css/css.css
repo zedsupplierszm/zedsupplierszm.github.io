@@ -73,6 +73,32 @@ body::after {
     border: 1px solid rgba(255,255,255,0.1);
 }
 
+
+/* Hide all main views and content by default */
+#homeView, #categoryPageView, #aboutView, #contactView, #linksView,
+#searchResultSection, #defaultHomeContent {
+    display: none !important;
+}
+
+/* Login overlay hidden by default */
+#loginOverlay {
+    display: none !important;
+}
+
+/* Optional loading spinner – add to your HTML if you want */
+#loadingSpinner {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+}
+/* Show spinner when needed */
+#loadingSpinner.active {
+    display: block;
+}
+
 #modalTitle { 
     margin-top: 0; 
     color: #333; 
@@ -420,6 +446,7 @@ a:active {
 .admin-only {
     display: none;
 }
+
 
 
 </style>
