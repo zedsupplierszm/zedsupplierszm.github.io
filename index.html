@@ -1083,6 +1083,13 @@
         appId: "1:434327330685:web:6ac7e874dc5952a89c3614"
     };
 
+    let bgIndex = 0;
+const bgImages = [
+    './images/background1.jpg',
+    './images/background2.jpg',
+    './images/background3.jpg'
+];
+
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -1194,6 +1201,308 @@
         userAccounts = await getAllUsers();
     }
 
+    function syncBG() {
+    const header = document.getElementById('headerSection');
+    if (!header) {
+        console.log("Header element not found");
+        return;
+    }
+    
+    // Check if images exist, use fallbacks if not
+    const currentImage = bgImages[bgIndex];
+    
+    // Try to load image, if fails use next one
+    const img = new Image();
+    img.onload = function() {
+        header.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('${currentImage}')`;
+        console.log(`Background set to: ${currentImage}`);
+    };
+    img.onerror = function() {
+        console.log(`Image not found: ${currentImage}, using fallback`);
+        // Use a color fallback
+        header.style.backgroundImage = 'linear-gradient(135deg, #1a237e, #4a148c)';
+    };
+    img.src = currentImage;
+    
+    // Move to next image
+    bgIndex = (bgIndex + 1) % bgImages.length;
+    
+    // Update live clock
+    const now = new Date();
+    const clockElement = document.getElementById('liveClock');
+    if (clockElement) {
+        clockElement.textContent = 
+            now.toLocaleTimeString('en-US', { 
+                hour12: true, 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+    }
+}
+
+function renderCategories() {
+    console.log("Rendering categories... Categories array:", categories);
+    
+    const categoryGrid = document.getElementById('categoryGrid');
+    if (!categoryGrid) {
+        console.error("categoryGrid element not found!");
+        return;
+    }
+    
+    if (!categories || categories.length === 0) {
+        console.log("No categories to render");
+        categoryGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #666; padding: 40px;">No categories found. Click "New Category" to add your first category!</p>';
+        return;
+    }
+    
+    console.log(`Rendering ${categories.length} categories`);
+    
+    // Create category HTML
+    categoryGrid.innerHTML = categories.map((cat, index) => {
+        // Use modulo to cycle through available images
+        const imgIndex = (index % 5) + 1;
+        return `
+        <a class="grid-item" onclick="openCategoryPage('${cat.id}')" style="cursor: pointer;">
+            <img src="./images/category_${imgIndex}.jpg" alt="${cat.name}" 
+                 onerror="this.src='./images/mainlogo.png'">
+            <span>${cat.icon || '📁'} ${cat.name}</span>
+        </a>
+        `;
+    }).join('');
+}
+
+async function initializeFirestoreCollections() {
+    console.log("Checking/creating collections...");
+    
+    try {
+        // Check if categories collection has documents
+        const categoriesSnapshot = await db.collection(COLLECTIONS.CATEGORIES).limit(1).get();
+        
+        if (categoriesSnapshot.empty) {
+            console.log("Creating default categories...");
+            const defaultCategories = [
+                { name: "Stationery & Office Supplies", icon: "📎", createdAt: new Date().toISOString() },
+                { name: "ICT Equipment & Services", icon: "💻", createdAt: new Date().toISOString() },
+                { name: "Cleaning Services & Materials", icon: "🧹", createdAt: new Date().toISOString() },
+                { name: "Catering & Refreshments", icon: "🍽️", createdAt: new Date().toISOString() },
+                { name: "Furniture & Furnishings", icon: "🛋️", createdAt: new Date().toISOString() },
+                { name: "Printing & Publishing", icon: "🖨️", createdAt: new Date().toISOString() },
+                { name: "Construction & Maintenance", icon: "🔨", createdAt: new Date().toISOString() },
+                { name: "Transport & Logistics", icon: "🚚", createdAt: new Date().toISOString() },
+                { name: "Consultancy Services", icon: "💼", createdAt: new Date().toISOString() },
+                { name: "Security Services", icon: "🔒", createdAt: new Date().toISOString() }
+            ];
+            
+            for (const category of defaultCategories) {
+                await db.collection(COLLECTIONS.CATEGORIES).add(category);
+            }
+            console.log("Default categories created");
+            
+            // Reload categories
+            const newSnapshot = await db.collection(COLLECTIONS.CATEGORIES).get();
+            categories = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+        
+        // Check if links collection has documents
+        const linksSnapshot = await db.collection(COLLECTIONS.LINKS).limit(1).get();
+        if (linksSnapshot.empty) {
+            console.log("Creating default links...");
+            const defaultLinks = [
+                { 
+                    institution: "Public Procurement Authority (PPA)", 
+                    website: "https://www.ppa.org.zm", 
+                    email: "info@ppa.org.zm",
+                    createdAt: new Date().toISOString()
+                },
+                { 
+                    institution: "Zambia Public Procurement Agency (ZPPA)", 
+                    website: "https://www.zppa.org.zm", 
+                    email: "director@zppa.org.zm",
+                    createdAt: new Date().toISOString()
+                }
+            ];
+            
+            for (const link of defaultLinks) {
+                await db.collection(COLLECTIONS.LINKS).add(link);
+            }
+            console.log("Default links created");
+            
+            // Reload links
+            const newLinksSnapshot = await db.collection(COLLECTIONS.LINKS).get();
+            links = newLinksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+        
+        return true;
+    } catch (error) {
+        console.error("Error initializing collections:", error);
+        return false;
+    }
+}
+
+function showView(viewName) {
+    console.log(`Showing view: ${viewName}`);
+    
+    // Hide all views
+    const views = ['homeView', 'categoryPageView', 'aboutView', 'contactView', 'linksView'];
+    views.forEach(view => {
+        const element = document.getElementById(view);
+        if (element) element.style.display = 'none';
+    });
+    
+    // Also hide search results
+    document.getElementById('searchResultSection').style.display = 'none';
+    document.getElementById('defaultHomeContent').style.display = 'block';
+    
+    // Show selected view
+    switch(viewName) {
+        case 'home':
+            document.getElementById('homeView').style.display = 'block';
+            renderCategories();
+            break;
+        case 'about':
+            document.getElementById('aboutView').style.display = 'block';
+            break;
+        case 'contact':
+            document.getElementById('contactView').style.display = 'block';
+            break;
+        case 'links':
+            document.getElementById('linksView').style.display = 'block';
+            renderLinks();
+            break;
+    }
+}
+
+function openCategoryPage(categoryId) {
+    console.log("Opening category:", categoryId);
+    
+    // Find the category
+    const category = categories.find(cat => cat.id === categoryId);
+    if (!category) {
+        alert("Category not found!");
+        return;
+    }
+    
+    currentCategory = category.name;
+    document.getElementById('categoryTitle').textContent = category.name;
+    
+    // Filter suppliers for this category
+    const categorySuppliers = suppliers.filter(supplier => supplier.category === category.name);
+    console.log(`Found ${categorySuppliers.length} suppliers for category ${category.name}`);
+    
+    // Render suppliers
+    renderSuppliersTable(categorySuppliers);
+    
+    // Show the category page view
+    showView('category');
+}
+
+// Helper function to show category view
+function showView(viewName) {
+    // ... existing showView code ...
+    
+    switch(viewName) {
+        // ... existing cases ...
+        case 'category':
+            document.getElementById('categoryPageView').style.display = 'block';
+            break;
+    }
+}
+
+function renderSuppliersTable(suppliersList) {
+    const tbody = document.getElementById('supplierTableBody');
+    if (!tbody) return;
+    
+    if (!suppliersList || suppliersList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; padding: 20px; color: #666;">No suppliers found in this category.</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = suppliersList.map(supplier => `
+        <tr>
+            <td>${supplier.name || ''}</td>
+            <td>${supplier.specialization || ''}</td>
+            <td>${supplier.phone || ''}</td>
+            <td>${supplier.tpin || ''}</td>
+            <td>${supplier.email || ''}</td>
+            <td>${supplier.address || ''}</td>
+            <td>
+                <div class="star-rating-view">
+                    ${renderStars(supplier.rating || 0)}
+                    <span class="rating-value">${supplier.rating || 0}/5</span>
+                </div>
+            </td>
+            <td>
+                <div class="compliance-box">
+                    ${renderCompliancePills(supplier)}
+                </div>
+            </td>
+            <td>
+                <div class="vertical-life-bar-container">
+                    <div class="vertical-life-bar-fill ${getRenewalStatusClass(supplier)}" 
+                         style="height: ${calculateRenewalPercentage(supplier)}%"></div>
+                    <div class="vertical-life-bar-text">${getDaysRemaining(supplier)}d</div>
+                </div>
+            </td>
+            <td>
+                <div class="document-thumbnail-grid">
+                    ${renderDocumentThumbnails(supplier)}
+                </div>
+            </td>
+            <td>
+                <div class="supplier-images-preview">
+                    ${renderImageThumbnails(supplier)}
+                </div>
+            </td>
+            <td>
+                <div class="modified-by-container">
+                    <span class="modified-by-display">
+                        <span class="user-status status-online"></span>
+                        ${supplier.lastModifiedBy || 'System'}
+                        <span class="dropdown-arrow">▼</span>
+                    </span>
+                    <div class="history-dropdown">
+                        <div class="history-item">
+                            <span class="history-user">${supplier.lastModifiedBy || 'System'}</span>
+                            <div class="history-date">${supplier.lastModifiedDate || 'Unknown date'}</div>
+                            <div class="history-action">Last modified</div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <button class="btn-edit" onclick="editSupplier('${supplier.id}')">Edit</button>
+                <button class="btn-del" onclick="deleteSupplier('${supplier.id}')">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Helper functions for the table
+function renderStars(rating) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        stars += `<span class="star-view ${i <= rating ? 'filled' : 'star-empty-view'}">★</span>`;
+    }
+    return stars;
+}
+
+function renderCompliancePills(supplier) {
+    if (!supplier.compliance) return '<span class="compliance-pill comp-bad">NO DATA</span>';
+    
+    const pills = [];
+    if (supplier.compliance.tpin === 'yes') pills.push('<span class="compliance-pill comp-ok">TPIN</span>');
+    else pills.push('<span class="compliance-pill comp-bad">TPIN</span>');
+    
+    if (supplier.compliance.napsa === 'yes') pills.push('<span class="compliance-pill comp-ok">NAPSA</span>');
+    else pills.push('<span class="compliance-pill comp-bad">NAPSA</span>');
+    
+    if (supplier.compliance.zra === 'yes') pills.push('<span class="compliance-pill comp-ok">ZRA</span>');
+    else pills.push('<span class="compliance-pill comp-bad">ZRA</span>');
+    
+    return pills.join('');
+}
+
     // ==================== HELPER FUNCTIONS ====================
 
     function getCurrentUser() {
@@ -1301,7 +1610,7 @@
     try {
         console.log("Attempting login for user:", u);
         
-        // Search for user in Firebase - FIXED QUERY
+        // Search for user in Firebase
         const usersRef = db.collection(COLLECTIONS.USERS);
         const query = usersRef.where('username', '==', u);
         const querySnapshot = await query.get();
@@ -1332,6 +1641,10 @@
 
             // Update user accounts array
             userAccounts = await getAllUsers();
+            console.log("User accounts loaded:", userAccounts.length);
+            
+            // Load all data after successful login
+            await loadAllData();
             
             updateGreeting();
             updateUserDisplay();
@@ -1347,8 +1660,9 @@
                 document.getElementById('syncSettingsBtn').style.display = 'inline-block';
             }
             
-            // Show home view
+            // Show home view and render categories
             showView('home');
+            renderCategories(); // ADD THIS LINE
             
         } else {
             console.log("Password mismatch");
@@ -1449,58 +1763,83 @@ async function initializeApp() {
     // ==================== INITIALIZATION ====================
 
     async function initializeApp() {
-        // Always show login overlay first
-        document.getElementById('loginOverlay').style.display = 'flex';
-        
-        // Load data from Firebase
-        await loadAllData();
-        
-        // Check if users exist, if not create default users
-        if (userAccounts.length === 0) {
-            console.log("No users found, creating default users...");
-            await createDefaultUsers();
-        }
-        
-        // Check if user is already logged in
-        const currentUser = getCurrentUser();
-        const lastLogin = localStorage.getItem('last_login');
-        const today = new Date().toDateString();
-        
-        if (currentUser && lastLogin === today) {
-            // Verify user still exists and is enabled
-            const user = getUser(currentUser);
-            if (user && user.enabled) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                updateGreeting();
-                updateUserDisplay();
-                
-                if (isCurrentUserAdmin()) {
-                    document.getElementById('userMgmtBtn').style.display = 'inline-block';
-                    document.getElementById('sessionsBtn').style.display = 'inline-block';
-                    document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-                }
-                
-                showView('home');
-            }
-        }
-        
-        // Set up intervals
-        setInterval(syncBG, 1000);
-        setInterval(runTimeMonitoring, 30000);
-        setInterval(updateDashboardStatus, 1000);
-        
-        // Initialize UI
-        syncBG();
-        updateDashboardStatus();
-        
-        // Add event listeners
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeImageGallery();
-                closeDocumentViewer();
-            }
-        });
+    console.log("Initializing app...");
+    
+    // DON'T show login overlay immediately - wait to check if user is already logged in
+    document.getElementById('loginOverlay').style.display = 'none';
+    
+    // Load data from Firebase
+    await loadAllData();
+    
+    // Check if users exist, if not create default users
+    if (userAccounts.length === 0) {
+        console.log("No users found, creating default users...");
+        await createDefaultUsers();
     }
+    
+    // Check if user is already logged in
+    const currentUser = getCurrentUser();
+    const lastLogin = localStorage.getItem('last_login');
+    const today = new Date().toDateString();
+    
+    console.log("Session check:", {
+        currentUser: currentUser,
+        lastLogin: lastLogin,
+        today: today
+    });
+    
+    if (currentUser && lastLogin === today) {
+        // Verify user still exists and is enabled
+        const user = getUser(currentUser);
+        if (user && user.enabled) {
+            console.log("User already logged in:", currentUser);
+            // User is already logged in, don't show login
+            updateGreeting();
+            updateUserDisplay();
+            
+            if (isCurrentUserAdmin()) {
+                document.getElementById('userMgmtBtn').style.display = 'inline-block';
+                document.getElementById('sessionsBtn').style.display = 'inline-block';
+                document.getElementById('syncSettingsBtn').style.display = 'inline-block';
+            }
+            
+            // Initialize collections if needed
+            await initializeFirestoreCollections();
+            
+            // Show home view and render categories
+            showView('home');
+            renderCategories();
+        } else {
+            // User doesn't exist or is disabled, show login
+            console.log("User not found or disabled, showing login");
+            document.getElementById('loginOverlay').style.display = 'flex';
+        }
+    } else {
+        // No valid session, show login
+        console.log("No valid session, showing login");
+        document.getElementById('loginOverlay').style.display = 'flex';
+    }
+    
+    // Initialize collections if needed (do this regardless of login)
+    await initializeFirestoreCollections();
+    
+    // Set up intervals
+    setInterval(syncBG, 5000); // Change background every 5 seconds
+    setInterval(runTimeMonitoring, 30000);
+    setInterval(updateDashboardStatus, 1000);
+    
+    // Initialize UI
+    syncBG(); // Start the background slideshow
+    updateDashboardStatus();
+    
+    // Add event listeners
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeImageGallery();
+            closeDocumentViewer();
+        }
+    });
+}
 
     // Call initialization when page loads
     window.onload = initializeApp;
