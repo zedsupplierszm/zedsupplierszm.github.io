@@ -1184,22 +1184,7 @@
         }
     }
 
-    // 1. Check local token first, then verify
-const getCurrentUser = async () => {
-  const token = localStorage.getItem('token');
-  if (!token) return null;
-  
-  // Optimistic return with cached user
-  const cachedUser = localStorage.getItem('user');
-  if (cachedUser) {
-    // Return cached user immediately, verify in background
-    setTimeout(() => verifyToken(token), 0);
-    return JSON.parse(cachedUser);
-  }
-  
-  // If no cache, wait for verification
-  return await verifyToken(token);
-};
+
 
     async function ensureDefaultUsers() {
         try {
@@ -1233,6 +1218,9 @@ const getCurrentUser = async () => {
                     password: "RIGHTCHISHALA",
                     role: "staff",
                     enabled: true,
+                    nrc: "123456/78/1",
+                    email: "zulujosephp@gmail.com",
+                    phone: "+260973031254",
                     createdAt: new Date().toISOString()
                 });
             }
