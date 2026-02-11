@@ -1184,6 +1184,44 @@
         }
     }
 
+    function App() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Check auth state immediately
+    const checkAuth = async () => {
+      try {
+        // Your auth check logic here
+        const user = await getCurrentUser(); // or your auth method
+        setUser(user);
+      } catch (error) {
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  // Show nothing or a loader while checking auth
+  if (isLoading) {
+    return (
+      <div className="loading-screen">
+        {/* You can show a spinner, skeleton, or just nothing */}
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {user ? <MainScreen /> : <LoginScreen />}
+    </>
+  );
+}
+
     async function ensureDefaultUsers() {
         try {
             const usersSnapshot = await db.collection(COLLECTIONS.USERS).get();
