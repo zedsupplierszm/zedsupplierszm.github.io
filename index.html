@@ -1184,40 +1184,22 @@
         }
     }
 
-    function App() {
-  const [user, setUser] = useState(() => {
-    // Try to get cached user data immediately
-    const cached = localStorage.getItem('user');
-    return cached ? JSON.parse(cached) : null;
-  });
-  const [isLoading, setIsLoading] = useState(!user); // Skip loading if we have cached data
-
-  useEffect(() => {
-    if (!user) {
-      // Only verify if no cached user
-      verifyAuth();
-    } else {
-      // Verify in background even with cached user
-      verifyAuth();
-    }
-  }, []);
-
-  const verifyAuth = async () => {
-    try {
-      const verifiedUser = await getCurrentUser();
-      setUser(verifiedUser);
-      localStorage.setItem('user', JSON.stringify(verifiedUser));
-    } catch {
-      setUser(null);
-      localStorage.removeItem('user');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (isLoading) return <LoadingSpinner />;
-  return <>{user ? <MainScreen /> : <LoginScreen />}</>;
-}
+    // 1. Check local token first, then verify
+const getCurrentUser = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  
+  // Optimistic return with cached user
+  const cachedUser = localStorage.getItem('user');
+  if (cachedUser) {
+    // Return cached user immediately, verify in background
+    setTimeout(() => verifyToken(token), 0);
+    return JSON.parse(cachedUser);
+  }
+  
+  // If no cache, wait for verification
+  return await verifyToken(token);
+};
 
     async function ensureDefaultUsers() {
         try {
