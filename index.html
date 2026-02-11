@@ -1189,37 +1189,18 @@
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Check auth state immediately
-    const checkAuth = async () => {
-      try {
-        // Your auth check logic here
-        const user = await getCurrentUser(); // or your auth method
-        setUser(user);
-      } catch (error) {
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
+    // Your fastest auth check
+    Promise.resolve().then(async () => {
+      const user = await checkAuth(); // Make this as fast as possible
+      setUser(user);
+      setIsLoading(false);
+    });
   }, []);
 
-  // Show nothing or a loader while checking auth
-  if (isLoading) {
-    return (
-      <div className="loading-screen">
-        {/* You can show a spinner, skeleton, or just nothing */}
-        <div>Loading...</div>
-      </div>
-    );
-  }
+  // Don't render anything until we know
+  if (isLoading) return null; // Or <div style={{display: 'none'}} />
 
-  return (
-    <>
-      {user ? <MainScreen /> : <LoginScreen />}
-    </>
-  );
+  return user ? <MainScreen /> : <LoginScreen />;
 }
 
     async function ensureDefaultUsers() {
