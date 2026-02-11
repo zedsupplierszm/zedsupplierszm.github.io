@@ -1072,8 +1072,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
 
 <script>
-   
-    <script>
     // Firebase configuration
     const firebaseConfig = {
         apiKey: "AIzaSyCJrqk15bvd1746VkkDAcOM_U9w0PH7dP0",
@@ -1585,20 +1583,30 @@
 
     function togglePassword() {
         const pField = document.getElementById('passIn');
-        pField.type = pField.type === "password" ? "text" : "password";
+        if (pField) {
+            pField.type = pField.type === "password" ? "text" : "password";
+        }
     }
 
     async function handleLogin() {
+        const usernameField = document.getElementById('userIn');
+        const passwordField = document.getElementById('passIn');
+        
+        if (!usernameField || !passwordField) {
+            alert("Login form not found!");
+            return;
+        }
+
         if (isSystemLocked()) {
-            const currentUser = document.getElementById('userIn').value.toUpperCase().trim();
+            const currentUser = usernameField.value.toUpperCase().trim();
             if (currentUser !== "JOSEPH") {
                 alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
                 return;
             }
         }
 
-        const u = document.getElementById('userIn').value.toUpperCase().trim();
-        const p = document.getElementById('passIn').value.trim();
+        const u = usernameField.value.toUpperCase().trim();
+        const p = passwordField.value.trim();
 
         if (!u) {
             alert("Username required.");
@@ -1606,11 +1614,14 @@
         }
 
         try {
+            console.log("Attempting login for user:", u);
+            
             const usersRef = db.collection(COLLECTIONS.USERS);
             const query = usersRef.where('username', '==', u);
             const querySnapshot = await query.get();
             
             if (querySnapshot.empty) {
+                console.log("User not found:", u);
                 alert("Invalid username or password!");
                 return;
             }
@@ -1624,28 +1635,42 @@
             }
 
             if (user.password === p) {
+                console.log("Login successful for user:", u);
+                
+                // Set session
                 localStorage.setItem('logged_user', u);
                 localStorage.setItem('last_login', new Date().toDateString());
-                document.getElementById('loginOverlay').style.display = 'none';
-
-                userAccounts = await getAllUsers();
-                await loadAllData();
                 
+                // Hide login overlay
+                const loginOverlay = document.getElementById('loginOverlay');
+                if (loginOverlay) {
+                    loginOverlay.style.display = 'none';
+                }
+
+                // Load all data
+                await loadAllData();
+                await initializeFirestoreCollections();
+                
+                // Update UI
                 updateGreeting();
                 updateUserDisplay();
                 
-                if (isCurrentUserAdmin()) {
-                    document.getElementById('userMgmtBtn').style.display = 'inline-block';
-                    document.getElementById('sessionsBtn').style.display = 'inline-block';
-                    document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-                } else {
-                    document.getElementById('userMgmtBtn').style.display = 'none';
-                    document.getElementById('sessionsBtn').style.display = 'none';
-                    document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-                }
+                // Show admin buttons if applicable
+                const isAdmin = isCurrentUserAdmin();
+                const userMgmtBtn = document.getElementById('userMgmtBtn');
+                const sessionsBtn = document.getElementById('sessionsBtn');
+                const syncSettingsBtn = document.getElementById('syncSettingsBtn');
                 
+                if (userMgmtBtn) userMgmtBtn.style.display = isAdmin ? 'inline-block' : 'none';
+                if (sessionsBtn) sessionsBtn.style.display = isAdmin ? 'inline-block' : 'none';
+                if (syncSettingsBtn) syncSettingsBtn.style.display = 'inline-block';
+                
+                // Show home view
                 showView('home');
+                
+                showNotification(`Welcome, ${u}!`, 'success');
             } else {
+                console.log("Invalid password for user:", u);
                 alert("Invalid Username or Password!");
             }
         } catch (error) {
@@ -1657,7 +1682,23 @@
     function logout() {
         localStorage.removeItem('logged_user');
         localStorage.removeItem('last_login');
-        location.reload();
+        
+        const loginOverlay = document.getElementById('loginOverlay');
+        if (loginOverlay) {
+            loginOverlay.style.display = 'flex';
+            
+            // Clear login form
+            const usernameField = document.getElementById('userIn');
+            const passwordField = document.getElementById('passIn');
+            if (usernameField) usernameField.value = '';
+            if (passwordField) passwordField.value = '';
+        }
+        
+        // Hide all views
+        showView('home'); // This will hide views but home will be empty
+        document.getElementById('homeView').style.display = 'none';
+        
+        showNotification('Logged out successfully', 'success');
     }
 
     function updateGreeting() {
@@ -1711,11 +1752,13 @@
     }
 
     function openLinkModal() {
-        document.getElementById('linkModal').style.display = 'flex';
+        const modal = document.getElementById('linkModal');
+        if (modal) modal.style.display = 'flex';
     }
 
     function closeLinkModal() {
-        document.getElementById('linkModal').style.display = 'none';
+        const modal = document.getElementById('linkModal');
+        if (modal) modal.style.display = 'none';
     }
 
     function addLink() {
@@ -1724,7 +1767,8 @@
     }
 
     function closeModal() {
-        document.getElementById('modalOverlay').style.display = 'none';
+        const modal = document.getElementById('modalOverlay');
+        if (modal) modal.style.display = 'none';
     }
 
     function forgotPasswordSimple() {
@@ -1768,7 +1812,7 @@
 
     function importData(event) {
         alert('Import feature coming soon!');
-        event.target.value = '';
+        if (event.target) event.target.value = '';
     }
 
     function showAuditLogs() {
@@ -1867,15 +1911,26 @@
     async function initializeApp() {
         console.log("Initializing app...");
         
-        document.getElementById('loginOverlay').style.display = 'none';
+        // Always show login overlay first
+        const loginOverlay = document.getElementById('loginOverlay');
+        if (loginOverlay) {
+            loginOverlay.style.display = 'flex';
+        }
         
+        // Load initial data
         await loadAllData();
         
+        // Create default users if none exist
         if (userAccounts.length === 0) {
             console.log("No users found, creating default users...");
             await createDefaultUsers();
+            await loadAllData(); // Reload after creating
         }
         
+        // Initialize collections
+        await initializeFirestoreCollections();
+        
+        // Check for existing valid session
         const currentUser = getCurrentUser();
         const lastLogin = localStorage.getItem('last_login');
         const today = new Date().toDateString();
@@ -1883,40 +1938,71 @@
         if (currentUser && lastLogin === today) {
             const user = getUser(currentUser);
             if (user && user.enabled) {
-                console.log("User already logged in:", currentUser);
+                console.log("Valid session found for user:", currentUser);
+                
+                // Hide login overlay for valid session
+                if (loginOverlay) {
+                    loginOverlay.style.display = 'none';
+                }
+                
+                // Update UI
                 updateGreeting();
                 updateUserDisplay();
                 
-                if (isCurrentUserAdmin()) {
-                    document.getElementById('userMgmtBtn').style.display = 'inline-block';
-                    document.getElementById('sessionsBtn').style.display = 'inline-block';
-                    document.getElementById('syncSettingsBtn').style.display = 'inline-block';
-                }
+                // Show admin buttons if applicable
+                const isAdmin = isCurrentUserAdmin();
+                const userMgmtBtn = document.getElementById('userMgmtBtn');
+                const sessionsBtn = document.getElementById('sessionsBtn');
+                const syncSettingsBtn = document.getElementById('syncSettingsBtn');
                 
-                await initializeFirestoreCollections();
+                if (userMgmtBtn) userMgmtBtn.style.display = isAdmin ? 'inline-block' : 'none';
+                if (sessionsBtn) sessionsBtn.style.display = isAdmin ? 'inline-block' : 'none';
+                if (syncSettingsBtn) syncSettingsBtn.style.display = 'inline-block';
+                
+                // Show home view
                 showView('home');
             } else {
-                document.getElementById('loginOverlay').style.display = 'flex';
+                // Invalid user or disabled account - clear session
+                localStorage.removeItem('logged_user');
+                localStorage.removeItem('last_login');
             }
-        } else {
-            document.getElementById('loginOverlay').style.display = 'flex';
         }
         
-        await initializeFirestoreCollections();
-        
+        // Start background processes
         setInterval(syncBG, 5000);
         setInterval(runTimeMonitoring, 30000);
         setInterval(updateDashboardStatus, 1000);
         
+        // Initial updates
         syncBG();
         updateDashboardStatus();
         
+        // Event listeners
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeImageGallery();
                 closeDocumentViewer();
             }
         });
+        
+        // Enter key for login
+        const passIn = document.getElementById('passIn');
+        if (passIn) {
+            passIn.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleLogin();
+                }
+            });
+        }
+        
+        const userIn = document.getElementById('userIn');
+        if (userIn) {
+            userIn.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('passIn').focus();
+                }
+            });
+        }
         
         // Close modals when clicking outside
         window.onclick = function(event) {
@@ -1930,9 +2016,8 @@
         };
     }
 
+    // Start the app when page loads
     window.onload = initializeApp;
-</script>
-
 </script>
 
 <footer style="text-align:center; padding: 40px; background: #333; color: white;">
