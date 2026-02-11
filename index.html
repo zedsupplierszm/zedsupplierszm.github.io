@@ -1184,25 +1184,6 @@
         }
     }
 
-    function App() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // Your fastest auth check
-    Promise.resolve().then(async () => {
-      const user = await checkAuth(); // Make this as fast as possible
-      setUser(user);
-      setIsLoading(false);
-    });
-  }, []);
-
-  // Don't render anything until we know
-  if (isLoading) return null; // Or <div style={{display: 'none'}} />
-
-  return user ? <MainScreen /> : <LoginScreen />;
-}
-
     async function ensureDefaultUsers() {
         try {
             const usersSnapshot = await db.collection(COLLECTIONS.USERS).get();
