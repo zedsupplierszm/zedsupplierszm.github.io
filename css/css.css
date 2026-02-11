@@ -99,6 +99,52 @@ body::after {
     display: block;
 }
 
+/* Loading Spinner Container */
+#loadingSpinner {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2000;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    text-align: center;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#loadingSpinner.active {
+    display: flex;
+}
+
+/* The Spinner Circle */
+.spinner {
+    border: 5px solid rgba(0,0,0,0.1);
+    border-radius: 50%;
+    border-top: 5px solid #3498db;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Optional loading text */
+#loadingSpinner p {
+    margin: 0;
+    color: #333;
+    font-size: 16px;
+    font-weight: 500;
+}
+
 #modalTitle { 
     margin-top: 0; 
     color: #333; 
@@ -450,3 +496,4 @@ a:active {
 
 
 </style>
+
