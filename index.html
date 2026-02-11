@@ -1184,6 +1184,41 @@
         }
     }
 
+    function App() {
+  const [user, setUser] = useState(() => {
+    // Try to get cached user data immediately
+    const cached = localStorage.getItem('user');
+    return cached ? JSON.parse(cached) : null;
+  });
+  const [isLoading, setIsLoading] = useState(!user); // Skip loading if we have cached data
+
+  useEffect(() => {
+    if (!user) {
+      // Only verify if no cached user
+      verifyAuth();
+    } else {
+      // Verify in background even with cached user
+      verifyAuth();
+    }
+  }, []);
+
+  const verifyAuth = async () => {
+    try {
+      const verifiedUser = await getCurrentUser();
+      setUser(verifiedUser);
+      localStorage.setItem('user', JSON.stringify(verifiedUser));
+    } catch {
+      setUser(null);
+      localStorage.removeItem('user');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) return <LoadingSpinner />;
+  return <>{user ? <MainScreen /> : <LoginScreen />}</>;
+}
+
     async function ensureDefaultUsers() {
         try {
             const usersSnapshot = await db.collection(COLLECTIONS.USERS).get();
