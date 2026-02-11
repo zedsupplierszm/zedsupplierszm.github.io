@@ -818,17 +818,7 @@
             <p style="font-size: 12px; color: #888;">Operating Hours: 07:30 - 16:50 CAT</p>
             <p id="lockMessage" style="font-size: 12px; color: #666; margin-top: 10px;"></p>
         </div>
-        
-        <div id="loginFieldsContent">
-            <h2>System Login</h2>
-            <input type="text" id="userIn" placeholder="Username">
-            <div class="pass-wrapper">
-                <input type="password" id="passIn" placeholder="Password">
-                <span class="toggle-pass" onclick="togglePassword()">👁️</span>
-            </div>
-            <button class="btn btn-add" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">Login</button>
-            <p style="font-size: 12px; margin-top: 15px; color: #666; cursor: pointer;" onclick="forgotPasswordSimple()">Forgot Password?</p>
-        </div>
+    
     </div>
 </div>
 
@@ -852,18 +842,6 @@
     }
 </style>
 
-        <div id="loginFieldsContent">
-            <h2>System Login</h2>
-            <input type="text" id="userIn" placeholder="Username">
-            <div class="pass-wrapper">
-                <input type="password" id="passIn" placeholder="Password">
-                <span class="toggle-pass" onclick="togglePassword()">👁️</span>
-            </div>
-            <button class="btn btn-add" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">Login</button>
-            <p style="font-size: 12px; margin-top: 15px; color: #666; cursor: pointer;" onclick="forgotPasswordSimple()">Forgot Password?</p>
-        </div>
-    </div>
-</div>
 
 <div id="imageGalleryModal" class="image-gallery-modal">
     <div class="image-gallery-content">
@@ -1162,10 +1140,62 @@
         SESSIONS: 'sessions'
     };
 
+    async function ensureDefaultUsers() {
+    try {
+        const usersSnapshot = await db.collection(COLLECTIONS.USERS).limit(1).get();
+        
+        if (usersSnapshot.empty) {
+            console.log("Creating default users...");
+            await createDefaultUsers();
+            return true;
+        }
+        return true;
+    } catch (error) {
+        console.error("Error ensuring default users:", error);
+        return false;
+    }
+}
+
     // ==================== FIREBASE FUNCTIONS ====================
 
+    async function getAllUsers() {
+        try {
+            const snapshot = await db.collection(COLLECTIONS.USERS).get();
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error("Error getting users:", error);
+            return [];
+        }
+    }
+
+    async function loadAllData() {
+        try {
+            console.log("Loading data from Firebase...");
+            
+            // Load users
+            userAccounts = await getAllUsers();
+            
+            // Load categories
+            const categoriesSnapshot = await db.collection(COLLECTIONS.CATEGORIES).get();
+            categories = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Load suppliers
+            const suppliersSnapshot = await db.collection(COLLECTIONS.SUPPLIERS).get();
+            suppliers = suppliersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Load links
+            const linksSnapshot = await db.collection(COLLECTIONS.LINKS).get();
+            links = linksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            return true;
+        } catch (error) {
+            console.error("Error loading data:", error);
+            showNotification("Failed to load data from database", "error");
+            return false;
+        }
+    }
+
     async function createDefaultUsers() {
-        console.log("Creating default users...");
         const defaultUsers = [
             { 
                 username: "JOSEPH", 
@@ -1187,93 +1217,10 @@
         ];
         
         for (const user of defaultUsers) {
-            try {
-                await db.collection(COLLECTIONS.USERS).add(user);
-                console.log(`Created user: ${user.username}`);
-            } catch (e) {
-                console.error(`Error creating user ${user.username}:`, e);
-            }
+            await db.collection(COLLECTIONS.USERS).add(user);
         }
-    }
-
-    async function ensureDefaultUsers() {
-        try {
-            const usersSnapshot = await db.collection(COLLECTIONS.USERS)
-                .where('username', 'in', ['JOSEPH', 'CHISHALA'])
-                .limit(2)
-                .get();
-            
-            if (usersSnapshot.empty) {
-                await createDefaultUsers();
-                return true;
-            } else {
-                // Check if both users exist
-                const usernames = usersSnapshot.docs.map(doc => doc.data().username);
-                if (!usernames.includes('JOSEPH')) {
-                    await db.collection(COLLECTIONS.USERS).add({
-                        username: "JOSEPH",
-                        password: "RIGHTJOSEPH",
-                        role: "super admin",
-                        enabled: true,
-                        nrc: "123456/78/1",
-                        email: "zulujosephp@gmail.com",
-                        phone: "+260973031254",
-                        createdAt: new Date().toISOString()
-                    });
-                }
-                if (!usernames.includes('CHISHALA')) {
-                    await db.collection(COLLECTIONS.USERS).add({
-                        username: "CHISHALA",
-                        password: "RIGHTCHISHALA",
-                        role: "staff",
-                        enabled: true,
-                        createdAt: new Date().toISOString()
-                    });
-                }
-            }
-            return true;
-        } catch (error) {
-            console.error("Error ensuring default users:", error);
-            return false;
-        }
-    }
-
-    async function getAllUsers() {
-        try {
-            const snapshot = await db.collection(COLLECTIONS.USERS).get();
-            userAccounts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            console.log(`Loaded ${userAccounts.length} users`);
-            return userAccounts;
-        } catch (error) {
-            console.error("Error getting users:", error);
-            return [];
-        }
-    }
-
-    async function loadAllData() {
-        try {
-            console.log("Loading data from Firebase...");
-            
-            // Load users first
-            await getAllUsers();
-            
-            // Load categories
-            const categoriesSnapshot = await db.collection(COLLECTIONS.CATEGORIES).get();
-            categories = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            // Load suppliers
-            const suppliersSnapshot = await db.collection(COLLECTIONS.SUPPLIERS).get();
-            suppliers = suppliersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            // Load links
-            const linksSnapshot = await db.collection(COLLECTIONS.LINKS).get();
-            links = linksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            return true;
-        } catch (error) {
-            console.error("Error loading data:", error);
-            return false;
-        }
+        
+        userAccounts = await getAllUsers();
     }
 
     async function initializeFirestoreCollections() {
@@ -1301,6 +1248,9 @@
                 for (const category of defaultCategories) {
                     await db.collection(COLLECTIONS.CATEGORIES).add(category);
                 }
+                
+                const newSnapshot = await db.collection(COLLECTIONS.CATEGORIES).get();
+                categories = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             }
             
             // Check if links collection has documents
@@ -1325,6 +1275,9 @@
                 for (const link of defaultLinks) {
                     await db.collection(COLLECTIONS.LINKS).add(link);
                 }
+                
+                const newLinksSnapshot = await db.collection(COLLECTIONS.LINKS).get();
+                links = newLinksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             }
             
             return true;
@@ -1332,163 +1285,6 @@
             console.error("Error initializing collections:", error);
             return false;
         }
-    }
-
-    // ==================== LOGIN FUNCTIONS ====================
-
-    function isSystemLocked() {
-        const currentUser = getCurrentUser();
-        if(currentUser === "JOSEPH") return false;
-        
-        const now = new Date();
-        const currentTotal = (now.getHours() * 60) + now.getMinutes();
-        const lockTotal = (LOCK_TIME.hr * 60) + LOCK_TIME.min;
-        const openTotal = (OPEN_TIME.hr * 60) + OPEN_TIME.min;
-
-        return (currentTotal >= lockTotal || currentTotal < openTotal);
-    }
-
-    function togglePassword() {
-        const pField = document.getElementById('passIn');
-        if (pField) {
-            pField.type = pField.type === "password" ? "text" : "password";
-        }
-    }
-
-    async function handleLogin() {
-        const usernameField = document.getElementById('userIn');
-        const passwordField = document.getElementById('passIn');
-        
-        if (!usernameField || !passwordField) {
-            alert("Login form not found!");
-            return;
-        }
-
-        const u = usernameField.value.toUpperCase().trim();
-        const p = passwordField.value.trim();
-
-        if (!u) {
-            alert("Username required.");
-            return;
-        }
-
-        if (!p) {
-            alert("Password required.");
-            return;
-        }
-
-        if (isSystemLocked() && u !== "JOSEPH") {
-            alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
-            return;
-        }
-
-        try {
-            console.log("Attempting login for user:", u);
-            
-            // Ensure users exist in database
-            await ensureDefaultUsers();
-            
-            // Reload users to ensure we have latest data
-            await getAllUsers();
-            
-            // Find the user
-            const user = userAccounts.find(user => user.username === u);
-            
-            if (!user) {
-                console.log("User not found:", u);
-                alert("Invalid username or password!");
-                return;
-            }
-            
-            if (!user.enabled) {
-                alert("This account has been disabled. Please contact the administrator.");
-                return;
-            }
-
-            // Check password
-            if (user.password === p) {
-                console.log("Login successful for user:", u);
-                
-                // Set session
-                localStorage.setItem('logged_user', u);
-                localStorage.setItem('last_login', new Date().toDateString());
-                
-                // Hide login overlay
-                const loginOverlay = document.getElementById('loginOverlay');
-                if (loginOverlay) {
-                    loginOverlay.style.display = 'none';
-                }
-
-                // Load all data
-                await loadAllData();
-                await initializeFirestoreCollections();
-                
-                // Update UI
-                updateGreeting();
-                updateUserDisplay();
-                
-                // Show admin buttons if applicable
-                const isAdmin = isCurrentUserAdmin();
-                const userMgmtBtn = document.getElementById('userMgmtBtn');
-                const sessionsBtn = document.getElementById('sessionsBtn');
-                const syncSettingsBtn = document.getElementById('syncSettingsBtn');
-                
-                if (userMgmtBtn) userMgmtBtn.style.display = isAdmin ? 'inline-block' : 'none';
-                if (sessionsBtn) sessionsBtn.style.display = isAdmin ? 'inline-block' : 'none';
-                if (syncSettingsBtn) syncSettingsBtn.style.display = 'inline-block';
-                
-                // Show home view
-                showView('home');
-                
-                showNotification(`Welcome, ${u}!`, 'success');
-            } else {
-                console.log("Invalid password for user:", u);
-                alert("Invalid username or password!");
-            }
-        } catch (error) {
-            console.error("Login error:", error);
-            alert("Login failed. Please check your connection and try again. Error: " + error.message);
-        }
-    }
-
-    function logout() {
-        localStorage.removeItem('logged_user');
-        localStorage.removeItem('last_login');
-        
-        // Hide all app views
-        const views = ['homeView', 'categoryPageView', 'aboutView', 'contactView', 'linksView'];
-        views.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        });
-        
-        // Show login overlay
-        const loginOverlay = document.getElementById('loginOverlay');
-        if (loginOverlay) loginOverlay.style.display = 'flex';
-        
-        // Clear form fields
-        const userIn = document.getElementById('userIn');
-        const passIn = document.getElementById('passIn');
-        if (userIn) userIn.value = '';
-        if (passIn) passIn.value = '';
-        
-        showNotification('Logged out successfully', 'success');
-    }
-
-    function getCurrentUser() {
-        return localStorage.getItem('logged_user') || null;
-    }
-
-    function getUser(username) {
-        if (!userAccounts || userAccounts.length === 0) return null;
-        return userAccounts.find(u => u.username === username);
-    }
-
-    function isCurrentUserAdmin() {
-        const currentUser = getCurrentUser();
-        if (!currentUser) return false;
-        const user = getUser(currentUser);
-        return user && (user.role === 'super admin' || user.role === USER_ROLES.ADMIN);
     }
 
     // ==================== CORE UI FUNCTIONS ====================
@@ -1548,9 +1344,22 @@
         img.src = currentImage;
         
         bgIndex = (bgIndex + 1) % bgImages.length;
+        
+        const clockElement = document.getElementById('liveClock');
+        if (clockElement) {
+            const now = new Date();
+            clockElement.textContent = now.toLocaleTimeString('en-US', { 
+                hour12: true, 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
     }
 
     function renderCategories() {
+        console.log("Rendering categories...");
+        
         const categoryGrid = document.getElementById('categoryGrid');
         if (!categoryGrid) return;
         
@@ -1572,6 +1381,8 @@
     }
 
     function openCategoryPage(categoryId) {
+        console.log("Opening category:", categoryId);
+        
         const category = categories.find(cat => cat.id === categoryId);
         if (!category) {
             alert("Category not found!");
@@ -1750,6 +1561,22 @@
         `).join('');
     }
 
+    function getCurrentUser() {
+        return localStorage.getItem('logged_user') || null;
+    }
+
+    function getUser(username) {
+        if (!userAccounts || userAccounts.length === 0) return null;
+        return userAccounts.find(u => u.username === username.toUpperCase());
+    }
+
+    function isCurrentUserAdmin() {
+        const currentUser = getCurrentUser();
+        if (!currentUser) return false;
+        const user = getUser(currentUser);
+        return user && (user.role === 'super admin' || user.role === USER_ROLES.ADMIN);
+    }
+
     function showNotification(message, type = 'success') {
         let notification = document.getElementById('notification');
         if (!notification) {
@@ -1767,6 +1594,150 @@
             notification.style.display = 'none';
         }, 5000);
     }
+
+    // ==================== LOGIN FUNCTIONS ====================
+
+    function isSystemLocked() {
+        const currentUser = getCurrentUser();
+        if(currentUser === "JOSEPH") return false;
+        
+        const now = new Date();
+        const currentTotal = (now.getHours() * 60) + now.getMinutes();
+        const lockTotal = (LOCK_TIME.hr * 60) + LOCK_TIME.min;
+        const openTotal = (OPEN_TIME.hr * 60) + OPEN_TIME.min;
+
+        return (currentTotal >= lockTotal || currentTotal < openTotal);
+    }
+
+    function togglePassword() {
+        const pField = document.getElementById('passIn');
+        if (pField) {
+            pField.type = pField.type === "password" ? "text" : "password";
+        }
+    }
+
+    async function handleLogin() {
+    const usernameField = document.getElementById('userIn');
+    const passwordField = document.getElementById('passIn');
+    
+    if (!usernameField || !passwordField) {
+        alert("Login form not found!");
+        return;
+    }
+
+    if (isSystemLocked()) {
+        const currentUser = usernameField.value.toUpperCase().trim();
+        if (currentUser !== "JOSEPH") {
+            alert("Access Denied: The system is currently locked. Operating hours: 07:30 to 16:50 CAT.");
+            return;
+        }
+    }
+
+    const u = usernameField.value.toUpperCase().trim();
+    const p = passwordField.value.trim();
+
+    if (!u) {
+        alert("Username required.");
+        return;
+    }
+
+    if (!p) {
+        alert("Password required.");
+        return;
+    }
+
+    try {
+        console.log("Attempting login for user:", u);
+        
+        // First ensure default users exist
+        await ensureDefaultUsers();
+        
+        // Now try to find the user
+        const usersRef = db.collection(COLLECTIONS.USERS);
+        const query = usersRef.where('username', '==', u);
+        const querySnapshot = await query.get();
+        
+        if (querySnapshot.empty) {
+            console.log("User not found:", u);
+            alert("Invalid username or password!");
+            return;
+        }
+        
+        const userDoc = querySnapshot.docs[0];
+        const user = userDoc.data();
+        
+        if (!user.enabled) {
+            alert("This account has been disabled. Please contact the administrator.");
+            return;
+        }
+
+        if (user.password === p) {
+            console.log("Login successful for user:", u);
+            
+            // Set session
+            localStorage.setItem('logged_user', u);
+            localStorage.setItem('last_login', new Date().toDateString());
+            
+            // Hide login overlay
+            const loginOverlay = document.getElementById('loginOverlay');
+            if (loginOverlay) {
+                loginOverlay.style.display = 'none';
+            }
+
+            // Load all data
+            await loadAllData();
+            
+            // Update UI
+            updateGreeting();
+            updateUserDisplay();
+            
+            // Show admin buttons if applicable
+            const isAdmin = isCurrentUserAdmin();
+            const userMgmtBtn = document.getElementById('userMgmtBtn');
+            const sessionsBtn = document.getElementById('sessionsBtn');
+            const syncSettingsBtn = document.getElementById('syncSettingsBtn');
+            
+            if (userMgmtBtn) userMgmtBtn.style.display = isAdmin ? 'inline-block' : 'none';
+            if (sessionsBtn) sessionsBtn.style.display = isAdmin ? 'inline-block' : 'none';
+            if (syncSettingsBtn) syncSettingsBtn.style.display = 'inline-block';
+            
+            // Show home view
+            showView('home');
+            
+            showNotification(`Welcome, ${u}!`, 'success');
+        } else {
+            console.log("Invalid password for user:", u);
+            alert("Invalid username or password!");
+        }
+    } catch (error) {
+        console.error("Login error:", error);
+        alert("Login failed. Please check your connection and try again. Error: " + error.message);
+    }
+}
+
+    function logout() {
+    localStorage.removeItem('logged_user');
+    localStorage.removeItem('last_login');
+    
+    // Hide all app views
+    const views = ['homeView', 'categoryPageView', 'aboutView', 'contactView', 'linksView'];
+    views.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    
+    // Show login overlay
+    const loginOverlay = document.getElementById('loginOverlay');
+    if (loginOverlay) loginOverlay.style.display = 'flex';
+    
+    // Clear form fields
+    const userIn = document.getElementById('userIn');
+    const passIn = document.getElementById('passIn');
+    if (userIn) userIn.value = '';
+    if (passIn) passIn.value = '';
+    
+    showNotification('Logged out successfully', 'success');
+}
 
     function updateGreeting() {
         const hour = new Date().getHours();
@@ -1787,38 +1758,12 @@
             
             if (user) {
                 roleBadge.textContent = user.role.toUpperCase();
-                roleBadge.className = user.role === 'super admin' || user.role === 'admin' ? 'role-badge role-admin' : 'role-badge role-staff';
+                roleBadge.className = user.role === 'admin' || user.role === 'super admin' ? 'role-badge role-admin' : 'role-badge role-staff';
                 roleBadge.style.display = 'inline-block';
             }
         } else if (userInfo) {
             userInfo.textContent = 'Not logged in';
             if (roleBadge) roleBadge.style.display = 'none';
-        }
-    }
-
-    function updateDashboardStatus() {
-        const now = new Date();
-        const clockEl = document.getElementById('liveClock');
-        if (clockEl) {
-            clockEl.textContent = now.toLocaleTimeString('en-US', { 
-                hour12: true, 
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit'
-            });
-        }
-        
-        const statusDot = document.getElementById('statusDot');
-        const statusText = document.getElementById('statusText');
-        
-        if (statusDot && statusText) {
-            if (isSystemLocked()) {
-                statusDot.style.background = '#ff4d4d';
-                statusText.textContent = 'System Locked';
-            } else {
-                statusDot.style.background = '#2ecc71';
-                statusText.textContent = 'System Online';
-            }
         }
     }
 
@@ -1967,75 +1912,114 @@
         // Placeholder for time monitoring
     }
 
+    function updateDashboardStatus() {
+        const now = new Date();
+        const clockEl = document.getElementById('liveClock');
+        if (clockEl) {
+            clockEl.textContent = now.toLocaleTimeString('en-US', { 
+                hour12: true, 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        
+        if (statusDot && statusText) {
+            if (isSystemLocked()) {
+                statusDot.style.background = '#ff4d4d';
+                statusText.textContent = 'System Locked';
+            } else {
+                statusDot.style.background = '#2ecc71';
+                statusText.textContent = 'System Online';
+            }
+        }
+        
+        const currentUser = getCurrentUser();
+        if (currentUser && currentUser !== 'Not logged in') {
+            updateGreeting();
+            updateUserDisplay();
+        }
+    }
+
     // ==================== INITIALIZATION ====================
 
     async function initializeApp() {
-        console.log("Initializing app...");
+    console.log("Initializing app...");
+    
+    const loginOverlay = document.getElementById('loginOverlay');
+    
+    try {
+        // Ensure default users exist first
+        await ensureDefaultUsers();
         
-        const loginOverlay = document.getElementById('loginOverlay');
+        // Check for existing session
+        const savedUser = localStorage.getItem('logged_user');
+        const lastLogin = localStorage.getItem('last_login');
+        const today = new Date().toDateString();
         
-        try {
-            // Check for existing session
-            const savedUser = localStorage.getItem('logged_user');
-            const lastLogin = localStorage.getItem('last_login');
-            const today = new Date().toDateString();
-            
-            // Always ensure users exist first
-            await ensureDefaultUsers();
-            
-            // Load user accounts
-            await getAllUsers();
-            
-            if (savedUser && lastLogin === today) {
-                const user = getUser(savedUser);
-                if (user && user.enabled) {
-                    console.log("Valid session restored for:", savedUser);
-                    await loadAllData();
-                    await initializeFirestoreCollections();
-                    
-                    if (loginOverlay) loginOverlay.style.display = 'none';
-                    
-                    updateGreeting();
-                    updateUserDisplay();
-                    
-                    const isAdmin = isCurrentUserAdmin();
-                    const userMgmtBtn = document.getElementById('userMgmtBtn');
-                    const sessionsBtn = document.getElementById('sessionsBtn');
-                    const syncSettingsBtn = document.getElementById('syncSettingsBtn');
-                    
-                    if (userMgmtBtn) userMgmtBtn.style.display = isAdmin ? 'inline-block' : 'none';
-                    if (sessionsBtn) sessionsBtn.style.display = isAdmin ? 'inline-block' : 'none';
-                    if (syncSettingsBtn) syncSettingsBtn.style.display = 'inline-block';
-                    
-                    showView('home');
-                } else {
-                    // Clear invalid session
-                    localStorage.removeItem('logged_user');
-                    localStorage.removeItem('last_login');
-                    if (loginOverlay) loginOverlay.style.display = 'flex';
-                }
-            } else {
-                // No valid session - show login
-                if (loginOverlay) loginOverlay.style.display = 'flex';
-                // Load data in background
-                loadAllData();
-                initializeFirestoreCollections();
-            }
-        } catch (error) {
-            console.error("Initialization error:", error);
-            // Show login on error
+        if (!savedUser || lastLogin !== today) {
+            // No valid session - show login
             if (loginOverlay) loginOverlay.style.display = 'flex';
+            // Load data in background
+            loadAllData().then(() => initializeFirestoreCollections());
+            startBackgroundTasks();
+            return;
         }
         
-        // Start background tasks
-        startBackgroundTasks();
+        // Load data and verify session
+        await loadAllData();
+        await initializeFirestoreCollections();
+        
+        const user = getUser(savedUser);
+        if (user && user.enabled) {
+            console.log("Valid session restored for:", savedUser);
+            if (loginOverlay) loginOverlay.style.display = 'none';
+            
+            updateGreeting();
+            updateUserDisplay();
+            
+            const isAdmin = isCurrentUserAdmin();
+            const userMgmtBtn = document.getElementById('userMgmtBtn');
+            const sessionsBtn = document.getElementById('sessionsBtn');
+            const syncSettingsBtn = document.getElementById('syncSettingsBtn');
+            
+            if (userMgmtBtn) userMgmtBtn.style.display = isAdmin ? 'inline-block' : 'none';
+            if (sessionsBtn) sessionsBtn.style.display = isAdmin ? 'inline-block' : 'none';
+            if (syncSettingsBtn) syncSettingsBtn.style.display = 'inline-block';
+            
+            showView('home');
+        } else {
+            localStorage.removeItem('logged_user');
+            localStorage.removeItem('last_login');
+            if (loginOverlay) loginOverlay.style.display = 'flex';
+        }
+    } catch (error) {
+        console.error("Initialization error:", error);
+        // Show login on error
+        if (loginOverlay) loginOverlay.style.display = 'flex';
     }
+    
+    startBackgroundTasks();
+}
 
-    function startBackgroundTasks() {
+// Extract background processes to avoid duplication
+function startBackgroundTasks() {
+    setInterval(syncBG, 5000);
+    setInterval(runTimeMonitoring, 30000);
+    setInterval(updateDashboardStatus, 1000);
+    syncBG();
+    updateDashboardStatus();
+}
+        
+        // Start background processes
         setInterval(syncBG, 5000);
         setInterval(runTimeMonitoring, 30000);
         setInterval(updateDashboardStatus, 1000);
         
+        // Initial updates
         syncBG();
         updateDashboardStatus();
         
@@ -2047,10 +2031,13 @@
             }
         });
         
+        // Enter key for login
         const passIn = document.getElementById('passIn');
         if (passIn) {
             passIn.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') handleLogin();
+                if (e.key === 'Enter') {
+                    handleLogin();
+                }
             });
         }
         
@@ -2058,12 +2045,12 @@
         if (userIn) {
             userIn.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    const passIn = document.getElementById('passIn');
-                    if (passIn) passIn.focus();
+                    document.getElementById('passIn').focus();
                 }
             });
         }
         
+        // Close modals when clicking outside
         window.onclick = function(event) {
             const linkModal = document.getElementById('linkModal');
             const imageModal = document.getElementById('imageGalleryModal');
