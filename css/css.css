@@ -64,17 +64,30 @@ body::after {
     100%      { background-image: url(../images/bgx.jpg); filter: brightness(100%); transform: scale(1); }
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+/* Add to your <style> section */
+.top-nav li a[onclick*="Approval"] {
+    background: #e67e22 !important;
+    color: white !important;
+    animation: pulse-approval 2s infinite;
+    border-radius: 30px;
+    margin: 5px;
+    padding: 12px 25px !important;
 }
-.spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
+
+@keyframes pulse-approval {
+    0% { box-shadow: 0 0 0 0 rgba(230, 126, 34, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(230, 126, 34, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(230, 126, 34, 0); }
+}
+
+.approval-badge {
+    background: #ff4d4d;
+    color: white;
+    border-radius: 20px;
+    padding: 2px 8px;
+    margin-left: 8px;
+    font-size: 12px;
+    font-weight: bold;
 }
 
 .modal-content { 
@@ -85,7 +98,6 @@ body::after {
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     border: 1px solid rgba(255,255,255,0.1);
 }
-
 
 /* Hide all main views and content by default */
 #homeView, #categoryPageView, #aboutView, #contactView, #linksView,
@@ -110,52 +122,6 @@ body::after {
 /* Show spinner when needed */
 #loadingSpinner.active {
     display: block;
-}
-
-/* Loading Spinner Container */
-#loadingSpinner {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 2000;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 30px 40px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    text-align: center;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-#loadingSpinner.active {
-    display: flex;
-}
-
-/* The Spinner Circle */
-.spinner {
-    border: 5px solid rgba(0,0,0,0.1);
-    border-radius: 50%;
-    border-top: 5px solid #3498db;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-    margin-bottom: 15px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Optional loading text */
-#loadingSpinner p {
-    margin: 0;
-    color: #333;
-    font-size: 16px;
-    font-weight: 500;
 }
 
 #modalTitle { 
@@ -507,7 +473,4 @@ a:active {
 }
 
 
-
 </style>
-
-
