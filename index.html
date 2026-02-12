@@ -414,6 +414,7 @@
     <li><a onclick="logout()" style="background: #888;">LOGOUT</a></li>
     <button id="userMgmtBtn" class="btn" style="background:#e67e22; margin: 10px; display:none;" onclick="manageUsersModal()">👥 User Management</button>
     <button id="sessionsBtn" class="btn" style="background:#2196F3; margin: 10px; display:none;" onclick="toggleSessionsPanel()">👁️ Active Sessions</button>
+<button id="requestsManagementBtn" class="btn exclusive-super" style="background:#9b59b6; margin: 10px; display:none;" onclick="openRequestsManagement()">📋 Requests Management</button>
 </ul>
 
 <!-- STATUS BAR -->
@@ -462,7 +463,7 @@
         <button id="exportBackupBtn" class="btn exclusive-super" style="background:#607d8b" onclick="exportData()">💾 Export Backup</button>
         <button id="importMergeBtn" class="btn exclusive-super" style="background:#9c27b0" onclick="document.getElementById('importFile').click()">📥 Import & Merge</button>
         <input type="file" id="importFile" style="display:none" onchange="importData(event)">
-        <button id="requestsManagementBtn" class="btn exclusive-super" style="background:#9b59b6" onclick="openRequestsManagement()">📋 Requests Management & History</button>
+        
     </div>
 
     <div id="defaultHomeContent">
@@ -1018,243 +1019,375 @@ async function loadRequestsHistory() {
 }
 
 // COMPLETELY REWRITTEN - FIXED ARRAY CONFLICT
+// ========== FIXED REQUESTS MANAGEMENT ==========
+// ========== REQUESTS MANAGEMENT DASHBOARD - NO INDEX NEEDED ==========
 async function openRequestsManagement() {
     console.log("=== OPENING REQUESTS MANAGEMENT DASHBOARD ===");
     
-    // FORCE LOAD ALL pending requests directly from Firestore
-    let pendingRequests = [];
-    let allHistoryItems = [];
-    
     try {
-        console.log("Force loading ALL pending requests for super admin...");
+        // SIMPLE: Get ALL requests without complex filters
         const snapshot = await db.collection(COLLECTIONS.APPROVALS)
-            .where('status', '==', 'pending')
             .orderBy('createdAt', 'desc')
             .get();
         
-        pendingRequests = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        const allRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        console.log(`✅ SUPER ADMIN: Loaded ${pendingRequests.length} pending requests`);
-    } catch (error) {
-        console.error("Error loading pending requests:", error);
-        pendingRequests = [];
-    }
-    
-    // Load history separately (all non-pending requests)
-    try {
-        const historySnapshot = await db.collection(COLLECTIONS.APPROVALS)
-            .where('status', 'in', ['approved', 'rejected'])
-            .orderBy('createdAt', 'desc')
-            .limit(100)
-            .get();
+        // Filter in JavaScript instead of Firestore
+        const pendingRequests = allRequests.filter(req => req.status === 'pending');
+        const historyRequests = allRequests.filter(req => req.status === 'approved' || req.status === 'rejected');
         
-        allHistoryItems = historySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-        console.log(`Loaded ${allHistoryItems.length} history items`);
-    } catch (error) {
-        console.error('Error loading requests history:', error);
-        allHistoryItems = [];
-    }
-    
-    // Create modal
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.id = 'requestsManagementModal';
-    modal.style.display = 'flex';
-    
-    let pendingHtml = '';
-    let historyHtml = '';
-    
-    // Pending requests section
-    if (pendingRequests.length === 0) {
-        pendingHtml = '<div style="text-align: center; padding: 40px; color: #666;">✅ No pending requests</div>';
-    } else {
-        pendingRequests.forEach(req => {
-            // Format timestamp safely
-            let created = 'Unknown date';
-            if (req.createdAt) {
-                if (req.createdAt.toDate) {
-                    created = req.createdAt.toDate().toLocaleString();
-                } else if (req.createdDate) {
-                    created = new Date(req.createdDate).toLocaleString();
-                } else if (req.createdAt.seconds) {
-                    created = new Date(req.createdAt.seconds * 1000).toLocaleString();
-                } else if (typeof req.createdAt === 'string') {
-                    created = new Date(req.createdAt).toLocaleString();
+        const approvedCount = historyRequests.filter(r => r.status === 'approved').length;
+        const rejectedCount = historyRequests.filter(r => r.status === 'rejected').length;
+        const totalCount = allRequests.length;
+        
+        // Create modal
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'requestsManagementModal';
+        modal.style.display = 'flex';
+        
+        // Build PENDING REQUESTS HTML
+        let pendingHtml = '';
+        if (pendingRequests.length === 0) {
+            pendingHtml = `
+                <div style="text-align: center; padding: 60px; background: white; border-radius: 20px; color: #666;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+                    <div style="font-size: 18px; font-weight: 500;">No pending requests</div>
+                    <div style="font-size: 14px; color: #999; margin-top: 10px;">All caught up!</div>
+                </div>
+            `;
+        } else {
+            pendingRequests.forEach(req => {
+                let created = 'Unknown';
+                if (req.createdAt) {
+                    if (req.createdAt.toDate) created = req.createdAt.toDate().toLocaleString();
+                    else if (req.createdDate) created = new Date(req.createdDate).toLocaleString();
+                    else if (req.createdAt.seconds) created = new Date(req.createdAt.seconds * 1000).toLocaleString();
+                    else if (typeof req.createdAt === 'string') created = new Date(req.createdAt).toLocaleString();
                 }
-            }
-            
-            const actionColor = req.action === 'delete' ? '#e74c3c' : 
-                              req.action === 'edit' ? '#f39c12' : '#3498db';
-            
-            const itemName = req.requestedData?.name || 
-                           (req.type === 'category' ? 'Category' : 'Supplier') + 
-                           (req.itemId ? ` (${req.itemId.substring(0, 8)}...)` : 'N/A');
-            
-            pendingHtml += `
-                <div class="approval-request-item" style="border-left-color: ${actionColor}; border-left-width: 6px; margin-bottom: 20px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                        <span style="font-weight: bold; color: ${actionColor}; text-transform: uppercase; background: ${actionColor}20; padding: 6px 16px; border-radius: 30px; font-size: 13px;">
-                            ⏳ ${req.action?.toUpperCase() || 'ACTION'} - ${req.type?.toUpperCase() || 'ITEM'}
-                        </span>
-                        <span style="font-size: 12px; color: #666; background: #f0f0f0; padding: 4px 12px; border-radius: 20px;">
-                            ${created}
-                        </span>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
-                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">👤 REQUESTED BY</div>
-                            <div style="font-weight: 700; font-size: 16px;">${req.requestedBy || 'Unknown'}</div>
-                            <div style="font-size: 12px; color: #666; margin-top: 8px;">
-                                <span style="background: ${req.requestedByRole === 'super admin' ? '#9b59b6' : req.requestedByRole === 'admin' ? '#3498db' : '#2ecc71'}; padding: 4px 12px; border-radius: 20px; color: white; display: inline-block; font-weight: bold;">
-                                    ${req.requestedByRole || 'staff'}
+                
+                const actionColor = req.action === 'delete' ? '#e74c3c' : 
+                                  req.action === 'edit' ? '#f39c12' : '#3498db';
+                
+                const actionBg = req.action === 'delete' ? '#fee9e7' :
+                               req.action === 'edit' ? '#fef5e7' : '#e8f0fe';
+                
+                const itemName = req.requestedData?.name || 
+                               (req.type === 'category' ? 'Category' : 'Supplier') + 
+                               (req.itemId ? ` (${req.itemId.substring(0, 6)}...)` : '');
+                
+                pendingHtml += `
+                    <div style="background: white; border-radius: 24px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid #f0f0f0;">
+                        <!-- Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="background: ${actionBg}; color: ${actionColor}; padding: 8px 20px; border-radius: 30px; font-weight: 700; font-size: 14px; letter-spacing: 0.5px;">
+                                    ⏳ ${req.action?.toUpperCase() || 'ACTION'} · ${req.type?.toUpperCase() || 'ITEM'}
+                                </span>
+                                <span style="background: ${req.requestedByRole === 'super admin' ? '#9b59b6' : req.requestedByRole === 'admin' ? '#3498db' : '#2ecc71'}; color: white; padding: 6px 16px; border-radius: 30px; font-size: 13px; font-weight: 600;">
+                                    ${req.requestedByRole?.toUpperCase() || 'STAFF'}
                                 </span>
                             </div>
+                            <span style="color: #888; font-size: 13px; background: #f8f9fa; padding: 6px 16px; border-radius: 30px;">
+                                🕐 ${created}
+                            </span>
                         </div>
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
-                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">📦 ITEM DETAILS</div>
-                            <div style="font-weight: 700; font-size: 16px;">${itemName}</div>
-                            <div style="font-size: 12px; color: #666; margin-top: 8px; word-break: break-all;">
-                                ID: ${req.itemId || 'N/A'}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 15px; border-top: 1px solid #eee; padding-top: 20px;">
-                        <button class="btn" style="background: #27ae60; padding: 12px 28px; font-size: 14px; font-weight: bold; border-radius: 30px;" onclick="approveRequestFromDashboard('${req.id}')">
-                            ✓ APPROVE REQUEST
-                        </button>
-                        <button class="btn" style="background: #e74c3c; padding: 12px 28px; font-size: 14px; font-weight: bold; border-radius: 30px;" onclick="rejectRequestFromDashboard('${req.id}')">
-                            ✗ REJECT REQUEST
-                        </button>
-                        ${isCurrentUserSuperAdmin() ? 
-                            `<button class="btn" style="background: #95a5a6; padding: 12px 28px; border-radius: 30px;" onclick="deleteRequestFromHistory('${req.id}')">
-                                🗑️ DELETE REQUEST
-                            </button>` : ''
-                        }
-                    </div>
+                        
+                        <!-- Content Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; margin-bottom: 24px;">
+        <!-- Requester Info -->
+        <div style="background: #fafbfc; padding: 20px; border-radius: 20px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <div style="background: ${actionColor}20; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-size: 20px;">
+                    👤
                 </div>
-            `;
-        });
-    }
-    
-    // History section
-    const historyItems = allHistoryItems.slice(0, 20);
-    if (historyItems.length === 0) {
-        historyHtml = '<div style="text-align: center; padding: 40px; color: #666;">📭 No request history</div>';
-    } else {
-        historyItems.forEach(req => {
-            const created = req.createdAt ? new Date(req.createdAt).toLocaleString() : 'Unknown';
-            const reviewed = req.reviewedAt ? new Date(req.reviewedAt).toLocaleString() : 'N/A';
-            const statusColor = req.status === 'approved' ? '#2ecc71' : '#e74c3c';
-            historyHtml += `
-                <div style="background: white; border: 1px solid #e9ecef; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                        <span style="font-weight: bold; color: ${statusColor}; background: ${statusColor}20; padding: 6px 16px; border-radius: 30px; font-size: 13px;">
-                            ${req.status === 'approved' ? '✓ APPROVED' : '✗ REJECTED'} - ${req.action?.toUpperCase()}
-                        </span>
-                        <span style="font-size: 12px; color: #666;">${created}</span>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; font-size: 13px; background: #f8f9fa; padding: 15px; border-radius: 10px;">
-                        <div><span style="color: #666;">Requested by:</span> <strong>${req.requestedBy}</strong> (${req.requestedByRole})</div>
-                        <div><span style="color: #666;">Reviewed by:</span> <strong>${req.reviewedBy || 'N/A'}</strong></div>
-                        <div><span style="color: #666;">Item:</span> <strong>${req.requestedData?.name || req.itemId?.substring(0, 12) || 'N/A'}</strong></div>
-                    </div>
-                    ${isCurrentUserSuperAdmin() ? 
-                        `<button class="btn-del" style="margin-top: 15px; padding: 6px 16px; font-size: 12px; border-radius: 30px;" onclick="deleteRequestFromHistory('${req.id}')">
-                            🗑️ Remove from History
-                        </button>` : ''
-                    }
-                </div>
-            `;
-        });
-    }
-    
-    modal.innerHTML = `
-        <div class="modal-content" style="width: 1100px; max-width: 95%; max-height: 90vh; overflow-y: auto; border-radius: 24px; padding: 30px; background: #f8fafc;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <h2 style="color: var(--primary-green); margin: 0; display: flex; align-items: center; gap: 12px; font-size: 28px;">
-                    📋 Requests Management Dashboard
-                </h2>
-                <button onclick="closeRequestsManagement()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #666;">✕</button>
-            </div>
-            
-            <!-- Stats Cards - FIXED: Using correct local variables -->
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 35px;">
-                <div style="background: linear-gradient(145deg, #fff, #f8f9fa); padding: 25px; border-radius: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #e9ecef;">
-                    <span style="font-size: 36px; display: block; margin-bottom: 10px;">⏳</span>
-                    <span style="font-size: 32px; font-weight: bold; color: #e67e22;">${pendingRequests.length}</span>
-                    <span style="display: block; font-size: 14px; color: #666; margin-top: 5px;">Pending Requests</span>
-                </div>
-                <div style="background: linear-gradient(145deg, #fff, #f8f9fa); padding: 25px; border-radius: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #e9ecef;">
-                    <span style="font-size: 36px; display: block; margin-bottom: 10px;">✓</span>
-                    <span style="font-size: 32px; font-weight: bold; color: #2ecc71;">${allHistoryItems.filter(r => r.status === 'approved').length}</span>
-                    <span style="display: block; font-size: 14px; color: #666; margin-top: 5px;">Approved</span>
-                </div>
-                <div style="background: linear-gradient(145deg, #fff, #f8f9fa); padding: 25px; border-radius: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #e9ecef;">
-                    <span style="font-size: 36px; display: block; margin-bottom: 10px;">✗</span>
-                    <span style="font-size: 32px; font-weight: bold; color: #e74c3c;">${allHistoryItems.filter(r => r.status === 'rejected').length}</span>
-                    <span style="display: block; font-size: 14px; color: #666; margin-top: 5px;">Rejected</span>
-                </div>
-                <div style="background: linear-gradient(145deg, #fff, #f8f9fa); padding: 25px; border-radius: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #e9ecef;">
-                    <span style="font-size: 36px; display: block; margin-bottom: 10px;">📊</span>
-                    <span style="font-size: 32px; font-weight: bold; color: #3498db;">${allHistoryItems.length + pendingRequests.length}</span>
-                    <span style="display: block; font-size: 14px; color: #666; margin-top: 5px;">Total Requests</span>
+                <div>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Requested By</div>
+                    <div style="font-weight: 700; font-size: 16px;">${req.requestedBy || 'Unknown'}</div>
                 </div>
             </div>
-            
-            <!-- Tabs -->
-            <div style="display: flex; gap: 15px; margin-bottom: 25px; border-bottom: 2px solid #e9ecef; padding-bottom: 15px;">
-                <button id="pendingTabBtn" class="btn" style="background: #e67e22; color: white; border-radius: 30px; padding: 12px 30px; font-size: 15px; font-weight: bold;" onclick="switchRequestsTab('pending')">
-                    ⏳ PENDING REQUESTS (${pendingRequests.length})
-                </button>
-                <button id="historyTabBtn" class="btn" style="background: #34495e; color: white; border-radius: 30px; padding: 12px 30px; font-size: 15px; font-weight: bold;" onclick="switchRequestsTab('history')">
-                    📜 HISTORY (Last 20)
-                </button>
-            </div>
-            
-            <!-- Pending Requests Section -->
-            <div id="pendingRequestsSection">
-                <h3 style="color: #e67e22; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 20px;">
-                    <span>⏳ Pending Approval Requests</span>
-                    <span style="background: #e67e22; color: white; padding: 4px 14px; border-radius: 30px; font-size: 14px;">${pendingRequests.length}</span>
-                </h3>
-                <div id="pendingRequestsContainer" style="max-height: 500px; overflow-y: auto; padding-right: 15px;">
-                    ${pendingHtml}
-                </div>
-            </div>
-            
-            <!-- History Section (hidden by default) -->
-            <div id="historySection" style="display: none;">
-                <h3 style="color: #34495e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 20px;">
-                    <span>📜 Request History</span>
-                    <span style="background: #34495e; color: white; padding: 4px 14px; border-radius: 30px; font-size: 14px;">Last 20</span>
-                </h3>
-                <div id="historyContainer" style="max-height: 500px; overflow-y: auto; padding-right: 15px;">
-                    ${historyHtml}
-                </div>
-            </div>
-            
-            <div style="display: flex; gap: 15px; margin-top: 30px; border-top: 1px solid #e9ecef; padding-top: 25px;">
-                <button class="btn" style="flex: 1; background: #95a5a6; padding: 14px; font-size: 15px; border-radius: 30px;" onclick="closeRequestsManagement()">
-                    Close Dashboard
-                </button>
-                ${isCurrentUserSuperAdmin() ? 
-                    `<button class="btn" style="background: #c0392b; padding: 14px 30px; font-size: 15px; border-radius: 30px;" onclick="clearAllRequestsHistory()">
-                        🗑️ Clear All History
-                    </button>` : ''
-                }
+            <div style="display: flex; gap: 12px; margin-top: 8px; color: #666; font-size: 13px;">
+                <span>📋 ${req.action}</span>
+                <span>📦 ${req.type}</span>
             </div>
         </div>
-    `;
+        
+        <!-- Item Details & Changes - ENHANCED VERSION -->
+        <div style="background: #fafbfc; padding: 20px; border-radius: 20px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <div style="background: #e8f5e9; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-size: 20px;">
+                    📦
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Item Details</div>
+                    <div style="font-weight: 700; font-size: 16px;">${itemName}</div>
+                </div>
+            </div>
+            <div style="font-size: 12px; color: #888; margin-top: 8px; word-break: break-all; background: white; padding: 12px; border-radius: 12px;">
+                ID: ${req.itemId || 'N/A'}
+            </div>
+            
+            <!-- SHOW WHAT WAS CHANGED - For EDIT requests -->
+            ${req.action === 'edit' && req.requestedData ? `
+            <div style="margin-top: 16px; border-top: 1px dashed #e0e0e0; padding-top: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <span style="background: #f39c12; color: white; padding: 4px 12px; border-radius: 30px; font-size: 11px; font-weight: 700;">CHANGES</span>
+                    <span style="font-size: 12px; color: #666;">Modified fields</span>
+                </div>
+                <div style="background: #fff3e0; border-radius: 16px; padding: 16px;">
+                    ${Object.entries(req.requestedData)
+                        .filter(([key]) => !['id', 'createdAt', 'updatedAt', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
+                        .map(([key, value]) => {
+                            if (typeof value === 'object') {
+                                return `<div style="margin-bottom: 8px; font-size: 12px;">
+                                    <span style="font-weight: 700; color: #e67e22; text-transform: capitalize;">${key}:</span>
+                                    <pre style="background: white; padding: 8px; border-radius: 8px; margin: 4px 0 0 0; font-size: 11px; overflow-x: auto;">${JSON.stringify(value, null, 2)}</pre>
+                                </div>`;
+                            }
+                            return `<div style="display: flex; margin-bottom: 8px; font-size: 12px;">
+                                <span style="font-weight: 700; color: #e67e22; width: 120px; text-transform: capitalize;">${key}:</span>
+                                <span style="color: #2c3e50; flex: 1;">${value || '<span style="color: #999;">(empty)</span>'}</span>
+                            </div>`;
+                        }).join('')}
+                </div>
+            </div>
+            ` : ''}
+            
+            <!-- SHOW WHAT WILL BE DELETED - For DELETE requests -->
+            ${req.action === 'delete' ? `
+            <div style="margin-top: 16px; border-top: 1px dashed #e0e0e0; padding-top: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <span style="background: #e74c3c; color: white; padding: 4px 12px; border-radius: 30px; font-size: 11px; font-weight: 700;">WARNING</span>
+                    <span style="font-size: 12px; color: #666;">This item will be permanently deleted</span>
+                </div>
+                <div style="background: #fee9e7; border-radius: 16px; padding: 16px; border-left: 4px solid #e74c3c;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 24px;">⚠️</span>
+                        <div>
+                            <div style="font-weight: 700; color: #c0392b; margin-bottom: 4px;">Delete Confirmation Required</div>
+                            <div style="font-size: 12px; color: #666;">You are about to delete <strong>${itemName}</strong>. This action cannot be undone.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    </div>
+                        
+                        <!-- Action Buttons -->
+                        <div style="display: flex; gap: 16px; justify-content: flex-end; border-top: 1px solid #f0f0f0; padding-top: 24px;">
+                            <button onclick="approveRequestNow('${req.id}')" style="background: #27ae60; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(39, 174, 96, 0.2);">
+                                <span style="font-size: 18px;">✓</span> APPROVE REQUEST
+                            </button>
+                            <button onclick="rejectRequestNow('${req.id}')" style="background: #e74c3c; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);">
+                                <span style="font-size: 18px;">✗</span> REJECT REQUEST
+                            </button>
+                            ${isCurrentUserSuperAdmin() ? 
+                                `<button onclick="deleteRequestNow('${req.id}')" style="background: #95a5a6; color: white; border: none; padding: 14px 28px; border-radius: 40px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                    🗑️ DELETE
+                                </button>` : ''
+                            }
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        // Build HISTORY HTML
+        let historyHtml = '';
+        if (historyRequests.length === 0) {
+            historyHtml = `
+                <div style="text-align: center; padding: 60px; background: white; border-radius: 20px; color: #666;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
+                    <div style="font-size: 18px; font-weight: 500;">No request history</div>
+                </div>
+            `;
+        } else {
+            historyRequests.slice(0, 20).forEach(req => {
+                const created = req.createdAt ? new Date(req.createdAt).toLocaleString() : 'Unknown';
+                const statusColor = req.status === 'approved' ? '#2ecc71' : '#e74c3c';
+                const statusBg = req.status === 'approved' ? '#e8f8f0' : '#fee9e7';
+                
+                historyHtml += `
+                    <div style="background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <div style="background: ${statusBg}; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-size: 24px;">
+                                ${req.status === 'approved' ? '✓' : '✗'}
+                            </div>
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                                    <span style="background: ${statusColor}; color: white; padding: 4px 14px; border-radius: 30px; font-size: 12px; font-weight: 700;">
+                                        ${req.status.toUpperCase()}
+                                    </span>
+                                    <span style="color: #666; font-size: 12px;">${req.action?.toUpperCase()} · ${req.type?.toUpperCase()}</span>
+                                </div>
+                                <div style="display: flex; gap: 20px; font-size: 13px;">
+                                    <span style="color: #555;">👤 ${req.requestedBy}</span>
+                                    <span style="color: #888;">✓ ${req.reviewedBy || 'System'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="color: #888; font-size: 12px;">
+                            ${created}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        // Full Dashboard HTML
+        modal.innerHTML = `
+            <div style="background: linear-gradient(145deg, #f8fafc, #f0f4f8); width: 1300px; max-width: 95%; max-height: 90vh; overflow-y: auto; border-radius: 32px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);">
+                <!-- Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="background: var(--primary-green); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 20px;">
+                            <span style="font-size: 32px; color: white;">📋</span>
+                        </div>
+                        <div>
+                            <h2 style="color: #1e3b37; margin: 0; font-size: 28px; font-weight: 700;">Requests Management</h2>
+                            <p style="color: #6b9080; margin: 5px 0 0 0; font-size: 15px;">Approve, reject, and track all change requests</p>
+                        </div>
+                    </div>
+                    <button onclick="this.closest('.modal').remove()" style="background: white; border: none; width: 48px; height: 48px; border-radius: 16px; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #666; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                        ✕
+                    </button>
+                </div>
+                
+                <!-- Stats Cards -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 40px;">
+                    <div style="background: white; padding: 28px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid white;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                            <span style="font-size: 42px;">⏳</span>
+                            <span style="background: #e67e22; color: white; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 600;">Pending</span>
+                        </div>
+                        <div style="font-size: 44px; font-weight: 800; color: #e67e22; margin-bottom: 8px;">${pendingRequests.length}</div>
+                        <div style="color: #666; font-size: 15px;">Awaiting approval</div>
+                    </div>
+                    
+                    <div style="background: white; padding: 28px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid white;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                            <span style="font-size: 42px;">✓</span>
+                            <span style="background: #2ecc71; color: white; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 600;">Approved</span>
+                        </div>
+                        <div style="font-size: 44px; font-weight: 800; color: #2ecc71; margin-bottom: 8px;">${approvedCount}</div>
+                        <div style="color: #666; font-size: 15px;">Successfully approved</div>
+                    </div>
+                    
+                    <div style="background: white; padding: 28px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid white;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                            <span style="font-size: 42px;">✗</span>
+                            <span style="background: #e74c3c; color: white; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 600;">Rejected</span>
+                        </div>
+                        <div style="font-size: 44px; font-weight: 800; color: #e74c3c; margin-bottom: 8px;">${rejectedCount}</div>
+                        <div style="color: #666; font-size: 15px;">Declined requests</div>
+                    </div>
+                    
+                    <div style="background: white; padding: 28px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid white;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                            <span style="font-size: 42px;">📊</span>
+                            <span style="background: #3498db; color: white; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 600;">Total</span>
+                        </div>
+                        <div style="font-size: 44px; font-weight: 800; color: #3498db; margin-bottom: 8px;">${totalCount}</div>
+                        <div style="color: #666; font-size: 15px;">All time requests</div>
+                    </div>
+                </div>
+                
+                <!-- Tabs -->
+                <div style="display: flex; gap: 16px; margin-bottom: 30px; border-bottom: 2px solid #e9ecef; padding-bottom: 16px;">
+                    <button id="pendingTabBtn" onclick="showPendingTab()" style="background: #e67e22; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <span>⏳</span> PENDING REQUESTS (${pendingRequests.length})
+                    </button>
+                    <button id="historyTabBtn" onclick="showHistoryTab()" style="background: #34495e; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <span>📜</span> HISTORY & ARCHIVE (${historyRequests.length})
+                    </button>
+                </div>
+                
+                <!-- Pending Section -->
+                <div id="pendingSection" style="display: block;">
+                    <div style="max-height: 500px; overflow-y: auto; padding-right: 8px;">
+                        ${pendingHtml}
+                    </div>
+                </div>
+                
+                <!-- History Section -->
+                <div id="historySection" style="display: none;">
+                    <div style="max-height: 500px; overflow-y: auto; padding-right: 8px;">
+                        ${historyHtml}
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; display: flex; justify-content: flex-end;">
+                    <span style="color: #888; font-size: 13px;">Last updated: ${new Date().toLocaleString()}</span>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to load requests: ' + error.message);
+    }
+}
+
+// Tab switching functions
+window.showPendingTab = function() {
+    const pending = document.getElementById('pendingSection');
+    const history = document.getElementById('historySection');
+    const pendingBtn = document.getElementById('pendingTabBtn');
+    const historyBtn = document.getElementById('historyTabBtn');
     
-    document.body.appendChild(modal);
+    if (pending && history) {
+        pending.style.display = 'block';
+        history.style.display = 'none';
+        pendingBtn.style.background = '#e67e22';
+        historyBtn.style.background = '#34495e';
+    }
+};
+
+window.showHistoryTab = function() {
+    const pending = document.getElementById('pendingSection');
+    const history = document.getElementById('historySection');
+    const pendingBtn = document.getElementById('pendingTabBtn');
+    const historyBtn = document.getElementById('historyTabBtn');
+    
+    if (pending && history) {
+        pending.style.display = 'none';
+        history.style.display = 'block';
+        pendingBtn.style.background = '#34495e';
+        historyBtn.style.background = '#e67e22';
+    }
+};
+
+// Helper function to show what changed in edit requests
+function renderChanges(oldData, newData) {
+    if (!oldData || !newData) return '';
+    
+    let changes = '';
+    const allKeys = new Set([...Object.keys(oldData), ...Object.keys(newData)]);
+    
+    allKeys.forEach(key => {
+        if (key.includes('id') || key.includes('at') || key.includes('by')) return;
+        
+        const oldVal = oldData[key];
+        const newVal = newData[key];
+        
+        if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+            changes += `
+                <div style="display: flex; margin-bottom: 12px; padding: 8px; background: white; border-radius: 8px;">
+                    <div style="width: 120px; font-weight: 700; color: #555; text-transform: capitalize;">${key}:</div>
+                    <div style="flex: 1;">
+                        <div style="color: #e74c3c; text-decoration: line-through; font-size: 12px;">${oldVal || '(empty)'}</div>
+                        <div style="color: #27ae60; font-weight: 600; font-size: 12px;">→ ${newVal || '(empty)'}</div>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    return changes || '<div style="color: #999; padding: 8px;">No visible changes detected</div>';
 }
 
     function closeRequestsManagement() {
@@ -1350,9 +1483,9 @@ async function openRequestsManagement() {
     let totalAuditPages = 1;
 
     const bgImages = [
-        './images/background1.jpg',
-        './images/background2.jpg',
-        './images/background3.jpg'
+        './images/bgx.jpg',
+        './images/bg.jpg',
+        './images/bgx1.jpg'
     ];
 
     const LOCK_TIME = { hr: 16, min: 50 };
@@ -2313,71 +2446,76 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
     }
 
     async function deleteCategory(categoryId) {
-        const category = categories.find(c => c.id === categoryId);
-        if (!category) return;
+    const category = categories.find(c => c.id === categoryId);
+    if (!category) return;
 
-        // Check permissions
-        if (!canDeleteCategory()) {
-            if (requiresApprovalForDelete()) {
-                await createApprovalRequest('category', { name: category.name }, 'delete', categoryId);
-                showNotification('Delete request submitted for approval', 'info');
-                return;
-            } else {
-                alert('You do not have permission to delete categories');
-                return;
-            }
-        }
-
-        if (confirm(`Are you sure you want to delete category "${category.name}"? This will NOT delete suppliers in this category.`)) {
+    const user = getUser(getCurrentUser());
+    
+    // SUPER ADMIN: Delete immediately
+    if (user && user.role === 'super admin') {
+        if (confirm(`Delete category "${category.name}"?`)) {
             try {
                 await db.collection(COLLECTIONS.CATEGORIES).doc(categoryId).delete();
-
-                await logAudit('DELETE_CATEGORY', {
-                    categoryId: categoryId,
-                    name: category.name,
-                    deletedBy: getCurrentUser()
-                });
-
+                await logAudit('DELETE_CATEGORY', { categoryId, name: category.name });
                 await loadAllData();
                 renderCategories();
-                populateCategoryDropdown();
-                showNotification(`Category "${category.name}" deleted successfully`, 'success');
+                showNotification('Category deleted', 'success');
             } catch (error) {
-                console.error('Error deleting category:', error);
-                alert('Failed to delete category: ' + error.message);
+                console.error('Error:', error);
+                alert('Failed to delete');
             }
         }
+        return;
     }
+    
+    // STAFF & ADMIN: Create approval request
+    if (user && (user.role === 'staff' || user.role === 'admin')) {
+        await createApprovalRequest('category', { name: category.name }, 'delete', categoryId);
+        showNotification('Delete request submitted for approval', 'info');
+        return;
+    }
+    
+    alert('You do not have permission');
+}
 
     // ========== CATEGORY RENDERING - UPDATED TO MATCH INDEX FILE ==========
-    function renderCategories() {
-        const categoryGrid = document.getElementById('categoryGrid');
-        if (!categoryGrid) return;
+    // ========== CATEGORY RENDERING WITH SUPPLIER COUNTS ==========
+function renderCategories() {
+    const categoryGrid = document.getElementById('categoryGrid');
+    if (!categoryGrid) return;
 
-        const user = getUser(getCurrentUser());
-        const canDelete = user && user.role === 'super admin';
+    const user = getUser(getCurrentUser());
+    const canDelete = user && user.role === 'super admin';
 
-        if (!categories || categories.length === 0) {
-            categoryGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #6b9080; padding: 60px; font-size: 1.2rem;">No categories yet — click "New Category" to add your first category.</p>';
-            return;
-        }
-
-        const categoryImagePath = './images/mainlogo3.png';
-        
-        categoryGrid.innerHTML = categories.map((cat, index) => {
-            const fallbackColor = `hsl(${(index * 45) % 360}, 70%, 55%)`;
-            return `
-                <div class="grid-item" onclick="openCategoryPage('${cat.id}')">
-                    <div class="category-image-wrapper">
-                        <img src="${categoryImagePath}" alt="${cat.name}" 
-                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'category-fallback\' style=\'background: radial-gradient(circle at 30% 30%, ${fallbackColor}, #2c6b2c);\'>${cat.name.charAt(0)}</div>';">
-                    </div>
-                    <span>${cat.name}</span>
-                    ${canDelete ? `<button class="btn-del" onclick="event.stopPropagation(); deleteCategory('${cat.id}')">Delete</button>` : ''}
-                </div>
-            `;
-        }).join('');
+    if (!categories || categories.length === 0) {
+        categoryGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #6b9080; padding: 60px; font-size: 1.2rem;">No categories yet — click "New Category" to add your first category.</p>';
+        return;
     }
+
+    const categoryImagePath = './images/mainlogo3.png';
+    
+    categoryGrid.innerHTML = categories.map((cat, index) => {
+        // Count suppliers in this category
+        const supplierCount = suppliers.filter(s => s.category === cat.name).length;
+        const fallbackColor = `hsl(${(index * 45) % 360}, 70%, 55%)`;
+        
+        return `
+            <div class="grid-item" onclick="openCategoryPage('${cat.id}')">
+                <div class="category-image-wrapper">
+                    <img src="${categoryImagePath}" alt="${cat.name}" 
+                         onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'category-fallback\' style=\'background: radial-gradient(circle at 30% 30%, ${fallbackColor}, #2c6b2c);\'>${cat.name.charAt(0)}</div>';">
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; padding: 18px 12px;">
+                    <span style="font-weight: 600; font-size: 1rem; color: #1e3b37; margin-bottom: 8px;">${cat.name}</span>
+                    <span style="background: #4CAF50; color: white; padding: 6px 16px; border-radius: 40px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);">
+                        ${supplierCount} ${supplierCount === 1 ? 'Supplier' : 'Suppliers'}
+                    </span>
+                </div>
+                ${canDelete ? `<button class="btn-del" onclick="event.stopPropagation(); deleteCategory('${cat.id}')">Delete</button>` : ''}
+            </div>
+        `;
+    }).join('');
+}
 
     // ========== SUPPLIER MANAGEMENT ==========
     function openSupplierModal() {
@@ -2606,47 +2744,36 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
     }
 
     async function deleteSupplier(supplierId) {
-        const supplier = suppliers.find(s => s.id === supplierId);
-        if (!supplier) return;
+    const supplier = suppliers.find(s => s.id === supplierId);
+    if (!supplier) return;
 
-        // Check permissions
-        if (!canDeleteSupplier()) {
-            if (requiresApprovalForDelete()) {
-                await createApprovalRequest('supplier', { name: supplier.name }, 'delete', supplierId);
-                showNotification('Delete request submitted for approval', 'info');
-                return;
-            } else {
-                alert('You do not have permission to delete suppliers');
-                return;
-            }
-        }
-
-        if (confirm(`Are you sure you want to delete supplier "${supplier.name}"?`)) {
+    const user = getUser(getCurrentUser());
+    
+    // SUPER ADMIN: Delete immediately
+    if (user && user.role === 'super admin') {
+        if (confirm(`Delete supplier "${supplier.name}"?`)) {
             try {
                 await db.collection(COLLECTIONS.SUPPLIERS).doc(supplierId).delete();
-
-                await logAudit('DELETE_SUPPLIER', {
-                    supplierId: supplierId,
-                    name: supplier.name,
-                    category: supplier.category,
-                    deletedBy: getCurrentUser()
-                });
-
+                await logAudit('DELETE_SUPPLIER', { supplierId, name: supplier.name });
                 await loadAllData();
-                
-                // Refresh current view
-                if (document.getElementById('categoryPageView').style.display === 'block') {
-                    const categorySuppliers = suppliers.filter(s => s.category === currentCategory);
-                    renderSuppliersTable(categorySuppliers);
-                }
-                
-                showNotification(`Supplier "${supplier.name}" deleted successfully`, 'success');
+                showNotification('Supplier deleted', 'success');
             } catch (error) {
-                console.error('Error deleting supplier:', error);
-                alert('Failed to delete supplier: ' + error.message);
+                console.error('Error:', error);
+                alert('Failed to delete');
             }
         }
+        return;
     }
+    
+    // STAFF & ADMIN: Create approval request
+    if (user && (user.role === 'staff' || user.role === 'admin')) {
+        await createApprovalRequest('supplier', { name: supplier.name }, 'delete', supplierId);
+        showNotification('Delete request submitted for approval', 'info');
+        return;
+    }
+    
+    alert('You do not have permission');
+}
 
     // ========== SUPPLIER TABLE ==========
     function openCategoryPage(categoryId) {
@@ -2702,7 +2829,8 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
                 <td><span style="font-size: 11px;">${s.lastModifiedBy || s.createdBy || 'System'}<br><span style="color: #666;">${formatDate(s.lastModifiedAt || s.createdAt)}</span></span></td>
                 <td>
                     ${canEdit ? `<button class="btn-edit" onclick="editSupplier('${s.id}')" style="margin-right: 5px;">Edit</button>` : ''}
-                    ${canDelete ? `<button class="btn-del" onclick="deleteSupplier('${s.id}')">Delete</button>` : ''}
+                    ${canDelete ? `<button class="btn-del" onclick="deleteSupplier('${s.id}')"style="margin-right: 5px;">Delete</button>` : ''}
+                    
                     ${user && user.role !== 'super admin' && user.role !== 'admin' ? 
                         `<button class="btn-approve" onclick="deleteSupplier('${s.id}')" style="background: #e67e22;">Request Delete</button>` : ''}
                 </td>
@@ -3661,112 +3789,144 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
 
     // Modify createApprovalRequest to include role
     async function createApprovalRequest(type, data, action, itemId) {
-        try {
-            const currentUser = getUser(getCurrentUser());
-            
-            const request = {
-                type: type,
-                action: action,
-                itemId: itemId,
-                requestedBy: getCurrentUser(),
-                requestedByRole: currentUser.role, // IMPORTANT: Add role for filtering
-                requestedData: data,
-                status: 'pending',
-                createdAt: new Date().toISOString(), // Use ISO string instead
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            await db.collection(COLLECTIONS.APPROVALS).add(request);
-            
-            // Don't load manually - listener will catch it
-            showNotification('✅ Approval request submitted successfully', 'success');
-        } catch (error) {
-            console.error('Error creating approval request:', error);
-            alert('Failed to create approval request: ' + error.message);
-        }
-    }
-
-    // Modify confirmApproval for realtime updates
-    async function confirmApproval(approved) {
-        const requestId = localStorage.getItem('currentApprovalRequestId');
-        const request = approvalRequests.find(r => r.id === requestId);
-        
-        if (!request) {
-            alert('Request not found');
-            closeApprovalActionModal();
+    try {
+        const currentUser = getUser(getCurrentUser());
+        if (!currentUser) {
+            alert('Not logged in');
             return;
         }
+
+        console.log("CREATING APPROVAL REQUEST:", { type, action, itemId });
         
-        try {
-            if (approved) {
-                // Execute the requested action
-                if (request.action === 'delete') {
-                    if (request.type === 'category') {
-                        await db.collection(COLLECTIONS.CATEGORIES).doc(request.itemId).delete();
-                        await logAudit('DELETE_CATEGORY_APPROVED', { 
-                            categoryId: request.itemId,
-                            approvedBy: getCurrentUser(),
-                            requestedBy: request.requestedBy
-                        });
-                    } else if (request.type === 'supplier') {
-                        await db.collection(COLLECTIONS.SUPPLIERS).doc(request.itemId).delete();
-                        await logAudit('DELETE_SUPPLIER_APPROVED', { 
-                            supplierId: request.itemId,
-                            approvedBy: getCurrentUser(),
-                            requestedBy: request.requestedBy
-                        });
-                    }
-                } else if (request.action === 'edit') {
-                    if (request.type === 'category') {
-                        await db.collection(COLLECTIONS.CATEGORIES).doc(request.itemId).update(request.requestedData);
-                        await logAudit('EDIT_CATEGORY_APPROVED', { 
-                            categoryId: request.itemId,
-                            approvedBy: getCurrentUser(),
-                            requestedBy: request.requestedBy
-                        });
-                    } else if (request.type === 'supplier') {
-                        await db.collection(COLLECTIONS.SUPPLIERS).doc(request.itemId).update(request.requestedData);
-                        await logAudit('EDIT_SUPPLIER_APPROVED', { 
-                            supplierId: request.itemId,
-                            approvedBy: getCurrentUser(),
-                            requestedBy: request.requestedBy
-                        });
-                    }
+        const request = {
+            type: type,
+            action: action,
+            itemId: itemId,
+            requestedBy: getCurrentUser(),
+            requestedByRole: currentUser.role,
+            requestedData: data,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            createdDate: new Date().toISOString()
+        };
+        
+        await db.collection(COLLECTIONS.APPROVALS).add(request);
+        
+        // Show notification
+        showNotification('✅ Request submitted for approval', 'success');
+        
+        // Force reload approval requests
+        setTimeout(async () => {
+            await loadApprovalRequests();
+            applyRoleBasedUI();
+        }, 500);
+        
+    } catch (error) {
+        console.error('Error creating request:', error);
+        alert('Failed: ' + error.message);
+    }
+}
+
+    // Modify confirmApproval for realtime updates
+    // ========== FIXED APPROVE/REJECT FUNCTIONS ==========
+async function confirmApproval(approved) {
+    const requestId = localStorage.getItem('currentApprovalRequestId');
+    
+    if (!requestId) {
+        alert('No request selected');
+        return;
+    }
+
+    try {
+        // Get the request directly from Firestore
+        const docRef = db.collection(COLLECTIONS.APPROVALS).doc(requestId);
+        const doc = await docRef.get();
+        
+        if (!doc.exists) {
+            alert('Request not found. It may have been already processed.');
+            localStorage.removeItem('currentApprovalRequestId');
+            return;
+        }
+
+        const request = { id: doc.id, ...doc.data() };
+        
+        if (approved) {
+            // Execute the action
+            if (request.action === 'delete') {
+                if (request.type === 'category') {
+                    await db.collection(COLLECTIONS.CATEGORIES).doc(request.itemId).delete();
+                    showNotification('Category deleted', 'success');
+                } else if (request.type === 'supplier') {
+                    await db.collection(COLLECTIONS.SUPPLIERS).doc(request.itemId).delete();
+                    showNotification('Supplier deleted', 'success');
+                }
+            } else if (request.action === 'edit') {
+                if (request.type === 'category') {
+                    await db.collection(COLLECTIONS.CATEGORIES).doc(request.itemId).update(request.requestedData);
+                    showNotification('Category updated', 'success');
+                } else if (request.type === 'supplier') {
+                    await db.collection(COLLECTIONS.SUPPLIERS).doc(request.itemId).update(request.requestedData);
+                    showNotification('Supplier updated', 'success');
                 }
             }
-            
-            // Update request status
-            await db.collection(COLLECTIONS.APPROVALS).doc(requestId).update({
-                status: approved ? 'approved' : 'rejected',
-                reviewedBy: getCurrentUser(),
-                reviewedAt: new Date().toISOString(),
-            });
-            
-            await logAudit(approved ? 'APPROVAL_GRANTED' : 'APPROVAL_REJECTED', {
-                requestId: requestId,
-                type: request.type,
-                action: request.action
-            });
-            
-            showNotification(`✅ Request ${approved ? 'approved' : 'rejected'} successfully`, 'success');
-            
-            closeApprovalActionModal();
-            closeApprovalRequestsModal();
-            
-            // Reload data
-            await loadAllData();
-            renderCategories();
-            
-            if (document.getElementById('categoryPageView').style.display === 'block') {
-                const categorySuppliers = suppliers.filter(s => s.category === currentCategory);
-                renderSuppliersTable(categorySuppliers);
-            }
-            
-        } catch (error) {
-            console.error('Error processing approval:', error);
-            alert('Failed to process approval: ' + error.message);
         }
+
+        // Update the request status
+        await docRef.update({
+            status: approved ? 'approved' : 'rejected',
+            reviewedBy: getCurrentUser(),
+            reviewedAt: new Date().toISOString()
+        });
+
+        await logAudit(approved ? 'APPROVAL_GRANTED' : 'APPROVAL_REJECTED', {
+            requestId: requestId,
+            type: request.type,
+            action: request.action
+        });
+
+        showNotification(`Request ${approved ? 'approved' : 'rejected'} successfully`, 'success');
+        
+        // Close all modals
+        document.getElementById('approvalActionModal').style.display = 'none';
+        document.getElementById('approvalRequestsModal').style.display = 'none';
+        
+        // Remove any open management modal
+        const modal = document.getElementById('requestsManagementModal');
+        if (modal) modal.remove();
+        
+        // Refresh data
+        await loadAllData();
+        await loadApprovalRequests();
+        
+        // Refresh views
+        renderCategories();
+        applyRoleBasedUI();
+        
+        if (document.getElementById('categoryPageView').style.display === 'block') {
+            const categorySuppliers = suppliers.filter(s => s.category === currentCategory);
+            renderSuppliersTable(categorySuppliers);
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to process request: ' + error.message);
+    } finally {
+        localStorage.removeItem('currentApprovalRequestId');
     }
+}
+
+// Simple approve/reject for Requests Management Dashboard
+window.approveRequestNow = async function(requestId) {
+    localStorage.setItem('currentApprovalRequestId', requestId);
+    await confirmApproval(true);
+    openRequestsManagement(); // Reopen the dashboard
+};
+
+window.rejectRequestNow = async function(requestId) {
+    localStorage.setItem('currentApprovalRequestId', requestId);
+    await confirmApproval(false);
+    openRequestsManagement(); // Reopen the dashboard
+};
 
     // ========== INITIALIZATION WITH REALTIME LISTENER ==========
     async function initializeApp() {
