@@ -137,16 +137,13 @@
 
         .btn-del {
             background: var(--danger-red);
-            padding: 5px 8px;
-            font-size: 11px;
+            padding: 5px 10px;
+            font-size: 12px;
             border: none;
             border-radius: 4px;
             color: white;
             cursor: pointer;
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 10;
+            display: inline-block;
         }
         .btn-del:hover { opacity: 0.85; }
 
@@ -158,7 +155,7 @@
             margin-bottom: 30px;
         }
 
-        #categoryPageView, #aboutView, #contactView, #linksView, #auditLogsView { 
+        #categoryPageView, #aboutView, #contactView, #linksView, #auditLogsView, #userApprovalHistoryView { 
             display: none; padding: 40px 20px; max-width: 1300px; margin: 0 auto; 
         }
         
@@ -170,8 +167,9 @@
         .btn:hover { opacity: 0.85; transform: scale(0.98); }
         .btn-add { background: var(--primary-green); }
         .btn-back { background: #607d8b; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
-        .btn-edit { background: #f39c12; padding: 5px 10px; font-size: 12px; border-radius: 4px; color: white; border: none; }
-        .btn-del { background: var(--danger-red); padding: 5px 10px; font-size: 12px; border-radius: 4px; color: white; border: none; }
+        .btn-edit { background: #f39c12; padding: 5px 10px; font-size: 12px; border-radius: 4px; color: white; border: none; display: inline-block; margin-right: 5px; }
+        .btn-del { background: var(--danger-red); padding: 5px 10px; font-size: 12px; border-radius: 4px; color: white; border: none; display: inline-block; }
+        .btn-request-delete { background: #e67e22; padding: 5px 10px; font-size: 12px; border-radius: 4px; color: white; border: none; display: inline-block; }
         .btn-approve { background: #9b59b6; padding: 5px 10px; font-size: 12px; border-radius: 4px; color: white; border: none; }
         .btn-super { background: #9b59b6; }
         .btn-warning { background: #e67e22; }
@@ -295,6 +293,37 @@
             border-radius: 8px;
         }
 
+        /* REASON INPUT MODAL */
+        .reason-modal {
+            display: none;
+            position: fixed;
+            z-index: 15000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+        }
+        .reason-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            width: 450px;
+            max-width: 95%;
+        }
+        .reason-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+        }
+
         /* DOCUMENT UPLOAD */
         .document-upload-area {
             border: 2px dashed #ccc;
@@ -353,6 +382,39 @@
             color: var(--star-color);
         }
 
+        .approval-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        .approval-tab {
+            padding: 10px 20px;
+            border-radius: 30px;
+            background: #f0f0f0;
+            color: #333;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .approval-tab.active {
+            background: var(--primary-green);
+            color: white;
+        }
+        .approval-tab:hover {
+            background: #e0e0e0;
+        }
+        .approval-tab.active:hover {
+            background: var(--primary-green);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
         @media (max-width: 900px) { 
             .grid-container { grid-template-columns: repeat(2, 1fr); } 
             .top-nav { flex-direction: column; }
@@ -377,15 +439,15 @@
     ⚠️ SYSTEM ALERT: Scheduled lockout at 16:50. Super admin and admin bypass active.
 </div>
 
-<!-- LOGIN OVERLAY -->
+<!-- LOGIN OVERLAY - EMPTY FIELDS -->
 <div id="loginOverlay" style="display: flex;">
     <div class="login-card">
         <img src="./images/mainlogo.png" width="100" alt="logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' fill=\'%234CAF50\'/><text x=\'50\' y=\'55\' font-size=\'40\' text-anchor=\'middle\' fill=\'white\' font-weight=\'bold\'>Z</text></svg>'">
         <div id="loginFieldsContent">
             <h2>System Login</h2>
-            <input type="text" id="userIn" placeholder="Username" value="JOSEPH">
+            <input type="text" id="userIn" placeholder="Username" value="">
             <div class="pass-wrapper">
-                <input type="password" id="passIn" placeholder="Password" value="RIGHTJOSEPH">
+                <input type="password" id="passIn" placeholder="Password" value="">
                 <span class="toggle-pass" onclick="togglePassword()">👁️</span>
             </div>
             <button class="btn btn-add" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">Login</button>
@@ -411,10 +473,11 @@
     <li><a onclick="showView('about')">ABOUT US</a></li>
     <li><a onclick="showAuditLogs()">📋 AUDIT LOGS</a></li>
     <li><a onclick="openApprovalRequestsModal()" id="approvalRequestsNavBtn" style="background:#e67e22; display:none;">✅ APPROVALS</a></li>
+    <li><a onclick="openUserApprovalHistory()" id="approvalHistoryNavBtn" style="background:#9b59b6; display:none;">📜 MY REQUESTS</a></li>
     <li><a onclick="logout()" style="background: #888;">LOGOUT</a></li>
     <button id="userMgmtBtn" class="btn" style="background:#e67e22; margin: 10px; display:none;" onclick="manageUsersModal()">👥 User Management</button>
     <button id="sessionsBtn" class="btn" style="background:#2196F3; margin: 10px; display:none;" onclick="toggleSessionsPanel()">👁️ Active Sessions</button>
-<button id="requestsManagementBtn" class="btn exclusive-super" style="background:#9b59b6; margin: 10px; display:none;" onclick="openRequestsManagement()">📋 Requests Management</button>
+    <button id="requestsManagementBtn" class="btn exclusive-super" style="background:#9b59b6; margin: 10px; display:none;" onclick="openRequestsManagement()">📋 Requests Management</button>
 </ul>
 
 <!-- STATUS BAR -->
@@ -454,16 +517,31 @@
     </div>
 </div>
 
+<!-- ========== REASON INPUT MODAL ========== -->
+<div id="reasonModal" class="reason-modal">
+    <div class="reason-modal-content">
+        <h3 id="reasonModalTitle" style="color: var(--warning-orange); margin-bottom: 10px;">State Reason for Deletion</h3>
+        <p style="color: #666; font-size: 13px; margin-bottom: 5px;">Please provide a reason for this deletion request:</p>
+        <textarea id="deletionReason" class="reason-textarea" placeholder="Enter your reason here..."></textarea>
+        <div style="display: flex; gap: 15px; justify-content: flex-end;">
+            <button class="btn" style="background: var(--primary-green);" onclick="submitDeletionReason()">Submit Request</button>
+            <button class="btn" style="background: #95a5a6;" onclick="closeReasonModal()">Cancel</button>
+        </div>
+        <input type="hidden" id="pendingDeletionType">
+        <input type="hidden" id="pendingDeletionId">
+        <input type="hidden" id="pendingDeletionName">
+    </div>
+</div>
+
 <!-- ========== HOME VIEW ========== -->
 <div id="homeView" class="grid-section" style="display: none;">
     <div class="admin-controls" id="adminControlsBar">
-        <button class="btn btn-add" onclick="openCategoryModal()">+ New Category</button>
-        <button class="btn btn-add" style="background:#3498db" onclick="openSupplierModal()">+ New Supplier</button>
+        <button class="btn btn-add" onclick="openCategoryModal()" id="newCategoryBtn">+ New Category</button>
+        <button class="btn btn-add" style="background:#3498db" onclick="openSupplierModal()" id="newSupplierBtn">+ New Supplier</button>
         <input type="text" id="globalSearch" placeholder="🔍 Search Supplier Name..." style="padding: 10px 20px; border-radius: 30px; border: 1px solid #ddd; width: 250px;" onkeyup="filterEverything()">
         <button id="exportBackupBtn" class="btn exclusive-super" style="background:#607d8b" onclick="exportData()">💾 Export Backup</button>
         <button id="importMergeBtn" class="btn exclusive-super" style="background:#9c27b0" onclick="document.getElementById('importFile').click()">📥 Import & Merge</button>
         <input type="file" id="importFile" style="display:none" onchange="importData(event)">
-        
     </div>
 
     <div id="defaultHomeContent">
@@ -558,7 +636,7 @@
 <div id="linksView" style="display: none; padding: 40px 20px; max-width: 1200px; margin: 0 auto;">
     <h2 style="color: #333;">Links Management</h2>
     <div style="margin-bottom: 20px;" id="addLinkBtnContainer">
-        <button class="btn btn-add" onclick="openLinkModal()">+ Add New Link</button>
+        <button class="btn btn-add" onclick="openLinkModal()" id="addLinkBtn">+ Add New Link</button>
     </div>
     <table class="data-table">
         <thead>
@@ -588,6 +666,20 @@
         </div>
         <div id="auditPagination" class="pagination-controls">
             <!-- Pagination controls will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- ========== USER APPROVAL HISTORY VIEW ========== -->
+<div id="userApprovalHistoryView" style="display: none; padding: 40px 20px; max-width: 1200px; margin: 0 auto;">
+    <h2 style="color: #333; margin-bottom: 20px;">📜 My Approval Requests</h2>
+    <div class="about-card" style="padding: 20px;">
+        <div class="approval-tabs">
+            <div class="approval-tab active" onclick="switchApprovalHistoryTab('pending')" id="historyPendingTab">Pending Requests</div>
+            <div class="approval-tab" onclick="switchApprovalHistoryTab('history')" id="historyHistoryTab">History (Approved/Rejected)</div>
+        </div>
+        <div id="userApprovalHistoryContainer" style="min-height: 400px;">
+            <!-- User approval history will be loaded here -->
         </div>
     </div>
 </div>
@@ -805,7 +897,7 @@
     <div class="modal-content" style="width:600px; border-radius: 24px;">
         <h3 style="color:var(--primary-green); margin-bottom:15px;">👤 User Management</h3>
         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:15px;">
-            <button class="btn btn-add" onclick="openAddUserModal()">+ Add User</button>
+            <button class="btn btn-add" onclick="openAddUserModal()" id="addUserBtn">+ Add User</button>
             <button id="deleteAllLogsBtn" class="btn exclusive-super" style="background:#c0392b;" onclick="deleteAllAuditLogs()">🗑️ Delete All Logs</button>
             <button id="deleteLast50LogsBtn" class="btn exclusive-super" style="background:#e67e22;" onclick="deleteLast50AuditLogs()">🗑️ Delete Last 50 Logs</button>
         </div>
@@ -918,9 +1010,7 @@
                     document.getElementById('tabConflictWarning').style.display = 'block';
                     return false;
                 }
-            } catch (e) {
-                // Invalid data, override
-            }
+            } catch (e) {}
         }
         
         localStorage.setItem(TAB_LOCK_KEY, JSON.stringify({
@@ -981,6 +1071,32 @@
     const auth = firebase.auth();
     const storage = firebase.storage();
 
+    // ========== PERFORMANCE CACHING ==========
+    const CACHE_DURATION = 30000;
+    const dataCache = {
+        categories: { data: null, timestamp: 0 },
+        suppliers: { data: null, timestamp: 0 },
+        links: { data: null, timestamp: 0 },
+        users: { data: null, timestamp: 0 }
+    };
+
+    async function getCachedData(collectionName, forceRefresh = false) {
+        const cache = dataCache[collectionName];
+        const now = Date.now();
+        
+        if (!forceRefresh && cache.data && (now - cache.timestamp) < CACHE_DURATION) {
+            return cache.data;
+        }
+        
+        const snapshot = await db.collection(COLLECTIONS[collectionName.toUpperCase()]).get();
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        cache.data = data;
+        cache.timestamp = now;
+        
+        return data;
+    }
+
     // ========== GLOBAL VARIABLES ==========
     let categories = [];
     let suppliers = [];
@@ -999,484 +1115,497 @@
         zra: null,
         zppa: null
     };
+    let pendingDeletionCallback = null;
 
     // ========== REQUESTS MANAGEMENT & HISTORY ==========
-let requestsHistory = []; // Store all requests (pending, approved, rejected)
+    let requestsHistory = [];
 
-async function loadRequestsHistory() {
-    try {
-        const snapshot = await db.collection(COLLECTIONS.APPROVALS)
-            .orderBy('createdAt', 'desc')
-            .limit(100)
-            .get();
-        requestsHistory = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-    } catch (error) {
-        console.error('Error loading requests history:', error);
+    async function loadRequestsHistory() {
+        try {
+            const snapshot = await db.collection(COLLECTIONS.APPROVALS)
+                .orderBy('createdAt', 'desc')
+                .limit(100)
+                .get();
+            requestsHistory = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+        } catch (error) {
+            console.error('Error loading requests history:', error);
+        }
     }
-}
 
-// COMPLETELY REWRITTEN - FIXED ARRAY CONFLICT
-// ========== FIXED REQUESTS MANAGEMENT ==========
-// ========== REQUESTS MANAGEMENT DASHBOARD - NO INDEX NEEDED ==========
-async function openRequestsManagement() {
-    console.log("=== OPENING REQUESTS MANAGEMENT DASHBOARD ===");
-    
-    try {
-        // SIMPLE: Get ALL requests without complex filters
-        const snapshot = await db.collection(COLLECTIONS.APPROVALS)
-            .orderBy('createdAt', 'desc')
-            .get();
-        
-        const allRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        // Filter in JavaScript instead of Firestore
-        const pendingRequests = allRequests.filter(req => req.status === 'pending');
-        const historyRequests = allRequests.filter(req => req.status === 'approved' || req.status === 'rejected');
-        
-        const approvedCount = historyRequests.filter(r => r.status === 'approved').length;
-        const rejectedCount = historyRequests.filter(r => r.status === 'rejected').length;
-        const totalCount = allRequests.length;
-        
-        // Create modal
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.id = 'requestsManagementModal';
-        modal.style.display = 'flex';
-        
-        // Build PENDING REQUESTS HTML
-        let pendingHtml = '';
-        if (pendingRequests.length === 0) {
-            pendingHtml = `
-                <div style="text-align: center; padding: 60px; background: white; border-radius: 20px; color: #666;">
-                    <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
-                    <div style="font-size: 18px; font-weight: 500;">No pending requests</div>
-                    <div style="font-size: 14px; color: #999; margin-top: 10px;">All caught up!</div>
-                </div>
-            `;
-        } else {
-            pendingRequests.forEach(req => {
-                let created = 'Unknown';
-                if (req.createdAt) {
-                    if (req.createdAt.toDate) created = req.createdAt.toDate().toLocaleString();
-                    else if (req.createdDate) created = new Date(req.createdDate).toLocaleString();
-                    else if (req.createdAt.seconds) created = new Date(req.createdAt.seconds * 1000).toLocaleString();
-                    else if (typeof req.createdAt === 'string') created = new Date(req.createdAt).toLocaleString();
-                }
-                
-                const actionColor = req.action === 'delete' ? '#e74c3c' : 
-                                  req.action === 'edit' ? '#f39c12' : '#3498db';
-                
-                const actionBg = req.action === 'delete' ? '#fee9e7' :
-                               req.action === 'edit' ? '#fef5e7' : '#e8f0fe';
-                
-                const itemName = req.requestedData?.name || 
-                               (req.type === 'category' ? 'Category' : 'Supplier') + 
-                               (req.itemId ? ` (${req.itemId.substring(0, 6)}...)` : '');
-                
-                pendingHtml += `
-                    <div style="background: white; border-radius: 24px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid #f0f0f0;">
-                        <!-- Header -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <span style="background: ${actionBg}; color: ${actionColor}; padding: 8px 20px; border-radius: 30px; font-weight: 700; font-size: 14px; letter-spacing: 0.5px;">
-                                    ⏳ ${req.action?.toUpperCase() || 'ACTION'} · ${req.type?.toUpperCase() || 'ITEM'}
-                                </span>
-                                <span style="background: ${req.requestedByRole === 'super admin' ? '#9b59b6' : req.requestedByRole === 'admin' ? '#3498db' : '#2ecc71'}; color: white; padding: 6px 16px; border-radius: 30px; font-size: 13px; font-weight: 600;">
-                                    ${req.requestedByRole?.toUpperCase() || 'STAFF'}
-                                </span>
-                            </div>
-                            <span style="color: #888; font-size: 13px; background: #f8f9fa; padding: 6px 16px; border-radius: 30px;">
-                                🕐 ${created}
-                            </span>
-                        </div>
-                        
-                        <!-- Content Grid -->
-    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; margin-bottom: 24px;">
-        <!-- Requester Info -->
-        <div style="background: #fafbfc; padding: 20px; border-radius: 20px;">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                <div style="background: ${actionColor}20; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-size: 20px;">
-                    👤
-                </div>
-                <div>
-                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Requested By</div>
-                    <div style="font-weight: 700; font-size: 16px;">${req.requestedBy || 'Unknown'}</div>
-                </div>
-            </div>
-            <div style="display: flex; gap: 12px; margin-top: 8px; color: #666; font-size: 13px;">
-                <span>📋 ${req.action}</span>
-                <span>📦 ${req.type}</span>
-            </div>
-        </div>
-        
-        <!-- Item Details & Changes - ENHANCED VERSION -->
-        <div style="background: #fafbfc; padding: 20px; border-radius: 20px;">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                <div style="background: #e8f5e9; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-size: 20px;">
-                    📦
-                </div>
-                <div>
-                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Item Details</div>
-                    <div style="font-weight: 700; font-size: 16px;">${itemName}</div>
-                </div>
-            </div>
-            <div style="font-size: 12px; color: #888; margin-top: 8px; word-break: break-all; background: white; padding: 12px; border-radius: 12px;">
-                ID: ${req.itemId || 'N/A'}
-            </div>
+    async function openRequestsManagement() {
+        try {
+            const snapshot = await db.collection(COLLECTIONS.APPROVALS)
+                .orderBy('createdAt', 'desc')
+                .get();
             
-            <!-- SHOW WHAT WAS CHANGED - For EDIT requests -->
-            ${req.action === 'edit' && req.requestedData ? `
-            <div style="margin-top: 16px; border-top: 1px dashed #e0e0e0; padding-top: 16px;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                    <span style="background: #f39c12; color: white; padding: 4px 12px; border-radius: 30px; font-size: 11px; font-weight: 700;">CHANGES</span>
-                    <span style="font-size: 12px; color: #666;">Modified fields</span>
-                </div>
-                <div style="background: #fff3e0; border-radius: 16px; padding: 16px;">
-                    ${Object.entries(req.requestedData)
-                        .filter(([key]) => !['id', 'createdAt', 'updatedAt', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
-                        .map(([key, value]) => {
-                            if (typeof value === 'object') {
-                                return `<div style="margin-bottom: 8px; font-size: 12px;">
-                                    <span style="font-weight: 700; color: #e67e22; text-transform: capitalize;">${key}:</span>
-                                    <pre style="background: white; padding: 8px; border-radius: 8px; margin: 4px 0 0 0; font-size: 11px; overflow-x: auto;">${JSON.stringify(value, null, 2)}</pre>
-                                </div>`;
-                            }
-                            return `<div style="display: flex; margin-bottom: 8px; font-size: 12px;">
-                                <span style="font-weight: 700; color: #e67e22; width: 120px; text-transform: capitalize;">${key}:</span>
-                                <span style="color: #2c3e50; flex: 1;">${value || '<span style="color: #999;">(empty)</span>'}</span>
-                            </div>`;
-                        }).join('')}
-                </div>
-            </div>
-            ` : ''}
+            const allRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
-            <!-- SHOW WHAT WILL BE DELETED - For DELETE requests -->
-            ${req.action === 'delete' ? `
-            <div style="margin-top: 16px; border-top: 1px dashed #e0e0e0; padding-top: 16px;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                    <span style="background: #e74c3c; color: white; padding: 4px 12px; border-radius: 30px; font-size: 11px; font-weight: 700;">WARNING</span>
-                    <span style="font-size: 12px; color: #666;">This item will be permanently deleted</span>
-                </div>
-                <div style="background: #fee9e7; border-radius: 16px; padding: 16px; border-left: 4px solid #e74c3c;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 24px;">⚠️</span>
-                        <div>
-                            <div style="font-weight: 700; color: #c0392b; margin-bottom: 4px;">Delete Confirmation Required</div>
-                            <div style="font-size: 12px; color: #666;">You are about to delete <strong>${itemName}</strong>. This action cannot be undone.</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            ` : ''}
-        </div>
-    </div>
-                        
-                        <!-- Action Buttons -->
-                        <div style="display: flex; gap: 16px; justify-content: flex-end; border-top: 1px solid #f0f0f0; padding-top: 24px;">
-                            <button onclick="approveRequestNow('${req.id}')" style="background: #27ae60; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(39, 174, 96, 0.2);">
-                                <span style="font-size: 18px;">✓</span> APPROVE REQUEST
-                            </button>
-                            <button onclick="rejectRequestNow('${req.id}')" style="background: #e74c3c; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);">
-                                <span style="font-size: 18px;">✗</span> REJECT REQUEST
-                            </button>
-                            ${isCurrentUserSuperAdmin() ? 
-                                `<button onclick="deleteRequestNow('${req.id}')" style="background: #95a5a6; color: white; border: none; padding: 14px 28px; border-radius: 40px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                                    🗑️ DELETE
-                                </button>` : ''
-                            }
-                        </div>
+            const pendingRequests = allRequests.filter(req => req.status === 'pending');
+            const historyRequests = allRequests.filter(req => req.status === 'approved' || req.status === 'rejected');
+            
+            const approvedCount = historyRequests.filter(r => r.status === 'approved').length;
+            const rejectedCount = historyRequests.filter(r => r.status === 'rejected').length;
+            const totalCount = allRequests.length;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'requestsManagementModal';
+            modal.style.display = 'flex';
+            
+            let pendingHtml = '';
+            if (pendingRequests.length === 0) {
+                pendingHtml = `
+                    <div style="text-align: center; padding: 60px; background: white; border-radius: 20px; color: #666;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+                        <div style="font-size: 18px; font-weight: 500;">No pending requests</div>
+                        <div style="font-size: 14px; color: #999; margin-top: 10px;">All caught up!</div>
                     </div>
                 `;
-            });
-        }
-        
-        // Build HISTORY HTML
-        let historyHtml = '';
-        if (historyRequests.length === 0) {
-            historyHtml = `
-                <div style="text-align: center; padding: 60px; background: white; border-radius: 20px; color: #666;">
-                    <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
-                    <div style="font-size: 18px; font-weight: 500;">No request history</div>
-                </div>
-            `;
-        } else {
-            historyRequests.slice(0, 20).forEach(req => {
-                const created = req.createdAt ? new Date(req.createdAt).toLocaleString() : 'Unknown';
-                const statusColor = req.status === 'approved' ? '#2ecc71' : '#e74c3c';
-                const statusBg = req.status === 'approved' ? '#e8f8f0' : '#fee9e7';
-                
-                historyHtml += `
-                    <div style="background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 20px;">
-                            <div style="background: ${statusBg}; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-size: 24px;">
-                                ${req.status === 'approved' ? '✓' : '✗'}
+            } else {
+                pendingRequests.forEach(req => {
+                    let created = 'Unknown';
+                    if (req.createdAt) {
+                        if (req.createdAt.toDate) created = req.createdAt.toDate().toLocaleString();
+                        else if (req.createdDate) created = new Date(req.createdDate).toLocaleString();
+                        else if (req.createdAt.seconds) created = new Date(req.createdAt.seconds * 1000).toLocaleString();
+                        else if (typeof req.createdAt === 'string') created = new Date(req.createdAt).toLocaleString();
+                    }
+                    
+                    const actionColor = req.action === 'delete' ? '#e74c3c' : 
+                                      req.action === 'edit' ? '#f39c12' : '#3498db';
+                    
+                    const actionBg = req.action === 'delete' ? '#fee9e7' :
+                                   req.action === 'edit' ? '#fef5e7' : '#e8f0fe';
+                    
+                    const itemName = req.requestedData?.name || 
+                                   (req.type === 'category' ? 'Category' : 'Supplier') + 
+                                   (req.itemId ? ` (${req.itemId.substring(0, 6)}...)` : '');
+                    
+                    const reason = req.reason || 'No reason provided';
+                    
+                    pendingHtml += `
+                        <div style="background: white; border-radius: 24px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid #f0f0f0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="background: ${actionBg}; color: ${actionColor}; padding: 8px 20px; border-radius: 30px; font-weight: 700; font-size: 14px; letter-spacing: 0.5px;">
+                                        ⏳ ${req.action?.toUpperCase() || 'ACTION'} · ${req.type?.toUpperCase() || 'ITEM'}
+                                    </span>
+                                    <span style="background: ${req.requestedByRole === 'super admin' ? '#9b59b6' : req.requestedByRole === 'admin' ? '#3498db' : '#2ecc71'}; color: white; padding: 6px 16px; border-radius: 30px; font-size: 13px; font-weight: 600;">
+                                        ${req.requestedByRole?.toUpperCase() || 'STAFF'}
+                                    </span>
+                                </div>
+                                <span style="color: #888; font-size: 13px; background: #f8f9fa; padding: 6px 16px; border-radius: 30px;">
+                                    🕐 ${created}
+                                </span>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; margin-bottom: 24px;">
+                                <div style="background: #fafbfc; padding: 20px; border-radius: 20px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                        <div style="background: ${actionColor}20; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-size: 20px;">
+                                            👤
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Requested By</div>
+                                            <div style="font-weight: 700; font-size: 16px;">${req.requestedBy || 'Unknown'}</div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; margin-top: 8px; color: #666; font-size: 13px;">
+                                        <span>📋 ${req.action}</span>
+                                        <span>📦 ${req.type}</span>
+                                    </div>
+                                </div>
+                                
+                                <div style="background: #fafbfc; padding: 20px; border-radius: 20px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                        <div style="background: #e8f5e9; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-size: 20px;">
+                                            📦
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Item Details</div>
+                                            <div style="font-weight: 700; font-size: 16px;">${itemName}</div>
+                                        </div>
+                                    </div>
+                                    <div style="font-size: 12px; color: #888; margin-top: 8px; word-break: break-all; background: white; padding: 12px; border-radius: 12px;">
+                                        ID: ${req.itemId || 'N/A'}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${req.reason ? `
+                            <div style="background: #fff8e7; border-left: 4px solid #f39c12; padding: 16px; margin-bottom: 20px; border-radius: 8px;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <span style="background: #f39c12; color: white; padding: 4px 12px; border-radius: 30px; font-size: 11px; font-weight: 700;">REASON</span>
+                                    <span style="font-size: 12px; color: #666;">Provided by ${req.requestedBy}</span>
+                                </div>
+                                <p style="margin: 0; color: #2c3e50; font-size: 14px; line-height: 1.6;">${req.reason}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${req.action === 'edit' && req.requestedData ? `
+                            <div style="margin-top: 16px; border-top: 1px dashed #e0e0e0; padding-top: 16px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                    <span style="background: #f39c12; color: white; padding: 4px 12px; border-radius: 30px; font-size: 11px; font-weight: 700;">CHANGES</span>
+                                    <span style="font-size: 12px; color: #666;">Modified fields</span>
+                                </div>
+                                <div style="background: #fff3e0; border-radius: 16px; padding: 16px;">
+                                    ${Object.entries(req.requestedData)
+                                        .filter(([key]) => !['id', 'createdAt', 'updatedAt', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
+                                        .map(([key, value]) => {
+                                            if (typeof value === 'object') {
+                                                return `<div style="margin-bottom: 8px; font-size: 12px;">
+                                                    <span style="font-weight: 700; color: #e67e22; text-transform: capitalize;">${key}:</span>
+                                                    <pre style="background: white; padding: 8px; border-radius: 8px; margin: 4px 0 0 0; font-size: 11px; overflow-x: auto;">${JSON.stringify(value, null, 2)}</pre>
+                                                </div>`;
+                                            }
+                                            return `<div style="display: flex; margin-bottom: 8px; font-size: 12px;">
+                                                <span style="font-weight: 700; color: #e67e22; width: 120px; text-transform: capitalize;">${key}:</span>
+                                                <span style="color: #2c3e50; flex: 1;">${value || '<span style="color: #999;">(empty)</span>'}</span>
+                                            </div>`;
+                                        }).join('')}
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            <div style="display: flex; gap: 16px; justify-content: flex-end; border-top: 1px solid #f0f0f0; padding-top: 24px;">
+                                <button onclick="approveRequestNow('${req.id}')" style="background: #27ae60; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(39, 174, 96, 0.2);">
+                                    <span style="font-size: 18px;">✓</span> APPROVE REQUEST
+                                </button>
+                                <button onclick="rejectRequestNow('${req.id}')" style="background: #e74c3c; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);">
+                                    <span style="font-size: 18px;">✗</span> REJECT REQUEST
+                                </button>
+                                ${isCurrentUserSuperAdmin() ? 
+                                    `<button onclick="deleteRequestNow('${req.id}')" style="background: #95a5a6; color: white; border: none; padding: 14px 28px; border-radius: 40px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                        🗑️ DELETE
+                                    </button>` : ''
+                                }
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            let historyHtml = '';
+            if (historyRequests.length === 0) {
+                historyHtml = `
+                    <div style="text-align: center; padding: 60px; background: white; border-radius: 20px; color: #666;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
+                        <div style="font-size: 18px; font-weight: 500;">No request history</div>
+                    </div>
+                `;
+            } else {
+                historyRequests.slice(0, 20).forEach(req => {
+                    const created = req.createdAt ? new Date(req.createdAt).toLocaleString() : 'Unknown';
+                    const statusColor = req.status === 'approved' ? '#2ecc71' : '#e74c3c';
+                    const statusBg = req.status === 'approved' ? '#e8f8f0' : '#fee9e7';
+                    const reason = req.reason || 'No reason provided';
+                    
+                    historyHtml += `
+                        <div style="background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #f0f0f0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 20px;">
+                                    <div style="background: ${statusBg}; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-size: 24px;">
+                                        ${req.status === 'approved' ? '✓' : '✗'}
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                                            <span style="background: ${statusColor}; color: white; padding: 4px 14px; border-radius: 30px; font-size: 12px; font-weight: 700;">
+                                                ${req.status.toUpperCase()}
+                                            </span>
+                                            <span style="color: #666; font-size: 12px;">${req.action?.toUpperCase()} · ${req.type?.toUpperCase()}</span>
+                                        </div>
+                                        <div style="display: flex; gap: 20px; font-size: 13px;">
+                                            <span style="color: #555;">👤 ${req.requestedBy}</span>
+                                            <span style="color: #888;">✓ ${req.reviewedBy || 'System'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="color: #888; font-size: 12px;">
+                                    ${created}
+                                </div>
+                            </div>
+                            ${req.reason ? `
+                            <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-top: 10px; border-left: 3px solid ${statusColor};">
+                                <span style="font-weight: 600; font-size: 12px; color: #555;">Reason:</span>
+                                <span style="font-size: 13px; color: #333; margin-left: 8px;">${req.reason}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+            }
+            
+            modal.innerHTML = `
+                <div style="background: linear-gradient(145deg, #f8fafc, #f0f4f8); width: 1300px; max-width: 95%; max-height: 90vh; overflow-y: auto; border-radius: 32px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div style="background: var(--primary-green); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 20px;">
+                                <span style="font-size: 32px; color: white;">📋</span>
                             </div>
                             <div>
-                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                                    <span style="background: ${statusColor}; color: white; padding: 4px 14px; border-radius: 30px; font-size: 12px; font-weight: 700;">
-                                        ${req.status.toUpperCase()}
-                                    </span>
-                                    <span style="color: #666; font-size: 12px;">${req.action?.toUpperCase()} · ${req.type?.toUpperCase()}</span>
-                                </div>
-                                <div style="display: flex; gap: 20px; font-size: 13px;">
-                                    <span style="color: #555;">👤 ${req.requestedBy}</span>
-                                    <span style="color: #888;">✓ ${req.reviewedBy || 'System'}</span>
-                                </div>
+                                <h2 style="color: #1e3b37; margin: 0; font-size: 28px; font-weight: 700;">Requests Management</h2>
+                                <p style="color: #6b9080; margin: 5px 0 0 0; font-size: 15px;">Approve, reject, and track all change requests</p>
                             </div>
                         </div>
-                        <div style="color: #888; font-size: 12px;">
-                            ${created}
-                        </div>
-                    </div>
-                `;
-            });
-        }
-        
-        // Full Dashboard HTML
-        modal.innerHTML = `
-            <div style="background: linear-gradient(145deg, #f8fafc, #f0f4f8); width: 1300px; max-width: 95%; max-height: 90vh; overflow-y: auto; border-radius: 32px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);">
-                <!-- Header -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <div style="background: var(--primary-green); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 20px;">
-                            <span style="font-size: 32px; color: white;">📋</span>
-                        </div>
-                        <div>
-                            <h2 style="color: #1e3b37; margin: 0; font-size: 28px; font-weight: 700;">Requests Management</h2>
-                            <p style="color: #6b9080; margin: 5px 0 0 0; font-size: 15px;">Approve, reject, and track all change requests</p>
-                        </div>
-                    </div>
-                    <button onclick="this.closest('.modal').remove()" style="background: white; border: none; width: 48px; height: 48px; border-radius: 16px; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #666; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-                        ✕
-                    </button>
-                </div>
-                
-                <!-- Stats Cards -->
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 40px;">
-                    <div style="background: white; padding: 28px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid white;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                            <span style="font-size: 42px;">⏳</span>
-                            <span style="background: #e67e22; color: white; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 600;">Pending</span>
-                        </div>
-                        <div style="font-size: 44px; font-weight: 800; color: #e67e22; margin-bottom: 8px;">${pendingRequests.length}</div>
-                        <div style="color: #666; font-size: 15px;">Awaiting approval</div>
+                        <button onclick="this.closest('.modal').remove()" style="background: white; border: none; width: 48px; height: 48px; border-radius: 16px; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #666; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                            ✕
+                        </button>
                     </div>
                     
-                    <div style="background: white; padding: 28px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid white;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                            <span style="font-size: 42px;">✓</span>
-                            <span style="background: #2ecc71; color: white; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 600;">Approved</span>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 40px;">
+                        <div style="background: white; padding: 28px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid white;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                                <span style="font-size: 42px;">⏳</span>
+                                <span style="background: #e67e22; color: white; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 600;">Pending</span>
+                            </div>
+                            <div style="font-size: 44px; font-weight: 800; color: #e67e22; margin-bottom: 8px;">${pendingRequests.length}</div>
+                            <div style="color: #666; font-size: 15px;">Awaiting approval</div>
                         </div>
-                        <div style="font-size: 44px; font-weight: 800; color: #2ecc71; margin-bottom: 8px;">${approvedCount}</div>
-                        <div style="color: #666; font-size: 15px;">Successfully approved</div>
+                        
+                        <div style="background: white; padding: 28px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid white;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                                <span style="font-size: 42px;">✓</span>
+                                <span style="background: #2ecc71; color: white; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 600;">Approved</span>
+                            </div>
+                            <div style="font-size: 44px; font-weight: 800; color: #2ecc71; margin-bottom: 8px;">${approvedCount}</div>
+                            <div style="color: #666; font-size: 15px;">Successfully approved</div>
+                        </div>
+                        
+                        <div style="background: white; padding: 28px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid white;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                                <span style="font-size: 42px;">✗</span>
+                                <span style="background: #e74c3c; color: white; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 600;">Rejected</span>
+                            </div>
+                            <div style="font-size: 44px; font-weight: 800; color: #e74c3c; margin-bottom: 8px;">${rejectedCount}</div>
+                            <div style="color: #666; font-size: 15px;">Declined requests</div>
+                        </div>
+                        
+                        <div style="background: white; padding: 28px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid white;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                                <span style="font-size: 42px;">📊</span>
+                                <span style="background: #3498db; color: white; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 600;">Total</span>
+                            </div>
+                            <div style="font-size: 44px; font-weight: 800; color: #3498db; margin-bottom: 8px;">${totalCount}</div>
+                            <div style="color: #666; font-size: 15px;">All time requests</div>
+                        </div>
                     </div>
                     
-                    <div style="background: white; padding: 28px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid white;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                            <span style="font-size: 42px;">✗</span>
-                            <span style="background: #e74c3c; color: white; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 600;">Rejected</span>
-                        </div>
-                        <div style="font-size: 44px; font-weight: 800; color: #e74c3c; margin-bottom: 8px;">${rejectedCount}</div>
-                        <div style="color: #666; font-size: 15px;">Declined requests</div>
+                    <div style="display: flex; gap: 16px; margin-bottom: 30px; border-bottom: 2px solid #e9ecef; padding-bottom: 16px;">
+                        <button id="pendingTabBtn" onclick="showPendingTab()" style="background: #e67e22; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            <span>⏳</span> PENDING REQUESTS (${pendingRequests.length})
+                        </button>
+                        <button id="historyTabBtn" onclick="showHistoryTab()" style="background: #34495e; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            <span>📜</span> HISTORY & ARCHIVE (${historyRequests.length})
+                        </button>
                     </div>
                     
-                    <div style="background: white; padding: 28px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid white;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                            <span style="font-size: 42px;">📊</span>
-                            <span style="background: #3498db; color: white; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 600;">Total</span>
+                    <div id="pendingSection" style="display: block;">
+                        <div style="max-height: 500px; overflow-y: auto; padding-right: 8px;">
+                            ${pendingHtml}
                         </div>
-                        <div style="font-size: 44px; font-weight: 800; color: #3498db; margin-bottom: 8px;">${totalCount}</div>
-                        <div style="color: #666; font-size: 15px;">All time requests</div>
                     </div>
-                </div>
-                
-                <!-- Tabs -->
-                <div style="display: flex; gap: 16px; margin-bottom: 30px; border-bottom: 2px solid #e9ecef; padding-bottom: 16px;">
-                    <button id="pendingTabBtn" onclick="showPendingTab()" style="background: #e67e22; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                        <span>⏳</span> PENDING REQUESTS (${pendingRequests.length})
-                    </button>
-                    <button id="historyTabBtn" onclick="showHistoryTab()" style="background: #34495e; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                        <span>📜</span> HISTORY & ARCHIVE (${historyRequests.length})
-                    </button>
-                </div>
-                
-                <!-- Pending Section -->
-                <div id="pendingSection" style="display: block;">
-                    <div style="max-height: 500px; overflow-y: auto; padding-right: 8px;">
-                        ${pendingHtml}
+                    
+                    <div id="historySection" style="display: none;">
+                        <div style="max-height: 500px; overflow-y: auto; padding-right: 8px;">
+                            ${historyHtml}
+                        </div>
                     </div>
-                </div>
-                
-                <!-- History Section -->
-                <div id="historySection" style="display: none;">
-                    <div style="max-height: 500px; overflow-y: auto; padding-right: 8px;">
-                        ${historyHtml}
-                    </div>
-                </div>
-                
-                <!-- Footer -->
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; display: flex; justify-content: flex-end;">
-                    <span style="color: #888; font-size: 13px;">Last updated: ${new Date().toLocaleString()}</span>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to load requests: ' + error.message);
-    }
-}
-
-// Tab switching functions
-window.showPendingTab = function() {
-    const pending = document.getElementById('pendingSection');
-    const history = document.getElementById('historySection');
-    const pendingBtn = document.getElementById('pendingTabBtn');
-    const historyBtn = document.getElementById('historyTabBtn');
-    
-    if (pending && history) {
-        pending.style.display = 'block';
-        history.style.display = 'none';
-        pendingBtn.style.background = '#e67e22';
-        historyBtn.style.background = '#34495e';
-    }
-};
-
-window.showHistoryTab = function() {
-    const pending = document.getElementById('pendingSection');
-    const history = document.getElementById('historySection');
-    const pendingBtn = document.getElementById('pendingTabBtn');
-    const historyBtn = document.getElementById('historyTabBtn');
-    
-    if (pending && history) {
-        pending.style.display = 'none';
-        history.style.display = 'block';
-        pendingBtn.style.background = '#34495e';
-        historyBtn.style.background = '#e67e22';
-    }
-};
-
-// Helper function to show what changed in edit requests
-function renderChanges(oldData, newData) {
-    if (!oldData || !newData) return '';
-    
-    let changes = '';
-    const allKeys = new Set([...Object.keys(oldData), ...Object.keys(newData)]);
-    
-    allKeys.forEach(key => {
-        if (key.includes('id') || key.includes('at') || key.includes('by')) return;
-        
-        const oldVal = oldData[key];
-        const newVal = newData[key];
-        
-        if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
-            changes += `
-                <div style="display: flex; margin-bottom: 12px; padding: 8px; background: white; border-radius: 8px;">
-                    <div style="width: 120px; font-weight: 700; color: #555; text-transform: capitalize;">${key}:</div>
-                    <div style="flex: 1;">
-                        <div style="color: #e74c3c; text-decoration: line-through; font-size: 12px;">${oldVal || '(empty)'}</div>
-                        <div style="color: #27ae60; font-weight: 600; font-size: 12px;">→ ${newVal || '(empty)'}</div>
+                    
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; display: flex; justify-content: flex-end;">
+                        <span style="color: #888; font-size: 13px;">Last updated: ${new Date().toLocaleString()}</span>
                     </div>
                 </div>
             `;
+            
+            document.body.appendChild(modal);
+            
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to load requests: ' + error.message);
         }
-    });
-    
-    return changes || '<div style="color: #999; padding: 8px;">No visible changes detected</div>';
-}
+    }
+
+    window.showPendingTab = function() {
+        const pending = document.getElementById('pendingSection');
+        const history = document.getElementById('historySection');
+        const pendingBtn = document.getElementById('pendingTabBtn');
+        const historyBtn = document.getElementById('historyTabBtn');
+        
+        if (pending && history) {
+            pending.style.display = 'block';
+            history.style.display = 'none';
+            pendingBtn.style.background = '#e67e22';
+            historyBtn.style.background = '#34495e';
+        }
+    };
+
+    window.showHistoryTab = function() {
+        const pending = document.getElementById('pendingSection');
+        const history = document.getElementById('historySection');
+        const pendingBtn = document.getElementById('pendingTabBtn');
+        const historyBtn = document.getElementById('historyTabBtn');
+        
+        if (pending && history) {
+            pending.style.display = 'none';
+            history.style.display = 'block';
+            pendingBtn.style.background = '#34495e';
+            historyBtn.style.background = '#e67e22';
+        }
+    };
 
     function closeRequestsManagement() {
         const modal = document.getElementById('requestsManagementModal');
         if (modal) modal.remove();
     }
 
-    function switchRequestsTab(tab) {
-        const pendingSection = document.getElementById('pendingRequestsSection');
-        const historySection = document.getElementById('historySection');
-        const pendingBtn = document.getElementById('pendingTabBtn');
-        const historyBtn = document.getElementById('historyTabBtn');
-        
-        if (tab === 'pending') {
-            pendingSection.style.display = 'block';
-            historySection.style.display = 'none';
-            pendingBtn.style.background = '#e67e22';
-            historyBtn.style.background = '#34495e';
-        } else {
-            pendingSection.style.display = 'none';
-            historySection.style.display = 'block';
-            pendingBtn.style.background = '#34495e';
-            historyBtn.style.background = '#e67e22';
-        }
-    }
-
-    async function approveRequestFromDashboard(requestId) {
-        localStorage.setItem('currentApprovalRequestId', requestId);
-        await confirmApproval(true);
-        setTimeout(() => {
-            closeRequestsManagement();
+    // ========== FIXED: USER APPROVAL HISTORY - NO INDEX REQUIRED ==========
+    async function openUserApprovalHistory() {
+        const currentUser = getUser(getCurrentUser());
+        // Super admin should NOT see the My Requests tab - they use Requests Management
+        if (currentUser && currentUser.role === 'super admin') {
+            showNotification('Super admin: Please use Requests Management to view all requests', 'info');
             openRequestsManagement();
-        }, 500);
-    }
-
-    async function rejectRequestFromDashboard(requestId) {
-        localStorage.setItem('currentApprovalRequestId', requestId);
-        await confirmApproval(false);
-        setTimeout(() => {
-            closeRequestsManagement();
-            openRequestsManagement();
-        }, 500);
-    }
-
-    async function deleteRequestFromHistory(requestId) {
-        if (!isCurrentUserSuperAdmin()) {
-            alert('Only super admin can delete requests');
             return;
         }
         
-        if (confirm('Delete this request from history?')) {
-            try {
-                await db.collection(COLLECTIONS.APPROVALS).doc(requestId).delete();
-                showNotification('Request deleted from history', 'success');
-                closeRequestsManagement();
-                openRequestsManagement();
-            } catch (error) {
-                console.error('Error deleting request:', error);
-                alert('Failed to delete request');
+        showView('userApprovalHistory');
+        await loadUserApprovalHistory('pending');
+    }
+
+    async function loadUserApprovalHistory(filter = 'pending') {
+        const currentUser = getCurrentUser();
+        if (!currentUser) return;
+        
+        const container = document.getElementById('userApprovalHistoryContainer');
+        if (!container) return;
+        
+        try {
+            console.log(`Loading ${filter} requests for user: ${currentUser}`);
+            
+            // First, get all requests for this user (no composite index required)
+            const snapshot = await db.collection(COLLECTIONS.APPROVALS)
+                .where('requestedBy', '==', currentUser)
+                .get();
+            
+            console.log(`Found ${snapshot.docs.length} total requests for user`);
+            
+            let userRequests = snapshot.docs.map(doc => ({ 
+                id: doc.id, 
+                ...doc.data() 
+            }));
+            
+            // Filter by status in JavaScript (client-side)
+            if (filter === 'pending') {
+                userRequests = userRequests.filter(req => req.status === 'pending');
+            } else {
+                userRequests = userRequests.filter(req => 
+                    req.status === 'approved' || req.status === 'rejected'
+                );
             }
+            
+            // Sort by createdAt (newest first) in JavaScript
+            userRequests.sort((a, b) => {
+                const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+                const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+                return dateB - dateA;
+            });
+            
+            renderUserApprovalHistory(userRequests, filter);
+            
+        } catch (error) {
+            console.error('Error loading user approval history:', error);
+            container.innerHTML = `
+                <div style="text-align: center; padding: 60px; color: #666;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
+                    <div style="font-size: 18px; font-weight: 500;">Failed to load requests</div>
+                    <div style="font-size: 14px; color: #999; margin-top: 10px;">${error.message}</div>
+                    <button onclick="loadUserApprovalHistory('${filter}')" class="btn" style="margin-top: 20px; background: var(--primary-green);">Retry</button>
+                    <p style="margin-top: 20px; font-size: 12px; color: #f39c12;">
+                        ⚠️ Please contact super admin to create the required Firestore indexes.
+                    </p>
+                </div>
+            `;
         }
     }
 
-    async function clearAllRequestsHistory() {
-        if (!isCurrentUserSuperAdmin()) {
-            alert('Only super admin can clear history');
+    function renderUserApprovalHistory(requests, filter) {
+        const container = document.getElementById('userApprovalHistoryContainer');
+        
+        if (requests.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 60px; color: #666;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
+                    <div style="font-size: 18px; font-weight: 500;">
+                        ${filter === 'pending' ? 'No pending requests' : 'No request history'}
+                    </div>
+                </div>
+            `;
             return;
         }
+
+        let html = '';
+        requests.forEach(req => {
+            const created = req.createdAt ? 
+                (req.createdAt.toDate ? req.createdAt.toDate().toLocaleString() : new Date(req.createdAt).toLocaleString()) 
+                : 'Unknown';
+            const actionColor = req.action === 'delete' ? '#e74c3c' : 
+                              req.action === 'edit' ? '#f39c12' : '#3498db';
+            const statusColor = req.status === 'approved' ? '#2ecc71' : 
+                              req.status === 'rejected' ? '#e74c3c' : '#f39c12';
+            
+            html += `
+                <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #e0e0e0; border-left: 6px solid ${actionColor};">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                        <div>
+                            <span style="background: ${statusColor}; color: white; padding: 4px 12px; border-radius: 30px; font-size: 12px; font-weight: 700;">
+                                ${req.status?.toUpperCase() || 'PENDING'}
+                            </span>
+                            <span style="margin-left: 12px; font-weight: 600; color: #2c3e50;">
+                                ${req.action?.toUpperCase()} - ${req.type?.toUpperCase()}
+                            </span>
+                        </div>
+                        <span style="color: #888; font-size: 12px;">${created}</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px;">
+                        <span style="font-weight: 600; color: #555;">Item:</span>
+                        <span style="color: #333; margin-left: 8px;">${req.requestedData?.name || req.itemId || 'N/A'}</span>
+                    </div>
+                    
+                    ${req.reason ? `
+                    <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                        <span style="font-weight: 600; color: #f39c12;">Reason:</span>
+                        <span style="color: #333; margin-left: 8px;">${req.reason}</span>
+                    </div>
+                    ` : ''}
+                    
+                    ${req.reviewedBy ? `
+                    <div style="font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 12px;">
+                        Reviewed by: ${req.reviewedBy} on ${req.reviewedAt ? new Date(req.reviewedAt).toLocaleString() : 'N/A'}
+                    </div>
+                    ` : ''}
+                    
+                    ${req.status === 'pending' ? `
+                    <div style="margin-top: 12px; font-size: 12px; color: #e67e22; background: #fef5e7; padding: 8px 12px; border-radius: 8px;">
+                        ⏳ This request is awaiting approval
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        });
         
-        if (confirm('⚠️ Delete ALL request history? This action CANNOT be undone.')) {
-            try {
-                const snapshot = await db.collection(COLLECTIONS.APPROVALS).get();
-                const batch = db.batch();
-                snapshot.docs.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                await batch.commit();
-                
-                showNotification('All request history cleared', 'success');
-                closeRequestsManagement();
-                await loadRequestsHistory();
-                await loadApprovalRequests();
-            } catch (error) {
-                console.error('Error clearing history:', error);
-                alert('Failed to clear history');
-            }
-        }
+        container.innerHTML = html;
     }
-    
+
+    function switchApprovalHistoryTab(tab) {
+        document.getElementById('historyPendingTab').classList.toggle('active', tab === 'pending');
+        document.getElementById('historyHistoryTab').classList.toggle('active', tab === 'history');
+        loadUserApprovalHistory(tab);
+    }
+
     // Audit pagination variables
     let currentAuditPage = 1;
     let auditLogsPerPage = 20;
@@ -1529,14 +1658,43 @@ function renderChanges(oldData, newData) {
         return user && (user.role === 'super admin' || user.role === 'admin'); 
     }
 
-    function canDeleteCategory() {
+    // ========== PERMISSION CHECKS ==========
+    
+    // USER MANAGEMENT PERMISSIONS
+    function canAddUser() {
+        const user = getUser(getCurrentUser());
+        if (!user) return false;
+        return user.role === 'super admin' || user.role === 'admin' || user.role === 'staff';
+    }
+    
+    function canAddUserWithoutApproval() {
         const user = getUser(getCurrentUser());
         return user && user.role === 'super admin';
     }
     
-    function canDeleteSupplier() {
+    function canDeleteUser() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin');
+    }
+    
+    function canDeleteUserWithoutApproval() {
         const user = getUser(getCurrentUser());
         return user && user.role === 'super admin';
+    }
+    
+    function isJoseph(username) {
+        return username === 'JOSEPH';
+    }
+
+    // CATEGORY PERMISSIONS
+    function canCreateCategory() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
+    }
+    
+    function canCreateCategoryWithoutApproval() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin');
     }
     
     function canEditCategory() {
@@ -1544,14 +1702,130 @@ function renderChanges(oldData, newData) {
         return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
     }
     
+    function canEditCategoryWithoutApproval() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin');
+    }
+    
+    function canDeleteCategory() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
+    }
+    
+    function canDeleteCategoryWithoutApproval() {
+        const user = getUser(getCurrentUser());
+        return user && user.role === 'super admin';
+    }
+    
+    function requiresReasonForCategoryDeletion() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'admin' || user.role === 'staff');
+    }
+
+    // SUPPLIER PERMISSIONS
+    function canCreateSupplier() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
+    }
+    
+    function canCreateSupplierWithoutApproval() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin');
+    }
+    
     function canEditSupplier() {
         const user = getUser(getCurrentUser());
         return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
     }
     
-    function requiresApprovalForDelete() {
+    function canEditSupplierWithoutApproval() {
         const user = getUser(getCurrentUser());
-        return user && user.role !== 'super admin';
+        return user && (user.role === 'super admin' || user.role === 'admin');
+    }
+    
+    function canDeleteSupplier() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
+    }
+    
+    function canDeleteSupplierWithoutApproval() {
+        const user = getUser(getCurrentUser());
+        return user && user.role === 'super admin';
+    }
+    
+    function requiresReasonForSupplierDeletion() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'admin' || user.role === 'staff');
+    }
+
+    // LINK PERMISSIONS
+    function canCreateLink() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
+    }
+    
+    function canCreateLinkWithoutApproval() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin');
+    }
+    
+    function canEditLink() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
+    }
+    
+    function canEditLinkWithoutApproval() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin');
+    }
+    
+    function canDeleteLink() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
+    }
+    
+    function canDeleteLinkWithoutApproval() {
+        const user = getUser(getCurrentUser());
+        return user && user.role === 'super admin';
+    }
+    
+    function requiresReasonForLinkDeletion() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'admin' || user.role === 'staff');
+    }
+
+    // AUDIT LOG PERMISSIONS
+    function canViewAuditLogs() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
+    }
+    
+    function canDeleteAuditLogs() {
+        const user = getUser(getCurrentUser());
+        return user && user.role === 'super admin';
+    }
+
+    // SESSIONS PERMISSIONS
+    function canViewSessions() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
+    }
+
+    // APPROVAL PERMISSIONS
+    function canApproveRequests() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin');
+    }
+    
+    function canApproveAllRequests() {
+        const user = getUser(getCurrentUser());
+        return user && user.role === 'super admin';
+    }
+
+    // SYSTEM LOCK PERMISSIONS
+    function canAccessLockedSystem() {
+        const user = getUser(getCurrentUser());
+        return user && (user.role === 'super admin' || user.role === 'admin');
     }
 
     // ========== SYSTEM LOCK ==========
@@ -1585,6 +1859,10 @@ function renderChanges(oldData, newData) {
 
     // ========== AUDIT LOGS VIEW ==========
     async function showAuditLogs() {
+        if (!canViewAuditLogs()) {
+            alert('You do not have permission to view audit logs');
+            return;
+        }
         showView('auditLogs');
         await loadAuditLogs();
         renderAuditLogs();
@@ -1594,6 +1872,7 @@ function renderChanges(oldData, newData) {
         try {
             const snapshot = await db.collection(COLLECTIONS.AUDIT_LOGS)
                 .orderBy('timestamp', 'desc')
+                .limit(50)
                 .get();
             auditLogs = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -1683,7 +1962,7 @@ function renderChanges(oldData, newData) {
 
     // ========== DELETE AUDIT LOGS (SUPER ADMIN ONLY) ==========
     async function deleteAllAuditLogs() {
-        if (!isCurrentUserSuperAdmin()) {
+        if (!canDeleteAuditLogs()) {
             alert('Only super admin can delete audit logs');
             return;
         }
@@ -1715,7 +1994,7 @@ function renderChanges(oldData, newData) {
     }
 
     async function deleteLast50AuditLogs() {
-        if (!isCurrentUserSuperAdmin()) {
+        if (!canDeleteAuditLogs()) {
             alert('Only super admin can delete audit logs');
             return;
         }
@@ -1750,178 +2029,243 @@ function renderChanges(oldData, newData) {
         }
     }
 
-    // ========== APPROVAL REQUESTS ==========
-    async function loadApprovalRequests() {
-    try {
-        console.log("Loading approval requests...");
-        const snapshot = await db.collection(COLLECTIONS.APPROVALS)
-            .where('status', '==', 'pending')
-            .orderBy('createdAt', 'desc')
-            .get();
-        
-        approvalRequests = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-        
-        console.log(`Found ${approvalRequests.length} pending requests:`, approvalRequests);
-        
-        // Update the approvals button
-        const navBtn = document.getElementById('approvalRequestsNavBtn');
-        if (navBtn) {
-            const currentUser = getUser(getCurrentUser());
-            if (currentUser && (currentUser.role === 'super admin' || currentUser.role === 'admin')) {
-                navBtn.style.display = approvalRequests.length > 0 ? 'inline-block' : 'none';
-                if (approvalRequests.length > 0) {
-                    navBtn.innerHTML = `✅ APPROVALS (${approvalRequests.length})`;
-                    navBtn.style.background = '#e67e22';
-                } else {
-                    navBtn.innerHTML = `✅ APPROVALS`;
-                    navBtn.style.background = '#e67e22';
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Error loading approval requests:', error);
-        approvalRequests = [];
+    // ========== REASON MODAL FUNCTIONS ==========
+    function openReasonModal(type, id, name, callback) {
+        document.getElementById('reasonModalTitle').innerHTML = `State Reason for ${type} Deletion`;
+        document.getElementById('pendingDeletionType').value = type;
+        document.getElementById('pendingDeletionId').value = id;
+        document.getElementById('pendingDeletionName').value = name;
+        document.getElementById('deletionReason').value = '';
+        pendingDeletionCallback = callback;
+        document.getElementById('reasonModal').style.display = 'flex';
     }
-}
 
-    async function createApprovalRequest(type, data, action, itemId) {
-    try {
-        const currentUser = getUser(getCurrentUser());
-        if (!currentUser) {
-            alert('You must be logged in to create a request');
+    function closeReasonModal() {
+        document.getElementById('reasonModal').style.display = 'none';
+        document.getElementById('deletionReason').value = '';
+        pendingDeletionCallback = null;
+    }
+
+    async function submitDeletionReason() {
+        const reason = document.getElementById('deletionReason').value.trim();
+        if (!reason) {
+            alert('Please provide a reason for deletion');
             return;
         }
 
-        console.log(`Creating ${action} request for ${type}:`, data);
-        
-        const request = {
-            type: type,
-            action: action,
-            itemId: itemId,
-            requestedBy: getCurrentUser(),
-            requestedByRole: currentUser.role,
-            requestedData: data,
-            status: 'pending',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            createdDate: new Date().toISOString() // Fallback for sorting
-        };
-        
-        const docRef = await db.collection(COLLECTIONS.APPROVALS).add(request);
-        console.log(`Request created with ID: ${docRef.id}`);
-        
-        // Immediately reload the approval requests
-        await loadApprovalRequests();
-        
-        // Force the approvals button to show
+        const type = document.getElementById('pendingDeletionType').value;
+        const id = document.getElementById('pendingDeletionId').value;
+        const name = document.getElementById('pendingDeletionName').value;
+
+        if (pendingDeletionCallback) {
+            await pendingDeletionCallback(type, id, name, reason);
+        }
+
+        closeReasonModal();
+    }
+
+    // ========== APPROVAL REQUESTS ==========
+    async function loadApprovalRequests() {
+        try {
+            console.log("Loading approval requests...");
+            const snapshot = await db.collection(COLLECTIONS.APPROVALS)
+                .where('status', '==', 'pending')
+                .orderBy('createdAt', 'desc')
+                .get();
+            
+            approvalRequests = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            
+            console.log(`Found ${approvalRequests.length} pending requests:`, approvalRequests);
+            
+            updateApprovalsButton();
+        } catch (error) {
+            console.error('Error loading approval requests:', error);
+            approvalRequests = [];
+        }
+    }
+
+    async function createApprovalRequest(type, data, action, itemId, reason = null) {
+        try {
+            const currentUser = getUser(getCurrentUser());
+            if (!currentUser) {
+                alert('You must be logged in to create a request');
+                return;
+            }
+
+            console.log(`Creating ${action} request for ${type}:`, data);
+            
+            const request = {
+                type: type,
+                action: action,
+                itemId: itemId,
+                requestedBy: getCurrentUser(),
+                requestedByRole: currentUser.role,
+                requestedData: data,
+                status: 'pending',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                createdDate: new Date().toISOString()
+            };
+            
+            if (reason) {
+                request.reason = reason;
+            }
+            
+            const docRef = await db.collection(COLLECTIONS.APPROVALS).add(request);
+            console.log(`Request created with ID: ${docRef.id}`);
+            
+            await loadApprovalRequests();
+            
+            updateApprovalsButton();
+            
+            showNotification('✅ Approval request submitted successfully', 'success');
+        } catch (error) {
+            console.error('Error creating approval request:', error);
+            alert('Failed to create approval request: ' + error.message);
+        }
+    }
+
+    function updateApprovalsButton() {
         const navBtn = document.getElementById('approvalRequestsNavBtn');
-        if (navBtn) {
-            navBtn.style.display = 'inline-block';
-            navBtn.innerHTML = `✅ APPROVALS (${approvalRequests.length})`;
+        if (!navBtn) return;
+        
+        const currentUser = getUser(getCurrentUser());
+        if (!currentUser || !canApproveRequests()) {
+            navBtn.style.display = 'none';
+            return;
         }
         
-        showNotification('✅ Approval request submitted successfully', 'success');
-    } catch (error) {
-        console.error('Error creating approval request:', error);
-        alert('Failed to create approval request: ' + error.message);
-    }
-}
-
-
-    async function openApprovalRequestsModal() {
-    // Force reload the approval requests first
-    await loadApprovalRequests();
-    
-    const container = document.getElementById('pendingApprovalsList');
-    if (!container) return;
-    
-    const currentUser = getUser(getCurrentUser());
-    
-    if (approvalRequests.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">✅ No pending approval requests</div>';
-    } else {
-        let html = '';
-        
-        // Show ALL pending requests to super admin, filter for admin
         let visibleRequests = approvalRequests;
         if (currentUser.role === 'admin') {
             visibleRequests = approvalRequests.filter(req => req.requestedByRole === 'staff');
         }
         
-        if (visibleRequests.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">✅ No pending approval requests for your role</div>';
+        if (visibleRequests.length > 0) {
+            navBtn.style.display = 'inline-block';
+            navBtn.innerHTML = `✅ APPROVALS (${visibleRequests.length})`;
+            navBtn.style.background = '#e67e22';
         } else {
-            visibleRequests.forEach(req => {
-                const created = req.createdDate ? new Date(req.createdDate) : new Date();
-                const timeStr = created.toLocaleString();
-                
-                // Determine color based on action
-                const actionColor = req.action === 'delete' ? '#e74c3c' : 
-                                  req.action === 'edit' ? '#f39c12' : '#3498db';
-                
-                // Get item name safely
-                const itemName = req.requestedData?.name || 
-                               (req.type === 'category' ? 'Category' : 'Supplier') + 
-                               (req.itemId ? ` (${req.itemId.substring(0, 6)}...)` : '');
-                
-                html += `<div class="approval-request-item" style="border-left-color: ${actionColor}; border-left-width: 6px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                                <span style="font-weight: bold; color: ${actionColor}; text-transform: uppercase; background: ${actionColor}20; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
-                                    ⏳ ${req.action?.toUpperCase() || 'ACTION'} - ${req.type?.toUpperCase() || 'ITEM'}
-                                </span>
-                                <span style="font-size: 11px; color: #666; background: #f0f0f0; padding: 4px 8px; border-radius: 12px;">
-                                    ${timeStr}
-                                </span>
-                            </div>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                                <div style="background: #f8f9fa; padding: 10px; border-radius: 8px;">
-                                    <div style="font-size: 11px; color: #666; margin-bottom: 4px;">👤 REQUESTED BY</div>
-                                    <div style="font-weight: 600; font-size: 14px;">${req.requestedBy || 'Unknown'}</div>
-                                    <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                                        <span class="role-badge" style="background: ${req.requestedByRole === 'super admin' ? '#9b59b6' : req.requestedByRole === 'admin' ? '#3498db' : '#2ecc71'}; padding: 2px 8px; border-radius: 12px; color: white; display: inline-block;">
-                                            ${req.requestedByRole || 'staff'}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div style="background: #f8f9fa; padding: 10px; border-radius: 8px;">
-                                    <div style="font-size: 11px; color: #666; margin-bottom: 4px;">📦 ITEM DETAILS</div>
-                                    <div style="font-weight: 600; font-size: 14px;">${itemName}</div>
-                                    <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                                        ID: ${req.itemId?.substring(0, 8) || 'N/A'}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div style="background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
-                                <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                                    <span style="background: #34495e; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px;">DATA</span>
-                                    Request Details
-                                </div>
-                                <pre style="background: #f5f5f5; padding: 10px; border-radius: 5px; font-size: 11px; overflow-x: auto; margin: 0; max-height: 150px; white-space: pre-wrap; word-wrap: break-word;">
-${JSON.stringify(req.requestedData, null, 2)}</pre>
-                            </div>
-                            
-                            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
-                                <button class="btn-approve" style="background: #27ae60; padding: 8px 20px; font-size: 13px; font-weight: bold;" onclick="openApprovalActionModal('${req.id}')">
-                                    ✓ REVIEW REQUEST
-                                </button>
-                                ${isCurrentUserSuperAdmin() ? 
-                                    `<button class="btn-del" style="background: #95a5a6; padding: 8px 16px;" onclick="deleteApprovalRequest('${req.id}')">
-                                        🗑️ DELETE
-                                    </button>` : ''
-                                }
-                            </div>
-                        </div>`;
-            });
-            container.innerHTML = html;
+            navBtn.style.display = 'none';
+        }
+
+        const historyBtn = document.getElementById('approvalHistoryNavBtn');
+        if (historyBtn && getCurrentUser()) {
+            // Super admin should NOT see My Requests button
+            if (currentUser && currentUser.role === 'super admin') {
+                historyBtn.style.display = 'none';
+            } else {
+                historyBtn.style.display = 'inline-block';
+            }
         }
     }
-    
-    document.getElementById('approvalRequestsModal').style.display = 'flex';
-}
+
+    async function openApprovalRequestsModal() {
+        await loadApprovalRequests();
+        
+        const container = document.getElementById('pendingApprovalsList');
+        if (!container) return;
+        
+        const currentUser = getUser(getCurrentUser());
+        
+        if (!canApproveRequests()) {
+            alert('You do not have permission to approve requests');
+            return;
+        }
+        
+        if (approvalRequests.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">✅ No pending approval requests</div>';
+        } else {
+            let html = '';
+            
+            let visibleRequests = approvalRequests;
+            if (currentUser.role === 'admin') {
+                visibleRequests = approvalRequests.filter(req => req.requestedByRole === 'staff');
+            }
+            
+            if (visibleRequests.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">✅ No pending approval requests for your role</div>';
+            } else {
+                visibleRequests.forEach(req => {
+                    const created = req.createdDate ? new Date(req.createdDate) : new Date();
+                    const timeStr = created.toLocaleString();
+                    
+                    const actionColor = req.action === 'delete' ? '#e74c3c' : 
+                                      req.action === 'edit' ? '#f39c12' : '#3498db';
+                    
+                    const itemName = req.requestedData?.name || 
+                                   (req.type === 'category' ? 'Category' : 'Supplier') + 
+                                   (req.itemId ? ` (${req.itemId.substring(0, 6)}...)` : '');
+                    
+                    const reason = req.reason || 'No reason provided';
+                    
+                    html += `<div class="approval-request-item" style="border-left-color: ${actionColor}; border-left-width: 6px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                    <span style="font-weight: bold; color: ${actionColor}; text-transform: uppercase; background: ${actionColor}20; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
+                                        ⏳ ${req.action?.toUpperCase() || 'ACTION'} - ${req.type?.toUpperCase() || 'ITEM'}
+                                    </span>
+                                    <span style="font-size: 11px; color: #666; background: #f0f0f0; padding: 4px 8px; border-radius: 12px;">
+                                        ${timeStr}
+                                    </span>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div style="background: #f8f9fa; padding: 10px; border-radius: 8px;">
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 4px;">👤 REQUESTED BY</div>
+                                        <div style="font-weight: 600; font-size: 14px;">${req.requestedBy || 'Unknown'}</div>
+                                        <div style="font-size: 11px; color: #666; margin-top: 4px;">
+                                            <span class="role-badge" style="background: ${req.requestedByRole === 'super admin' ? '#9b59b6' : req.requestedByRole === 'admin' ? '#3498db' : '#2ecc71'}; padding: 2px 8px; border-radius: 12px; color: white; display: inline-block;">
+                                                ${req.requestedByRole || 'staff'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div style="background: #f8f9fa; padding: 10px; border-radius: 8px;">
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 4px;">📦 ITEM DETAILS</div>
+                                        <div style="font-weight: 600; font-size: 14px;">${itemName}</div>
+                                        <div style="font-size: 11px; color: #666; margin-top: 4px;">
+                                            ID: ${req.itemId?.substring(0, 8) || 'N/A'}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                ${req.reason ? `
+                                <div style="background: #fff8e7; border-left: 4px solid #f39c12; padding: 12px; margin-bottom: 15px; border-radius: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                        <span style="background: #f39c12; color: white; padding: 2px 10px; border-radius: 30px; font-size: 10px; font-weight: 700;">REASON</span>
+                                        <span style="font-size: 11px; color: #666;">Provided by ${req.requestedBy}</span>
+                                    </div>
+                                    <p style="margin: 0; color: #2c3e50; font-size: 13px;">${req.reason}</p>
+                                </div>
+                                ` : ''}
+                                
+                                <div style="background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                                    <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                        <span style="background: #34495e; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px;">DATA</span>
+                                        Request Details
+                                    </div>
+                                    <pre style="background: #f5f5f5; padding: 10px; border-radius: 5px; font-size: 11px; overflow-x: auto; margin: 0; max-height: 150px; white-space: pre-wrap; word-wrap: break-word;">
+${JSON.stringify(req.requestedData, null, 2)}</pre>
+                                </div>
+                                
+                                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+                                    <button class="btn-approve" style="background: #27ae60; padding: 8px 20px; font-size: 13px; font-weight: bold;" onclick="openApprovalActionModal('${req.id}')">
+                                        ✓ REVIEW REQUEST
+                                    </button>
+                                    ${isCurrentUserSuperAdmin() ? 
+                                        `<button class="btn-del" style="background: #95a5a6; padding: 8px 16px;" onclick="deleteApprovalRequest('${req.id}')">
+                                            🗑️ DELETE
+                                        </button>` : ''
+                                    }
+                                </div>
+                            </div>`;
+                });
+                container.innerHTML = html;
+            }
+        }
+        
+        document.getElementById('approvalRequestsModal').style.display = 'flex';
+    }
 
     async function openApprovalActionModal(requestId) {
         const request = approvalRequests.find(r => r.id === requestId);
@@ -1931,9 +2275,17 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
         
         const detailsDiv = document.getElementById('approvalActionDetails');
         let detailsHtml = `<p><strong>Request Type:</strong> ${request.action} ${request.type}</p>`;
-        detailsHtml += `<p><strong>Requested By:</strong> ${request.requestedBy}</p>`;
+        detailsHtml += `<p><strong>Requested By:</strong> ${request.requestedBy} (${request.requestedByRole})</p>`;
         detailsHtml += `<p><strong>Date:</strong> ${new Date(request.createdAt).toLocaleString()}</p>`;
         detailsHtml += `<p><strong>Item ID:</strong> ${request.itemId || 'N/A'}</p>`;
+        
+        if (request.reason) {
+            detailsHtml += `<div style="margin-top: 10px; padding: 10px; background: #fff8e7; border-radius: 8px;">
+                <strong style="color: #f39c12;">Reason:</strong>
+                <p style="margin: 5px 0 0 0; font-size: 13px;">${request.reason}</p>
+            </div>`;
+        }
+        
         detailsHtml += `<div style="margin-top: 15px;"><strong>Request Data:</strong><pre style="background: #fff; padding: 10px; border-radius: 5px; font-size: 12px; overflow-x: auto;">${JSON.stringify(request.requestedData, null, 2)}</pre></div>`;
         
         detailsDiv.innerHTML = detailsHtml;
@@ -1943,101 +2295,156 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
 
     async function confirmApproval(approved) {
         const requestId = localStorage.getItem('currentApprovalRequestId');
-        const request = approvalRequests.find(r => r.id === requestId);
         
-        if (!request) {
-            alert('Request not found');
-            closeApprovalActionModal();
+        if (!requestId) {
+            alert('No request selected');
             return;
         }
-        
+
         try {
+            const docRef = db.collection(COLLECTIONS.APPROVALS).doc(requestId);
+            const doc = await docRef.get();
+            
+            if (!doc.exists) {
+                alert('Request not found. It may have been already processed.');
+                localStorage.removeItem('currentApprovalRequestId');
+                return;
+            }
+
+            const request = { id: doc.id, ...doc.data() };
+            
             if (approved) {
-                // Execute the requested action
                 if (request.action === 'delete') {
                     if (request.type === 'category') {
                         await db.collection(COLLECTIONS.CATEGORIES).doc(request.itemId).delete();
-                        await logAudit('DELETE_CATEGORY_APPROVED', { 
-                            categoryId: request.itemId,
-                            approvedBy: getCurrentUser(),
-                            requestedBy: request.requestedBy
-                        });
+                        showNotification('Category deleted', 'success');
                     } else if (request.type === 'supplier') {
                         await db.collection(COLLECTIONS.SUPPLIERS).doc(request.itemId).delete();
-                        await logAudit('DELETE_SUPPLIER_APPROVED', { 
-                            supplierId: request.itemId,
-                            approvedBy: getCurrentUser(),
-                            requestedBy: request.requestedBy
-                        });
+                        showNotification('Supplier deleted', 'success');
+                    } else if (request.type === 'link') {
+                        await db.collection(COLLECTIONS.LINKS).doc(request.itemId).delete();
+                        showNotification('Link deleted', 'success');
+                    } else if (request.type === 'user') {
+                        await db.collection(COLLECTIONS.USERS).doc(request.itemId).delete();
+                        showNotification('User deleted', 'success');
                     }
                 } else if (request.action === 'edit') {
                     if (request.type === 'category') {
                         await db.collection(COLLECTIONS.CATEGORIES).doc(request.itemId).update(request.requestedData);
-                        await logAudit('EDIT_CATEGORY_APPROVED', { 
-                            categoryId: request.itemId,
-                            approvedBy: getCurrentUser(),
-                            requestedBy: request.requestedBy
-                        });
+                        showNotification('Category updated', 'success');
                     } else if (request.type === 'supplier') {
                         await db.collection(COLLECTIONS.SUPPLIERS).doc(request.itemId).update(request.requestedData);
-                        await logAudit('EDIT_SUPPLIER_APPROVED', { 
-                            supplierId: request.itemId,
-                            approvedBy: getCurrentUser(),
-                            requestedBy: request.requestedBy
-                        });
+                        showNotification('Supplier updated', 'success');
+                    } else if (request.type === 'link') {
+                        await db.collection(COLLECTIONS.LINKS).doc(request.itemId).update(request.requestedData);
+                        showNotification('Link updated', 'success');
+                    } else if (request.type === 'user') {
+                        await db.collection(COLLECTIONS.USERS).doc(request.itemId).update(request.requestedData);
+                        showNotification('User updated', 'success');
+                    }
+                } else if (request.action === 'add') {
+                    if (request.type === 'user') {
+                        await db.collection(COLLECTIONS.USERS).add(request.requestedData);
+                        showNotification('User added', 'success');
                     }
                 }
             }
-            
-            // Update request status
-            await db.collection(COLLECTIONS.APPROVALS).doc(requestId).update({
+
+            await docRef.update({
                 status: approved ? 'approved' : 'rejected',
                 reviewedBy: getCurrentUser(),
                 reviewedAt: new Date().toISOString()
             });
-            
+
             await logAudit(approved ? 'APPROVAL_GRANTED' : 'APPROVAL_REJECTED', {
                 requestId: requestId,
                 type: request.type,
-                action: request.action
+                action: request.action,
+                requestedBy: request.requestedBy,
+                reason: request.reason
             });
-            
+
             showNotification(`Request ${approved ? 'approved' : 'rejected'} successfully`, 'success');
             
-            closeApprovalActionModal();
+            document.getElementById('approvalActionModal').style.display = 'none';
+            document.getElementById('approvalRequestsModal').style.display = 'none';
+            
+            const modal = document.getElementById('requestsManagementModal');
+            if (modal) modal.remove();
+            
+            await loadAllData(true);
             await loadApprovalRequests();
-            await loadAllData();
-            openApprovalRequestsModal();
+            
+            // Only load user approval history if not super admin
+            const currentUser = getUser(getCurrentUser());
+            if (currentUser && currentUser.role !== 'super admin') {
+                await loadUserApprovalHistory();
+            }
+            
             renderCategories();
+            applyRoleBasedUI();
             
             if (document.getElementById('categoryPageView').style.display === 'block') {
                 const categorySuppliers = suppliers.filter(s => s.category === currentCategory);
                 renderSuppliersTable(categorySuppliers);
             }
+
         } catch (error) {
-            console.error('Error processing approval:', error);
-            alert('Failed to process approval: ' + error.message);
+            console.error('Error:', error);
+            alert('Failed to process request: ' + error.message);
+        } finally {
+            localStorage.removeItem('currentApprovalRequestId');
         }
     }
 
+    window.approveRequestNow = async function(requestId) {
+        localStorage.setItem('currentApprovalRequestId', requestId);
+        await confirmApproval(true);
+        openRequestsManagement();
+    };
+
+    window.rejectRequestNow = async function(requestId) {
+        localStorage.setItem('currentApprovalRequestId', requestId);
+        await confirmApproval(false);
+        openRequestsManagement();
+    };
+
+    window.deleteRequestNow = async function(requestId) {
+        if (!isCurrentUserSuperAdmin()) {
+            alert('Only super admin can delete approval requests');
+            return;
+        }
+        
+        if (confirm('Delete this approval request permanently?')) {
+            try {
+                await db.collection(COLLECTIONS.APPROVALS).doc(requestId).delete();
+                await loadApprovalRequests();
+                showNotification('Approval request deleted', 'success');
+            } catch (error) {
+                console.error('Error deleting approval request:', error);
+                alert('Failed to delete approval request: ' + error.message);
+            }
+        }
+    };
+
     async function deleteApprovalRequest(requestId) {
-    if (!isCurrentUserSuperAdmin()) {
-        alert('Only super admin can delete approval requests');
-        return;
-    }
-    
-    if (confirm('Delete this approval request permanently?')) {
-        try {
-            await db.collection(COLLECTIONS.APPROVALS).doc(requestId).delete();
-            await loadApprovalRequests();
-            openApprovalRequestsModal();
-            showNotification('Approval request deleted', 'success');
-        } catch (error) {
-            console.error('Error deleting approval request:', error);
-            alert('Failed to delete approval request: ' + error.message);
+        if (!isCurrentUserSuperAdmin()) {
+            alert('Only super admin can delete approval requests');
+            return;
+        }
+        
+        if (confirm('Delete this approval request permanently?')) {
+            try {
+                await db.collection(COLLECTIONS.APPROVALS).doc(requestId).delete();
+                await loadApprovalRequests();
+                openApprovalRequestsModal();
+                showNotification('Approval request deleted', 'success');
+            } catch (error) {
+                console.error('Error deleting approval request:', error);
+                alert('Failed to delete approval request: ' + error.message);
+            }
         }
     }
-}
 
     function closeApprovalRequestsModal() {
         document.getElementById('approvalRequestsModal').style.display = 'none';
@@ -2118,7 +2525,6 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
                 previewEl.innerHTML = `<span style="color: var(--primary-green);">✓ ${file.name.substring(0, 20)}${file.name.length > 20 ? '...' : ''}</span>`;
             }
             
-            // Auto-check compliance if document uploaded
             if (docType === 'tpin') document.getElementById('complianceTpin').checked = true;
             if (docType === 'napsa') document.getElementById('complianceNapsa').checked = true;
             if (docType === 'zra') document.getElementById('complianceZra').checked = true;
@@ -2173,30 +2579,27 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
         }
     }
 
-    async function getAllUsers() {
+    async function getAllUsers(forceRefresh = false) {
         try {
-            const snapshot = await db.collection(COLLECTIONS.USERS).get();
-            userAccounts = snapshot.docs.map(doc => ({ 
-                id: doc.id, 
-                ...doc.data() 
-            }));
+            userAccounts = await getCachedData('users', forceRefresh);
         } catch (error) { 
             console.error("Error getting users:", error); 
         }
     }
 
-    async function loadAllData() {
+    async function loadAllData(forceRefresh = false) {
         try {
-            const catSnap = await db.collection(COLLECTIONS.CATEGORIES).get();
-            categories = catSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const [catData, supData, linkData] = await Promise.all([
+                getCachedData('categories', forceRefresh),
+                getCachedData('suppliers', forceRefresh),
+                getCachedData('links', forceRefresh)
+            ]);
             
-            const supSnap = await db.collection(COLLECTIONS.SUPPLIERS).get();
-            suppliers = supSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            categories = catData;
+            suppliers = supData;
+            links = linkData;
             
-            const linkSnap = await db.collection(COLLECTIONS.LINKS).get();
-            links = linkSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            console.log("Data loaded:", { categories: categories.length, suppliers: suppliers.length, links: links.length });
+            console.log("✅ Data loaded from " + (forceRefresh ? 'Firestore' : 'cache'));
         } catch (error) { 
             console.error("Error loading data:", error); 
         }
@@ -2266,7 +2669,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
         }
 
         try {
-            await getAllUsers();
+            await getAllUsers(true);
             const user = userAccounts.find(u => u.username === username);
             
             if (user && user.password === password && user.enabled) {
@@ -2275,8 +2678,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
                 localStorage.setItem('last_login', new Date().toDateString());
                 
                 if (isSystemLocked()) {
-                    const hasBypass = (user.role === 'super admin' || user.role === 'admin');
-                    if (!hasBypass) {
+                    if (!canAccessLockedSystem()) {
                         localStorage.removeItem('logged_user');
                         localStorage.removeItem('last_login');
                         alert("System is currently locked. Operating hours: 07:30 - 16:50 CAT.\nOnly Super Admin and Admin users have after-hours access.");
@@ -2295,8 +2697,8 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
                     });
                 }
 
-                await getAllUsers();
-                await loadAllData();
+                await getAllUsers(true);
+                await loadAllData(true);
                 await initializeFirestoreCollections();
                 await loadApprovalRequests();
                 
@@ -2332,13 +2734,6 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
         const username = getCurrentUser();
         logAudit('USER_LOGOUT', { username: username });
         
-        // Clean up realtime listeners
-        if (unsubscribeApprovals) {
-            console.log("🔴 Stopping approval listener");
-            unsubscribeApprovals();
-            unsubscribeApprovals = null;
-        }
-        
         localStorage.removeItem('logged_user');
         localStorage.removeItem('last_login');
         
@@ -2347,14 +2742,14 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
             sessionHeartbeat = null;
         }
 
-        ['homeView','categoryPageView','aboutView','contactView','linksView','auditLogsView'].forEach(id => {
+        ['homeView','categoryPageView','aboutView','contactView','linksView','auditLogsView','userApprovalHistoryView'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
 
         document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('userIn').value = 'JOSEPH';
-        document.getElementById('passIn').value = 'RIGHTJOSEPH';
+        document.getElementById('userIn').value = '';
+        document.getElementById('passIn').value = '';
         document.getElementById('timeWarning').style.display = 'none';
     }
 
@@ -2365,19 +2760,67 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
 
         const isSuper = (user.role === 'super admin');
         const isAdmin = (user.role === 'admin');
+        const isStaff = (user.role === 'staff');
 
         document.querySelectorAll('.exclusive-super').forEach(el => {
             el.style.display = isSuper ? 'inline-block' : 'none';
         });
 
+        // User Management Button - Admin and Super Admin only
         document.getElementById('userMgmtBtn').style.display = (isSuper || isAdmin) ? 'inline-block' : 'none';
-        document.getElementById('sessionsBtn').style.display = 'inline-block';
-        document.getElementById('approvalRequestsNavBtn').style.display = approvalRequests.length > 0 ? 'inline-block' : 'none';
+        
+        // Sessions Button - All roles can view
+        document.getElementById('sessionsBtn').style.display = canViewSessions() ? 'inline-block' : 'none';
+        
+        // Approvals Button - Admin and Super Admin only
+        const approvalsBtn = document.getElementById('approvalRequestsNavBtn');
+        if (approvalsBtn) {
+            approvalsBtn.style.display = canApproveRequests() && approvalRequests.length > 0 ? 'inline-block' : 'none';
+        }
 
+        // My Requests Button - Staff and Admin only (NOT super admin)
+        const historyBtn = document.getElementById('approvalHistoryNavBtn');
+        if (historyBtn) {
+            if (getCurrentUser() && (isStaff || isAdmin)) {
+                historyBtn.style.display = 'inline-block';
+            } else {
+                historyBtn.style.display = 'none';
+            }
+        }
+
+        // Requests Management - Super Admin only
         const requestsBtn = document.getElementById('requestsManagementBtn');
         if (requestsBtn) {
             requestsBtn.style.display = isSuper ? 'inline-block' : 'none';
         }
+
+        // Category Controls
+        const newCategoryBtn = document.getElementById('newCategoryBtn');
+        if (newCategoryBtn) {
+            newCategoryBtn.style.display = canCreateCategory() ? 'inline-block' : 'none';
+        }
+
+        // Supplier Controls
+        const newSupplierBtn = document.getElementById('newSupplierBtn');
+        if (newSupplierBtn) {
+            newSupplierBtn.style.display = canCreateSupplier() ? 'inline-block' : 'none';
+        }
+
+        // Link Controls
+        const addLinkBtn = document.getElementById('addLinkBtn');
+        if (addLinkBtn) {
+            addLinkBtn.style.display = canCreateLink() ? 'inline-block' : 'none';
+        }
+
+        // User Management Modal - Admin and Super Admin can view/edit, Staff cannot
+        if (!isSuper && !isAdmin) {
+            const userMgmtModal = document.getElementById('userManagementModal');
+            if (userMgmtModal && userMgmtModal.style.display === 'flex') {
+                userMgmtModal.style.display = 'none';
+            }
+        }
+
+        renderCategories();
         renderLinks();
     }
 
@@ -2394,7 +2837,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
                     await db.collection(COLLECTIONS.USERS).doc(user.id).update({
                         lastActive: new Date().toISOString()
                     });
-                    await getAllUsers();
+                    await getAllUsers(true);
                 } catch (error) {
                     console.error("Heartbeat error:", error);
                 }
@@ -2404,6 +2847,10 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
 
     // ========== CATEGORY MANAGEMENT ==========
     function openCategoryModal() {
+        if (!canCreateCategory()) {
+            alert('You do not have permission to create categories');
+            return;
+        }
         document.getElementById('categoryNameInput').value = '';
         document.getElementById('categoryModal').style.display = 'flex';
     }
@@ -2413,6 +2860,11 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
     }
 
     async function saveNewCategory() {
+        if (!canCreateCategory()) {
+            alert('You do not have permission to create categories');
+            return;
+        }
+
         const name = document.getElementById('categoryNameInput').value.trim();
         
         if (!name) {
@@ -2421,24 +2873,30 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
         }
 
         try {
-            await db.collection(COLLECTIONS.CATEGORIES).add({
-                name: name,
-                createdAt: new Date().toISOString(),
-                createdBy: getCurrentUser()
-            });
+            if (canCreateCategoryWithoutApproval()) {
+                // Admin or Super Admin - Save directly
+                await db.collection(COLLECTIONS.CATEGORIES).add({
+                    name: name,
+                    createdAt: new Date().toISOString(),
+                    createdBy: getCurrentUser()
+                });
 
-            await logAudit('CREATE_CATEGORY', { 
-                name: name,
-                createdBy: getCurrentUser()
-            });
+                await logAudit('CREATE_CATEGORY', { 
+                    name: name,
+                    createdBy: getCurrentUser()
+                });
 
-            await loadAllData();
-            renderCategories();
-            closeCategoryModal();
-            showNotification(`Category "${name}" created successfully`, 'success');
-
-            // Update category dropdown in supplier modal
-            populateCategoryDropdown();
+                await loadAllData(true);
+                renderCategories();
+                closeCategoryModal();
+                showNotification(`Category "${name}" created successfully`, 'success');
+                populateCategoryDropdown();
+            } else {
+                // Staff - Create approval request
+                await createApprovalRequest('category', { name: name }, 'add', null);
+                closeCategoryModal();
+                showNotification('Category creation request submitted for approval', 'info');
+            }
         } catch (error) {
             console.error('Error creating category:', error);
             alert('Failed to create category: ' + error.message);
@@ -2446,80 +2904,86 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
     }
 
     async function deleteCategory(categoryId) {
-    const category = categories.find(c => c.id === categoryId);
-    if (!category) return;
-
-    const user = getUser(getCurrentUser());
-    
-    // SUPER ADMIN: Delete immediately
-    if (user && user.role === 'super admin') {
-        if (confirm(`Delete category "${category.name}"?`)) {
-            try {
-                await db.collection(COLLECTIONS.CATEGORIES).doc(categoryId).delete();
-                await logAudit('DELETE_CATEGORY', { categoryId, name: category.name });
-                await loadAllData();
-                renderCategories();
-                showNotification('Category deleted', 'success');
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to delete');
-            }
+        if (!canDeleteCategory()) {
+            alert('You do not have permission to delete categories');
+            return;
         }
-        return;
+
+        const category = categories.find(c => c.id === categoryId);
+        if (!category) return;
+
+        if (canDeleteCategoryWithoutApproval()) {
+            // Super Admin - Delete directly
+            if (confirm(`Delete category "${category.name}"?`)) {
+                try {
+                    await db.collection(COLLECTIONS.CATEGORIES).doc(categoryId).delete();
+                    await logAudit('DELETE_CATEGORY', { 
+                        categoryId, 
+                        name: category.name,
+                        deletedBy: getCurrentUser() 
+                    });
+                    await loadAllData(true);
+                    renderCategories();
+                    showNotification('Category deleted', 'success');
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to delete');
+                }
+            }
+        } else if (requiresReasonForCategoryDeletion()) {
+            // Admin or Staff - Require reason and create approval request
+            openReasonModal('category', categoryId, category.name, async (type, id, name, reason) => {
+                await createApprovalRequest('category', { name: name }, 'delete', id, reason);
+                showNotification('Delete request submitted for approval', 'info');
+            });
+        }
     }
-    
-    // STAFF & ADMIN: Create approval request
-    if (user && (user.role === 'staff' || user.role === 'admin')) {
-        await createApprovalRequest('category', { name: category.name }, 'delete', categoryId);
-        showNotification('Delete request submitted for approval', 'info');
-        return;
-    }
-    
-    alert('You do not have permission');
-}
 
-    // ========== CATEGORY RENDERING - UPDATED TO MATCH INDEX FILE ==========
-    // ========== CATEGORY RENDERING WITH SUPPLIER COUNTS ==========
-function renderCategories() {
-    const categoryGrid = document.getElementById('categoryGrid');
-    if (!categoryGrid) return;
+    function renderCategories() {
+        const categoryGrid = document.getElementById('categoryGrid');
+        if (!categoryGrid) return;
 
-    const user = getUser(getCurrentUser());
-    const canDelete = user && user.role === 'super admin';
+        const user = getUser(getCurrentUser());
 
-    if (!categories || categories.length === 0) {
-        categoryGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #6b9080; padding: 60px; font-size: 1.2rem;">No categories yet — click "New Category" to add your first category.</p>';
-        return;
-    }
+        if (!categories || categories.length === 0) {
+            categoryGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #6b9080; padding: 60px; font-size: 1.2rem;">No categories yet — click "New Category" to add your first category.</p>';
+            return;
+        }
 
-    const categoryImagePath = './images/mainlogo3.png';
-    
-    categoryGrid.innerHTML = categories.map((cat, index) => {
-        // Count suppliers in this category
-        const supplierCount = suppliers.filter(s => s.category === cat.name).length;
-        const fallbackColor = `hsl(${(index * 45) % 360}, 70%, 55%)`;
+        const categoryImagePath = './images/mainlogo3.png';
         
-        return `
-            <div class="grid-item" onclick="openCategoryPage('${cat.id}')">
-                <div class="category-image-wrapper">
-                    <img src="${categoryImagePath}" alt="${cat.name}" 
-                         onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'category-fallback\' style=\'background: radial-gradient(circle at 30% 30%, ${fallbackColor}, #2c6b2c);\'>${cat.name.charAt(0)}</div>';">
+        categoryGrid.innerHTML = categories.map((cat, index) => {
+            const supplierCount = suppliers.filter(s => s.category === cat.name).length;
+            const fallbackColor = `hsl(${(index * 45) % 360}, 70%, 55%)`;
+            
+            const showDelete = canDeleteCategory() && canDeleteCategoryWithoutApproval();
+            
+            return `
+                <div class="grid-item" onclick="openCategoryPage('${cat.id}')">
+                    <div class="category-image-wrapper">
+                        <img src="${categoryImagePath}" alt="${cat.name}" loading="lazy"
+                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'category-fallback\' style=\'background: radial-gradient(circle at 30% 30%, ${fallbackColor}, #2c6b2c);\'>${cat.name.charAt(0)}</div>';">
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; padding: 18px 12px;">
+                        <span style="font-weight: 600; font-size: 1rem; color: #1e3b37; margin-bottom: 8px;">${cat.name}</span>
+                        <span style="background: #4CAF50; color: white; padding: 6px 16px; border-radius: 40px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);">
+                            ${supplierCount} ${supplierCount === 1 ? 'Supplier' : 'Suppliers'}
+                        </span>
+                    </div>
+                    ${showDelete ? `<button class="btn-del" onclick="event.stopPropagation(); deleteCategory('${cat.id}')">Delete</button>` : ''}
+                    ${!showDelete && canDeleteCategory() ? `<button class="btn-request-delete" onclick="event.stopPropagation(); deleteCategory('${cat.id}')">Request Delete</button>` : ''}
                 </div>
-                <div style="display: flex; flex-direction: column; align-items: center; padding: 18px 12px;">
-                    <span style="font-weight: 600; font-size: 1rem; color: #1e3b37; margin-bottom: 8px;">${cat.name}</span>
-                    <span style="background: #4CAF50; color: white; padding: 6px 16px; border-radius: 40px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);">
-                        ${supplierCount} ${supplierCount === 1 ? 'Supplier' : 'Suppliers'}
-                    </span>
-                </div>
-                ${canDelete ? `<button class="btn-del" onclick="event.stopPropagation(); deleteCategory('${cat.id}')">Delete</button>` : ''}
-            </div>
-        `;
-    }).join('');
-}
+            `;
+        }).join('');
+    }
 
     // ========== SUPPLIER MANAGEMENT ==========
     function openSupplierModal() {
-        // Reset form
+        if (!canCreateSupplier()) {
+            alert('You do not have permission to add suppliers');
+            return;
+        }
+
         document.getElementById('supplierModalTitle').innerHTML = '➕ Add New Supplier';
         document.getElementById('supplierName').value = '';
         document.getElementById('supplierSpecialization').value = '';
@@ -2530,19 +2994,15 @@ function renderCategories() {
         document.getElementById('editingSupplierId').value = '';
         document.getElementById('supplierActionType').value = 'add';
         
-        // Reset rating
         document.getElementById('star3').checked = true;
         
-        // Reset compliance checkboxes
         document.getElementById('complianceTpin').checked = false;
         document.getElementById('complianceNapsa').checked = false;
         document.getElementById('complianceZra').checked = false;
         document.getElementById('complianceZppa').checked = false;
         
-        // Reset renewal
         document.getElementById('supplierRenewalMonth').value = '11';
         
-        // Reset documents
         uploadedDocuments = { tpin: null, napsa: null, zra: null, zppa: null };
         ['tpin', 'napsa', 'zra', 'zppa'].forEach(type => {
             const previewEl = document.getElementById(`${type}DocPreview`);
@@ -2551,7 +3011,6 @@ function renderCategories() {
         
         updateComplianceUI();
         
-        // Populate category dropdown
         populateCategoryDropdown();
         
         document.getElementById('supplierModal').style.display = 'flex';
@@ -2572,6 +3031,11 @@ function renderCategories() {
     }
 
     async function saveSupplier() {
+        if (!canCreateSupplier() && !canEditSupplier()) {
+            alert('You do not have permission to save suppliers');
+            return;
+        }
+
         const name = document.getElementById('supplierName').value.trim();
         const phone = document.getElementById('supplierPhone').value.trim();
         const category = document.getElementById('supplierCategory').value;
@@ -2581,7 +3045,6 @@ function renderCategories() {
             return;
         }
 
-        // Get rating
         let rating = 3;
         const ratingInputs = document.querySelectorAll('input[name="rating"]');
         for (let input of ratingInputs) {
@@ -2591,12 +3054,10 @@ function renderCategories() {
             }
         }
 
-        // Get renewal date (default to Dec 31 of selected year)
         const renewalYear = document.getElementById('supplierRenewalYear').value;
         const renewalMonth = document.getElementById('supplierRenewalMonth').value;
         const renewalDate = new Date(renewalYear, parseInt(renewalMonth), 31).toISOString();
 
-        // Get compliance
         const compliance = {
             tpin: document.getElementById('complianceTpin').checked ? 'yes' : 'no',
             napsa: document.getElementById('complianceNapsa').checked ? 'yes' : 'no',
@@ -2604,7 +3065,6 @@ function renderCategories() {
             zppa: document.getElementById('complianceZppa').checked ? 'yes' : 'no'
         };
 
-        // Process documents
         const documents = [];
         for (let [type, doc] of Object.entries(uploadedDocuments)) {
             if (doc) {
@@ -2613,7 +3073,7 @@ function renderCategories() {
                     name: doc.name,
                     size: doc.size,
                     uploadedAt: doc.uploadedAt,
-                    data: doc.data // Base64 data
+                    data: doc.data
                 });
             }
         }
@@ -2630,7 +3090,7 @@ function renderCategories() {
             compliance: compliance,
             renewalDate: renewalDate,
             documents: documents,
-            images: [], // Add image support later
+            images: [],
             lastModifiedBy: getCurrentUser(),
             lastModifiedAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -2641,46 +3101,52 @@ function renderCategories() {
 
         try {
             if (actionType === 'edit' && editingId) {
-                // Edit supplier
-                const user = getUser(getCurrentUser());
-                
-                if (user.role !== 'super admin') {
-                    // Need approval for edit
+                if (canEditSupplierWithoutApproval()) {
+                    // Admin or Super Admin - Update directly
+                    await db.collection(COLLECTIONS.SUPPLIERS).doc(editingId).update(supplierData);
+                    
+                    await logAudit('UPDATE_SUPPLIER', {
+                        supplierId: editingId,
+                        name: name,
+                        updatedBy: getCurrentUser()
+                    });
+
+                    showNotification('Supplier updated successfully', 'success');
+                } else {
+                    // Staff - Create approval request
                     await createApprovalRequest('supplier', supplierData, 'edit', editingId);
                     closeSupplierModal();
+                    showNotification('Supplier edit request submitted for approval', 'info');
                     return;
                 }
-
-                await db.collection(COLLECTIONS.SUPPLIERS).doc(editingId).update(supplierData);
-                
-                await logAudit('UPDATE_SUPPLIER', {
-                    supplierId: editingId,
-                    name: name,
-                    updatedBy: getCurrentUser()
-                });
-
-                showNotification('Supplier updated successfully', 'success');
             } else {
-                // Add new supplier
-                await db.collection(COLLECTIONS.SUPPLIERS).add({
-                    ...supplierData,
-                    createdAt: new Date().toISOString(),
-                    createdBy: getCurrentUser()
-                });
+                if (canCreateSupplierWithoutApproval()) {
+                    // Admin or Super Admin - Add directly
+                    await db.collection(COLLECTIONS.SUPPLIERS).add({
+                        ...supplierData,
+                        createdAt: new Date().toISOString(),
+                        createdBy: getCurrentUser()
+                    });
 
-                await logAudit('CREATE_SUPPLIER', {
-                    name: name,
-                    category: category,
-                    createdBy: getCurrentUser()
-                });
+                    await logAudit('CREATE_SUPPLIER', {
+                        name: name,
+                        category: category,
+                        createdBy: getCurrentUser()
+                    });
 
-                showNotification('Supplier added successfully', 'success');
+                    showNotification('Supplier added successfully', 'success');
+                } else {
+                    // Staff - Create approval request
+                    await createApprovalRequest('supplier', supplierData, 'add', null);
+                    closeSupplierModal();
+                    showNotification('Supplier addition request submitted for approval', 'info');
+                    return;
+                }
             }
 
-            await loadAllData();
+            await loadAllData(true);
             closeSupplierModal();
 
-            // Refresh current view
             if (document.getElementById('categoryPageView').style.display === 'block') {
                 const categorySuppliers = suppliers.filter(s => s.category === currentCategory);
                 renderSuppliersTable(categorySuppliers);
@@ -2692,10 +3158,14 @@ function renderCategories() {
     }
 
     function editSupplier(supplierId) {
+        if (!canEditSupplier()) {
+            alert('You do not have permission to edit suppliers');
+            return;
+        }
+
         const supplier = suppliers.find(s => s.id === supplierId);
         if (!supplier) return;
 
-        // Open modal in edit mode
         document.getElementById('supplierModalTitle').innerHTML = '✏️ Edit Supplier';
         document.getElementById('supplierName').value = supplier.name || '';
         document.getElementById('supplierSpecialization').value = supplier.specialization || '';
@@ -2706,25 +3176,21 @@ function renderCategories() {
         document.getElementById('editingSupplierId').value = supplierId;
         document.getElementById('supplierActionType').value = 'edit';
         
-        // Populate and set category
         populateCategoryDropdown();
         setTimeout(() => {
             document.getElementById('supplierCategory').value = supplier.category || '';
         }, 100);
         
-        // Set rating
         const rating = supplier.rating || 3;
         document.querySelectorAll('input[name="rating"]').forEach(input => {
             input.checked = parseInt(input.value) === rating;
         });
         
-        // Set compliance
         document.getElementById('complianceTpin').checked = supplier.compliance?.tpin === 'yes';
         document.getElementById('complianceNapsa').checked = supplier.compliance?.napsa === 'yes';
         document.getElementById('complianceZra').checked = supplier.compliance?.zra === 'yes';
         document.getElementById('complianceZppa').checked = supplier.compliance?.zppa === 'yes';
         
-        // Set renewal
         if (supplier.renewalDate) {
             const date = new Date(supplier.renewalDate);
             document.getElementById('supplierRenewalMonth').value = date.getMonth().toString();
@@ -2733,7 +3199,6 @@ function renderCategories() {
         
         updateComplianceUI();
         
-        // Clear and reset document uploads
         uploadedDocuments = { tpin: null, napsa: null, zra: null, zppa: null };
         ['tpin', 'napsa', 'zra', 'zppa'].forEach(type => {
             const previewEl = document.getElementById(`${type}DocPreview`);
@@ -2744,36 +3209,44 @@ function renderCategories() {
     }
 
     async function deleteSupplier(supplierId) {
-    const supplier = suppliers.find(s => s.id === supplierId);
-    if (!supplier) return;
-
-    const user = getUser(getCurrentUser());
-    
-    // SUPER ADMIN: Delete immediately
-    if (user && user.role === 'super admin') {
-        if (confirm(`Delete supplier "${supplier.name}"?`)) {
-            try {
-                await db.collection(COLLECTIONS.SUPPLIERS).doc(supplierId).delete();
-                await logAudit('DELETE_SUPPLIER', { supplierId, name: supplier.name });
-                await loadAllData();
-                showNotification('Supplier deleted', 'success');
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to delete');
-            }
+        if (!canDeleteSupplier()) {
+            alert('You do not have permission to delete suppliers');
+            return;
         }
-        return;
+
+        const supplier = suppliers.find(s => s.id === supplierId);
+        if (!supplier) return;
+
+        if (canDeleteSupplierWithoutApproval()) {
+            // Super Admin - Delete directly
+            if (confirm(`Delete supplier "${supplier.name}"?`)) {
+                try {
+                    await db.collection(COLLECTIONS.SUPPLIERS).doc(supplierId).delete();
+                    await logAudit('DELETE_SUPPLIER', { 
+                        supplierId, 
+                        name: supplier.name,
+                        deletedBy: getCurrentUser() 
+                    });
+                    await loadAllData(true);
+                    showNotification('Supplier deleted', 'success');
+                    
+                    if (document.getElementById('categoryPageView').style.display === 'block') {
+                        const categorySuppliers = suppliers.filter(s => s.category === currentCategory);
+                        renderSuppliersTable(categorySuppliers);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to delete');
+                }
+            }
+        } else if (requiresReasonForSupplierDeletion()) {
+            // Admin or Staff - Require reason and create approval request
+            openReasonModal('supplier', supplierId, supplier.name, async (type, id, name, reason) => {
+                await createApprovalRequest('supplier', { name: name }, 'delete', id, reason);
+                showNotification('Delete request submitted for approval', 'info');
+            });
+        }
     }
-    
-    // STAFF & ADMIN: Create approval request
-    if (user && (user.role === 'staff' || user.role === 'admin')) {
-        await createApprovalRequest('supplier', { name: supplier.name }, 'delete', supplierId);
-        showNotification('Delete request submitted for approval', 'info');
-        return;
-    }
-    
-    alert('You do not have permission');
-}
 
     // ========== SUPPLIER TABLE ==========
     function openCategoryPage(categoryId) {
@@ -2792,8 +3265,6 @@ function renderCategories() {
         if (!tbody) return;
 
         const user = getUser(getCurrentUser());
-        const canEdit = user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
-        const canDelete = user && user.role === 'super admin';
 
         if (!suppliersList || suppliersList.length === 0) {
             tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; padding: 20px;">No suppliers found in this category.</td></tr>';
@@ -2803,6 +3274,11 @@ function renderCategories() {
         tbody.innerHTML = suppliersList.map(s => {
             const daysRemaining = getDaysRemaining(s);
             const renewalClass = daysRemaining < 0 ? 'expired' : daysRemaining < 30 ? 'expiring' : '';
+            
+            const canEdit = canEditSupplier();
+            const canDelete = canDeleteSupplier();
+            const canDeleteDirect = canDeleteSupplierWithoutApproval();
+            const requiresReason = requiresReasonForSupplierDeletion();
             
             return `
             <tr>
@@ -2828,11 +3304,12 @@ function renderCategories() {
                 <td><div class="supplier-images-preview">${renderImageThumbnails(s)}</div></td>
                 <td><span style="font-size: 11px;">${s.lastModifiedBy || s.createdBy || 'System'}<br><span style="color: #666;">${formatDate(s.lastModifiedAt || s.createdAt)}</span></span></td>
                 <td>
-                    ${canEdit ? `<button class="btn-edit" onclick="editSupplier('${s.id}')" style="margin-right: 5px;">Edit</button>` : ''}
-                    ${canDelete ? `<button class="btn-del" onclick="deleteSupplier('${s.id}')"style="margin-right: 5px;">Delete</button>` : ''}
-                    
-                    ${user && user.role !== 'super admin' && user.role !== 'admin' ? 
-                        `<button class="btn-approve" onclick="deleteSupplier('${s.id}')" style="background: #e67e22;">Request Delete</button>` : ''}
+                    <div class="action-buttons">
+                        ${canEdit ? `<button class="btn-edit" onclick="editSupplier('${s.id}')">Edit</button>` : ''}
+                        ${canDelete && canDeleteDirect ? `<button class="btn-del" onclick="deleteSupplier('${s.id}')">Delete</button>` : ''}
+                        ${canDelete && !canDeleteDirect && requiresReason ? 
+                            `<button class="btn-request-delete" onclick="deleteSupplier('${s.id}')">Request Delete</button>` : ''}
+                    </div>
                 </td>
             </tr>
         `}).join('');
@@ -2844,7 +3321,9 @@ function renderCategories() {
         if (!tbody) return;
 
         const user = getUser(getCurrentUser());
-        const canDelete = user && (user.role === 'super admin' || user.role === 'admin');
+        const canDelete = canDeleteLink();
+        const canDeleteDirect = canDeleteLinkWithoutApproval();
+        const requiresReason = requiresReasonForLinkDeletion();
 
         if (!links || links.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No links found.</td></tr>';
@@ -2856,12 +3335,25 @@ function renderCategories() {
                 <td>${link.institution || ''}</td>
                 <td><a href="${link.website}" target="_blank">${link.website}</a></td>
                 <td>${link.email || ''}</td>
-                <td>${canDelete ? `<button class="btn-del" onclick="deleteLink('${link.id}')">Delete</button>` : '—'}</td>
+                <td>
+                    <div class="action-buttons">
+                        ${canDelete && canDeleteDirect ? 
+                            `<button class="btn-del" onclick="deleteLink('${link.id}')">Delete</button>` : 
+                            canDelete && !canDeleteDirect && requiresReason ? 
+                            `<button class="btn-request-delete" onclick="deleteLink('${link.id}')">Request Delete</button>` : 
+                            '—'}
+                    </div>
+                </td>
             </tr>
         `).join('');
     }
 
     async function addLink() {
+        if (!canCreateLink()) {
+            alert('You do not have permission to add links');
+            return;
+        }
+
         const institution = document.getElementById('instName').value.trim();
         const website = document.getElementById('instWeb').value.trim();
         const email = document.getElementById('instEmail').value.trim();
@@ -2872,20 +3364,28 @@ function renderCategories() {
         }
 
         try {
-            const newLink = {
-                institution,
-                website,
-                email,
-                createdAt: new Date().toISOString(),
-                createdBy: getCurrentUser()
-            };
-            
-            await db.collection(COLLECTIONS.LINKS).add(newLink);
-            await logAudit('CREATE_LINK', { institution, website, email });
-            await loadAllData();
-            renderLinks();
-            closeLinkModal();
-            showNotification('Link added successfully');
+            if (canCreateLinkWithoutApproval()) {
+                // Admin or Super Admin - Add directly
+                const newLink = {
+                    institution,
+                    website,
+                    email,
+                    createdAt: new Date().toISOString(),
+                    createdBy: getCurrentUser()
+                };
+                
+                await db.collection(COLLECTIONS.LINKS).add(newLink);
+                await logAudit('CREATE_LINK', { institution, website, email, createdBy: getCurrentUser() });
+                await loadAllData(true);
+                renderLinks();
+                closeLinkModal();
+                showNotification('Link added successfully');
+            } else {
+                // Staff - Create approval request
+                await createApprovalRequest('link', { institution, website, email }, 'add', null);
+                closeLinkModal();
+                showNotification('Link addition request submitted for approval', 'info');
+            }
         } catch (error) {
             console.error("Error adding link:", error);
             alert("Failed to add link");
@@ -2893,32 +3393,46 @@ function renderCategories() {
     }
 
     async function deleteLink(id) {
-        const user = getUser(getCurrentUser());
-        if (!user || (user.role !== 'super admin' && user.role !== 'admin')) {
+        if (!canDeleteLink()) {
             alert("You don't have permission to delete links");
             return;
         }
 
         const link = links.find(l => l.id === id);
-        
-        if (confirm('Are you sure you want to delete this link?')) {
-            try {
-                await db.collection(COLLECTIONS.LINKS).doc(id).delete();
-                await logAudit('DELETE_LINK', { 
-                    institution: link?.institution,
-                    website: link?.website 
-                });
-                await loadAllData();
-                renderLinks();
-                showNotification('Link deleted successfully');
-            } catch (error) {
-                console.error("Error deleting link:", error);
-                alert("Failed to delete link");
+        if (!link) return;
+
+        if (canDeleteLinkWithoutApproval()) {
+            // Super Admin - Delete directly
+            if (confirm('Are you sure you want to delete this link?')) {
+                try {
+                    await db.collection(COLLECTIONS.LINKS).doc(id).delete();
+                    await logAudit('DELETE_LINK', { 
+                        institution: link?.institution,
+                        website: link?.website,
+                        deletedBy: getCurrentUser() 
+                    });
+                    await loadAllData(true);
+                    renderLinks();
+                    showNotification('Link deleted successfully');
+                } catch (error) {
+                    console.error("Error deleting link:", error);
+                    alert("Failed to delete link");
+                }
             }
+        } else if (requiresReasonForLinkDeletion()) {
+            // Admin or Staff - Require reason and create approval request
+            openReasonModal('link', id, link.institution, async (type, id, name, reason) => {
+                await createApprovalRequest('link', { name: name }, 'delete', id, reason);
+                showNotification('Delete request submitted for approval', 'info');
+            });
         }
     }
 
     function openLinkModal() { 
+        if (!canCreateLink()) {
+            alert('You do not have permission to add links');
+            return;
+        }
         document.getElementById('linkModal').style.display = 'flex'; 
     }
     
@@ -2935,11 +3449,11 @@ function renderCategories() {
         const curUser = getUser(currentUser);
         
         if (!curUser || (curUser.role !== 'super admin' && curUser.role !== 'admin')) {
-            alert("Access denied");
+            alert("Access denied - Only Admin and Super Admin can manage users");
             return;
         }
 
-        await getAllUsers();
+        await getAllUsers(true);
         
         const tbody = document.getElementById('userMgmtTableBody');
         let html = '';
@@ -2947,7 +3461,7 @@ function renderCategories() {
         for (let u of userAccounts) {
             const isSuperAdmin = (curUser.role === 'super admin');
             const canEdit = (curUser.role === 'super admin') || (curUser.role === 'admin' && u.role !== 'super admin');
-            const canDelete = (curUser.role === 'super admin');
+            const canDelete = (curUser.role === 'super admin') && !isJoseph(u.username);
             
             let displayEmail = '';
             let displayNrc = '';
@@ -2957,13 +3471,9 @@ function renderCategories() {
                 displayEmail = u.email || '';
                 displayNrc = u.nrc || '';
             } else if (curUser.role === 'admin') {
-                if (u.role === 'super admin') {
-                    displayEmail = '****@****';
-                    displayNrc = '******';
-                } else {
-                    displayEmail = '****@****';
-                    displayNrc = '******';
-                }
+                // Admin sees masked data for privacy
+                displayEmail = '****@****';
+                displayNrc = '******';
             }
 
             const status = u.enabled ? 
@@ -2972,22 +3482,22 @@ function renderCategories() {
             
             let actions = '';
             if (canEdit) {
-                actions += `<button class="btn-edit" onclick="openEditUserModal('${u.id}')" style="margin-right:5px;">Edit</button> `;
+                actions += `<button class="btn-edit" onclick="openEditUserModal('${u.id}')">Edit</button> `;
             }
             if (canDelete) {
-                actions += `<button class="btn-del" onclick="deleteUser('${u.id}')">Del</button>`;
+                actions += `<button class="btn-del" onclick="deleteUser('${u.id}')">Delete</button>`;
             }
             if (!actions) actions = '—';
 
             const roleClass = u.role.replace(' ', '');
             
             html += `<tr>
-                <td>${u.username}</td>
+                <td>${u.username}${isJoseph(u.username) ? ' 🔒' : ''}</td>
                 <td><span class="role-badge role-${roleClass}">${u.role}</span></td>
                 <td>${displayPhone}</td>
                 <td>${displayEmail}<br><span style="font-size:11px; color:#666;">NRC: ${displayNrc}</span></td>
                 <td>${status}</td>
-                <td>${actions}</td>
+                <td><div class="action-buttons">${actions}</div></td>
             </tr>`;
         }
 
@@ -3073,18 +3583,27 @@ function renderCategories() {
         }
 
         try {
-            await db.collection(COLLECTIONS.USERS).doc(userId).update(updatedData);
-            
-            await logAudit('EDIT_USER', {
-                username: user.username,
-                changes: updatedData,
-                editedBy: getCurrentUser()
-            });
-            
-            await getAllUsers();
-            closeEditUserModal();
-            manageUsersModal();
-            showNotification(`User ${user.username} updated successfully`);
+            if (currentUser.role === 'super admin') {
+                // Super Admin - Update directly
+                await db.collection(COLLECTIONS.USERS).doc(userId).update(updatedData);
+                
+                await logAudit('EDIT_USER', {
+                    username: user.username,
+                    changes: updatedData,
+                    editedBy: getCurrentUser()
+                });
+                
+                await getAllUsers(true);
+                closeEditUserModal();
+                manageUsersModal();
+                showNotification(`User ${user.username} updated successfully`);
+            } else {
+                // Admin - Require super admin approval
+                await createApprovalRequest('user', updatedData, 'edit', userId);
+                closeEditUserModal();
+                manageUsersModal();
+                showNotification('User edit request submitted for super admin approval', 'info');
+            }
         } catch (error) {
             console.error("Error updating user:", error);
             alert("Failed to update user: " + error.message);
@@ -3097,7 +3616,7 @@ function renderCategories() {
     }
 
     function openAddUserModal() {
-        if (!isCurrentUserSuperAdmin() && !isCurrentUserAdmin()) {
+        if (!canAddUser()) {
             alert("You don't have permission to add users");
             return;
         }
@@ -3110,14 +3629,26 @@ function renderCategories() {
         
         document.getElementById('newRole').value = 'staff';
 
-        if (!isCurrentUserSuperAdmin()) {
+        const currentUser = getUser(getCurrentUser());
+        
+        if (currentUser.role === 'staff') {
+            // Staff can only add staff users
             const roleSelect = document.getElementById('newRole');
             for (let i = 0; i < roleSelect.options.length; i++) {
-                if (roleSelect.options[i].value === 'super admin') {
+                if (roleSelect.options[i].value !== 'staff') {
                     roleSelect.options[i].disabled = true;
                 }
             }
-        } else {
+        } else if (currentUser.role === 'admin') {
+            // Admin can only add staff users, requires super admin approval
+            const roleSelect = document.getElementById('newRole');
+            for (let i = 0; i < roleSelect.options.length; i++) {
+                if (roleSelect.options[i].value !== 'staff') {
+                    roleSelect.options[i].disabled = true;
+                }
+            }
+        } else if (currentUser.role === 'super admin') {
+            // Super admin can add any role
             document.querySelectorAll('#newRole option').forEach(opt => opt.disabled = false);
         }
 
@@ -3125,7 +3656,7 @@ function renderCategories() {
     }
 
     async function saveNewUser() {
-        if (!isCurrentUserSuperAdmin() && !isCurrentUserAdmin()) {
+        if (!canAddUser()) {
             alert("You don't have permission to add users");
             return;
         }
@@ -3154,33 +3685,42 @@ function renderCategories() {
             return;
         }
 
-        try {
-            const newUser = {
-                username,
-                password,
-                role,
-                nrc,
-                email,
-                phone,
-                institution,
-                position,
-                enabled: true,
-                createdAt: new Date().toISOString(),
-                lastActive: null
-            };
+        const newUser = {
+            username,
+            password,
+            role,
+            nrc,
+            email,
+            phone,
+            institution,
+            position,
+            enabled: true,
+            createdAt: new Date().toISOString(),
+            lastActive: null
+        };
 
-            await db.collection(COLLECTIONS.USERS).add(newUser);
-            
-            await logAudit('CREATE_USER', {
-                username,
-                role,
-                createdBy: getCurrentUser()
-            });
-            
-            await getAllUsers();
-            closeAddUserModal();
-            manageUsersModal();
-            showNotification(`User ${username} created successfully`);
+        try {
+            if (canAddUserWithoutApproval()) {
+                // Super Admin - Add directly
+                await db.collection(COLLECTIONS.USERS).add(newUser);
+                
+                await logAudit('CREATE_USER', {
+                    username,
+                    role,
+                    createdBy: getCurrentUser()
+                });
+                
+                await getAllUsers(true);
+                closeAddUserModal();
+                manageUsersModal();
+                showNotification(`User ${username} created successfully`);
+            } else {
+                // Staff or Admin - Create approval request
+                const currentUser = getUser(getCurrentUser());
+                await createApprovalRequest('user', newUser, 'add', null);
+                closeAddUserModal();
+                showNotification(`User addition request submitted for ${currentUser.role === 'admin' ? 'super admin' : 'admin/super admin'} approval`, 'info');
+            }
         } catch (error) {
             console.error("Error creating user:", error);
             alert("Failed to create user");
@@ -3188,36 +3728,46 @@ function renderCategories() {
     }
 
     async function deleteUser(userId) {
-        if (!isCurrentUserSuperAdmin()) {
-            alert("Only super admin can delete users");
+        if (!canDeleteUser()) {
+            alert("You don't have permission to delete users");
             return;
         }
 
         const user = userAccounts.find(u => u.id === userId);
         if (!user) return;
 
-        if (user.username === 'JOSEPH') {
-            alert('Cannot delete the primary super admin account');
+        if (isJoseph(user.username)) {
+            alert('JOSEPH cannot be deleted');
             return;
         }
 
-        if (confirm(`Are you sure you want to permanently delete user ${user.username}?`)) {
-            try {
-                await db.collection(COLLECTIONS.USERS).doc(userId).delete();
-                
-                await logAudit('DELETE_USER', {
-                    username: user.username,
-                    role: user.role,
-                    deletedBy: getCurrentUser()
-                });
-                
-                await getAllUsers();
-                manageUsersModal();
-                showNotification(`User ${user.username} deleted successfully`);
-            } catch (error) {
-                console.error("Error deleting user:", error);
-                alert("Failed to delete user");
+        if (canDeleteUserWithoutApproval()) {
+            // Super Admin - Delete directly
+            if (confirm(`Are you sure you want to permanently delete user ${user.username}?`)) {
+                try {
+                    await db.collection(COLLECTIONS.USERS).doc(userId).delete();
+                    
+                    await logAudit('DELETE_USER', {
+                        username: user.username,
+                        role: user.role,
+                        deletedBy: getCurrentUser()
+                    });
+                    
+                    await getAllUsers(true);
+                    manageUsersModal();
+                    showNotification(`User ${user.username} deleted successfully`);
+                } catch (error) {
+                    console.error("Error deleting user:", error);
+                    alert("Failed to delete user");
+                }
             }
+        } else {
+            // Admin - Require super admin approval
+            openReasonModal('user', userId, user.username, async (type, id, name, reason) => {
+                await createApprovalRequest('user', { name: name, role: user.role }, 'delete', id, reason);
+                showNotification('User deletion request submitted for super admin approval', 'info');
+                manageUsersModal();
+            });
         }
     }
 
@@ -3231,13 +3781,18 @@ function renderCategories() {
 
     // ========== SESSIONS PANEL ==========
     async function toggleSessionsPanel() {
+        if (!canViewSessions()) {
+            alert('You do not have permission to view sessions');
+            return;
+        }
+
         const panel = document.getElementById('sessionsPanel');
         if (panel.style.display === 'block') {
             panel.style.display = 'none';
             return;
         }
 
-        await getAllUsers();
+        await getAllUsers(true);
         const listDiv = document.getElementById('activeSessionsList');
         const now = new Date();
         let html = '';
@@ -3283,8 +3838,8 @@ function renderCategories() {
         }
 
         try {
-            await loadAllData();
-            await getAllUsers();
+            await loadAllData(true);
+            await getAllUsers(true);
             await loadAuditLogs();
 
             const backup = {
@@ -3335,8 +3890,6 @@ function renderCategories() {
         event.target.value = '';
     }
 
-    
-
     // ========== UI HELPER FUNCTIONS ==========
     function showView(viewName) {
         document.getElementById('homeView').style.display = 'none';
@@ -3345,6 +3898,7 @@ function renderCategories() {
         document.getElementById('contactView').style.display = 'none';
         document.getElementById('linksView').style.display = 'none';
         document.getElementById('auditLogsView').style.display = 'none';
+        document.getElementById('userApprovalHistoryView').style.display = 'none';
         document.getElementById('searchResultSection').style.display = 'none';
         
         if (viewName === 'home') {
@@ -3361,6 +3915,9 @@ function renderCategories() {
             renderLinks();
         } else if (viewName === 'auditLogs') {
             document.getElementById('auditLogsView').style.display = 'block';
+        } else if (viewName === 'userApprovalHistory') {
+            document.getElementById('userApprovalHistoryView').style.display = 'block';
+            loadUserApprovalHistory('pending');
         }
     }
 
@@ -3411,8 +3968,7 @@ function renderCategories() {
         
         if (statusDot && statusText) {
             if (isSystemLocked()) {
-                const user = getUser(currentUser);
-                if (user && (user.role === 'super admin' || user.role === 'admin')) {
+                if (canAccessLockedSystem()) {
                     statusDot.className = 'pulse-online';
                     statusText.innerText = "🔓 SYSTEM LOCKED - You have after-hours access";
                     statusText.style.color = "var(--warning-orange)";
@@ -3576,33 +4132,37 @@ function renderCategories() {
     }
 
     // ========== SEARCH FUNCTION ==========
-    function filterEverything() { 
-        const term = document.getElementById('globalSearch').value.toLowerCase();
-        if (term.length < 2) { 
-            document.getElementById('searchResultSection').style.display = 'none';
-            document.getElementById('defaultHomeContent').style.display = 'block';
-            return;
-        }
-        
-        const results = suppliers.filter(s => s.name && s.name.toLowerCase().includes(term));
-        const tbody = document.getElementById('globalSearchResultsBody');
-        
-        tbody.innerHTML = results.map(s => {
-            const daysRemaining = getDaysRemaining(s);
-            return `
-            <tr>
-                <td>${s.name}</td>
-                <td>${s.category || ''}</td>
-                <td>${s.specialization || ''}</td>
-                <td>${s.phone || ''}</td>
-                <td>${renderStars(s.rating || 0)} ${s.rating || 0}/5</td>
-                <td><span style="background: ${daysRemaining < 0 ? '#e74c3c' : daysRemaining < 30 ? '#f39c12' : '#2ecc71'}; color: white; padding: 3px 8px; border-radius: 12px;">${daysRemaining} days</span></td>
-                <td><button class="btn-edit" onclick="editSupplier('${s.id}')">Edit</button></td>
-            </tr>
-        `}).join('');
-        
-        document.getElementById('defaultHomeContent').style.display = 'none';
-        document.getElementById('searchResultSection').style.display = 'block';
+    let searchTimeout;
+    function filterEverything() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const term = document.getElementById('globalSearch').value.toLowerCase();
+            if (term.length < 2) { 
+                document.getElementById('searchResultSection').style.display = 'none';
+                document.getElementById('defaultHomeContent').style.display = 'block';
+                return;
+            }
+            
+            const results = suppliers.filter(s => s.name && s.name.toLowerCase().includes(term));
+            const tbody = document.getElementById('globalSearchResultsBody');
+            
+            tbody.innerHTML = results.map(s => {
+                const daysRemaining = getDaysRemaining(s);
+                return `
+                <tr>
+                    <td>${s.name}</td>
+                    <td>${s.category || ''}</td>
+                    <td>${s.specialization || ''}</td>
+                    <td>${s.phone || ''}</td>
+                    <td>${renderStars(s.rating || 0)} ${s.rating || 0}/5</td>
+                    <td><span style="background: ${daysRemaining < 0 ? '#e74c3c' : daysRemaining < 30 ? '#f39c12' : '#2ecc71'}; color: white; padding: 3px 8px; border-radius: 12px;">${daysRemaining} days</span></td>
+                    <td><div class="action-buttons">${canEditSupplier() ? `<button class="btn-edit" onclick="editSupplier('${s.id}')">Edit</button>` : '—'}</div></td>
+                </tr>
+            `}).join('');
+            
+            document.getElementById('defaultHomeContent').style.display = 'none';
+            document.getElementById('searchResultSection').style.display = 'block';
+        }, 300);
     }
 
     // ========== NOTIFICATION ==========
@@ -3617,77 +4177,65 @@ function renderCategories() {
         }, 4000);
     }
 
-
-
     // ========== MISC ==========
     function forgotPasswordSimple() { 
         alert('Please contact the super admin at zulujosephp@gmail.com'); 
     }
 
     // ========== REALTIME APPROVAL LISTENER ==========
-    // This updates INSTANTLY when any change happens in Firestore
-
-    let unsubscribeApprovals = null; // Store listener to clean up
+    let unsubscribeApprovals = null;
 
     function startRealtimeApprovalListener() {
-        console.log("🔴 Starting REALTIME approval listener...");
-        
-        const user = getCurrentUser();
-        if (!user) return;
-        
-        const currentUser = getUser(user);
-        if (!currentUser || (currentUser.role !== 'super admin' && currentUser.role !== 'admin')) {
-            // Only super admin and admin need to listen
-            return;
-        }
-        
-        // Clean up existing listener
         if (unsubscribeApprovals) {
             unsubscribeApprovals();
             unsubscribeApprovals = null;
         }
         
-        // Create query based on role
+        const user = getCurrentUser();
+        if (!user) return;
+        
+        const currentUser = getUser(user);
+        if (!currentUser || !canApproveRequests()) {
+            return;
+        }
+        
         let query;
         if (currentUser.role === 'super admin') {
-            // Super admin sees ALL pending requests
             query = db.collection(COLLECTIONS.APPROVALS)
                 .where('status', '==', 'pending')
                 .orderBy('createdAt', 'desc');
         } else {
-            // Admin only sees requests from staff (not from other admins or super admins)
             query = db.collection(COLLECTIONS.APPROVALS)
                 .where('status', '==', 'pending')
-                .where('requestedByRole', '==', 'staff') // Need to add this field
+                .where('requestedByRole', '==', 'staff')
                 .orderBy('createdAt', 'desc');
         }
         
-        // Set up realtime listener
         unsubscribeApprovals = query.onSnapshot((snapshot) => {
             console.log(`📡 Realtime update: ${snapshot.docs.length} pending approvals`);
             
-            // Update global array
             approvalRequests = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
             
-            // Update UI
             updateApprovalsButton();
             
-            // If modal is open, refresh it
             const modal = document.getElementById('approvalRequestsModal');
             if (modal && modal.style.display === 'flex') {
-                renderApprovalsModal();
+                openApprovalRequestsModal();
             }
             
-            // Show notification for new requests
+            const reqModal = document.getElementById('requestsManagementModal');
+            if (reqModal) {
+                openRequestsManagement();
+            }
+            
             snapshot.docChanges().forEach(change => {
                 if (change.type === 'added') {
                     const req = change.doc.data();
-                    if (req.requestedBy !== getCurrentUser()) { // Don't notify about own requests
+                    if (req.requestedBy !== getCurrentUser()) {
                         showNotification(`📨 New approval request from ${req.requestedBy}`, 'info');
-                        playNotificationSound();
                     }
                 }
             });
@@ -3697,258 +4245,20 @@ function renderCategories() {
         });
     }
 
-    // Update approvals button with realtime count
-    function updateApprovalsButton() {
-        const navBtn = document.getElementById('approvalRequestsNavBtn');
-        if (!navBtn) return;
-        
-        const currentUser = getUser(getCurrentUser());
-        if (!currentUser || (currentUser.role !== 'super admin' && currentUser.role !== 'admin')) {
-            navBtn.style.display = 'none';
-            return;
-        }
-        
-        // Filter based on role
-        let visibleRequests = approvalRequests;
-        if (currentUser.role === 'admin') {
-            visibleRequests = approvalRequests.filter(req => req.requestedByRole === 'staff');
-        }
-        
-        if (visibleRequests.length > 0) {
-            navBtn.style.display = 'inline-block';
-            navBtn.innerHTML = `✅ APPROVALS (${visibleRequests.length})`;
-            navBtn.style.background = '#e67e22';
-            navBtn.style.animation = 'pulse-approval 2s infinite';
-        } else {
-            navBtn.style.display = 'none';
-        }
-    }
-
-    // Render approvals modal with realtime data
-    function renderApprovalsModal() {
-        const container = document.getElementById('pendingApprovalsList');
-        if (!container) return;
-        
-        const currentUser = getUser(getCurrentUser());
-        
-        if (approvalRequests.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">✅ No pending approval requests</div>';
-            return;
-        }
-        
-        // Filter based on role
-        let visibleRequests = approvalRequests;
-        if (currentUser.role === 'admin') {
-            visibleRequests = approvalRequests.filter(req => req.requestedByRole === 'staff');
-        }
-        
-        let html = '';
-        visibleRequests.forEach(req => {
-            const created = new Date(req.createdAt).toLocaleString();
-            const actionColor = req.action === 'delete' ? '#e74c3c' : req.action === 'edit' ? '#f39c12' : '#3498db';
-            
-            html += `<div class="approval-request-item" style="border-left-color: ${actionColor};">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <span style="font-weight: bold; color: ${actionColor}; text-transform: uppercase;">
-                                ${req.action} - ${req.type}
-                            </span>
-                            <span style="font-size: 11px; color: #666;">${created}</span>
-                        </div>
-                        <div style="font-size: 13px; margin-bottom: 8px;">
-                            <span style="background: #f0f0f0; padding: 3px 8px; border-radius: 12px;">
-                                👤 ${req.requestedBy} (${req.requestedByRole || 'staff'})
-                            </span>
-                            <span style="margin-left: 10px; font-weight: 500;">
-                                📦 ${req.requestedData?.name || req.itemId?.substring(0, 8) || 'N/A'}
-                            </span>
-                        </div>
-                        <div style="display: flex; gap: 8px; margin-top: 10px;">
-                            <button class="btn-approve" style="background: #27ae60;" onclick="openApprovalActionModal('${req.id}')">
-                                📋 Review
-                            </button>
-                            ${isCurrentUserSuperAdmin() ? 
-                                `<button class="btn-del" onclick="deleteApprovalRequest('${req.id}')">
-                                    🗑️ Delete
-                                </button>` : ''
-                            }
-                        </div>
-                    </div>`;
-        });
-        
-        container.innerHTML = html;
-    }
-
-    // Play notification sound (optional)
-    function playNotificationSound() {
-        try {
-            const audio = new Audio('data:audio/wav;base64,U3R1ZmZ5IHNvdW5k'); // Silent fallback
-            audio.volume = 0.3;
-            audio.play().catch(() => {}); // Ignore errors if autoplay blocked
-        } catch(e) {}
-    }
-
-    // Modify createApprovalRequest to include role
-    async function createApprovalRequest(type, data, action, itemId) {
-    try {
-        const currentUser = getUser(getCurrentUser());
-        if (!currentUser) {
-            alert('Not logged in');
-            return;
-        }
-
-        console.log("CREATING APPROVAL REQUEST:", { type, action, itemId });
-        
-        const request = {
-            type: type,
-            action: action,
-            itemId: itemId,
-            requestedBy: getCurrentUser(),
-            requestedByRole: currentUser.role,
-            requestedData: data,
-            status: 'pending',
-            createdAt: new Date().toISOString(),
-            createdDate: new Date().toISOString()
-        };
-        
-        await db.collection(COLLECTIONS.APPROVALS).add(request);
-        
-        // Show notification
-        showNotification('✅ Request submitted for approval', 'success');
-        
-        // Force reload approval requests
-        setTimeout(async () => {
-            await loadApprovalRequests();
-            applyRoleBasedUI();
-        }, 500);
-        
-    } catch (error) {
-        console.error('Error creating request:', error);
-        alert('Failed: ' + error.message);
-    }
-}
-
-    // Modify confirmApproval for realtime updates
-    // ========== FIXED APPROVE/REJECT FUNCTIONS ==========
-async function confirmApproval(approved) {
-    const requestId = localStorage.getItem('currentApprovalRequestId');
-    
-    if (!requestId) {
-        alert('No request selected');
-        return;
-    }
-
-    try {
-        // Get the request directly from Firestore
-        const docRef = db.collection(COLLECTIONS.APPROVALS).doc(requestId);
-        const doc = await docRef.get();
-        
-        if (!doc.exists) {
-            alert('Request not found. It may have been already processed.');
-            localStorage.removeItem('currentApprovalRequestId');
-            return;
-        }
-
-        const request = { id: doc.id, ...doc.data() };
-        
-        if (approved) {
-            // Execute the action
-            if (request.action === 'delete') {
-                if (request.type === 'category') {
-                    await db.collection(COLLECTIONS.CATEGORIES).doc(request.itemId).delete();
-                    showNotification('Category deleted', 'success');
-                } else if (request.type === 'supplier') {
-                    await db.collection(COLLECTIONS.SUPPLIERS).doc(request.itemId).delete();
-                    showNotification('Supplier deleted', 'success');
-                }
-            } else if (request.action === 'edit') {
-                if (request.type === 'category') {
-                    await db.collection(COLLECTIONS.CATEGORIES).doc(request.itemId).update(request.requestedData);
-                    showNotification('Category updated', 'success');
-                } else if (request.type === 'supplier') {
-                    await db.collection(COLLECTIONS.SUPPLIERS).doc(request.itemId).update(request.requestedData);
-                    showNotification('Supplier updated', 'success');
-                }
-            }
-        }
-
-        // Update the request status
-        await docRef.update({
-            status: approved ? 'approved' : 'rejected',
-            reviewedBy: getCurrentUser(),
-            reviewedAt: new Date().toISOString()
-        });
-
-        await logAudit(approved ? 'APPROVAL_GRANTED' : 'APPROVAL_REJECTED', {
-            requestId: requestId,
-            type: request.type,
-            action: request.action
-        });
-
-        showNotification(`Request ${approved ? 'approved' : 'rejected'} successfully`, 'success');
-        
-        // Close all modals
-        document.getElementById('approvalActionModal').style.display = 'none';
-        document.getElementById('approvalRequestsModal').style.display = 'none';
-        
-        // Remove any open management modal
-        const modal = document.getElementById('requestsManagementModal');
-        if (modal) modal.remove();
-        
-        // Refresh data
-        await loadAllData();
-        await loadApprovalRequests();
-        
-        // Refresh views
-        renderCategories();
-        applyRoleBasedUI();
-        
-        if (document.getElementById('categoryPageView').style.display === 'block') {
-            const categorySuppliers = suppliers.filter(s => s.category === currentCategory);
-            renderSuppliersTable(categorySuppliers);
-        }
-
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to process request: ' + error.message);
-    } finally {
-        localStorage.removeItem('currentApprovalRequestId');
-    }
-}
-
-// Simple approve/reject for Requests Management Dashboard
-window.approveRequestNow = async function(requestId) {
-    localStorage.setItem('currentApprovalRequestId', requestId);
-    await confirmApproval(true);
-    openRequestsManagement(); // Reopen the dashboard
-};
-
-window.rejectRequestNow = async function(requestId) {
-    localStorage.setItem('currentApprovalRequestId', requestId);
-    await confirmApproval(false);
-    openRequestsManagement(); // Reopen the dashboard
-};
-
-    // ========== INITIALIZATION WITH REALTIME LISTENER ==========
+    // ========== INITIALIZATION WITH CACHING ==========
     async function initializeApp() {
-        console.log("Initializing ZAMCOM Supplier Directory with REALTIME...");
+        console.log("Initializing ZAMCOM Supplier Directory with FIXED BUTTON POSITIONS and EMPTY LOGIN FIELDS...");
         
-        // Enforce single tab
         if (!enforceSingleTab()) {
             return;
         }
         
         try {
-            // Initialize Firebase first
             await ensureDefaultUsers();
-            await getAllUsers();
+            await getAllUsers(true);
             
-            // ===== START REALTIME APPROVAL LISTENER =====
-            // This establishes persistent WebSocket connection to Firestore
-            console.log("🔴 Starting REALTIME approval listener...");
             startRealtimeApprovalListener();
-            // ============================================
             
-            // Setup compliance listeners
             ['complianceTpin', 'complianceNapsa', 'complianceZra', 'complianceZppa'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -3956,44 +4266,38 @@ window.rejectRequestNow = async function(requestId) {
                 }
             });
             
-            // Pre-fill login fields
+            // IMPORTANT: Login fields are EMPTY - user must enter credentials
             const userIn = document.getElementById('userIn');
             const passIn = document.getElementById('passIn');
-            if (userIn) userIn.value = 'JOSEPH';
-            if (passIn) passIn.value = 'RIGHTJOSEPH';
+            if (userIn) userIn.value = '';
+            if (passIn) passIn.value = '';
             
-            // Check for existing session
             const savedUser = localStorage.getItem('logged_user');
-            const lastLogin = localStorage.getItem('last_login');
-            const today = new Date().toDateString();
             
-            if (savedUser && lastLogin === today) {
+            if (savedUser) {
                 const user = getUser(savedUser);
                 if (user && user.enabled) {
-                    await loadAllData();
+                    localStorage.setItem('last_login', new Date().toDateString());
+                    
+                    await loadAllData(false);
                     await initializeFirestoreCollections();
                     
-                    // Update last active timestamp
                     if (user.id) {
                         await db.collection(COLLECTIONS.USERS).doc(user.id).update({
                             lastActive: new Date().toISOString()
                         });
                     }
                     
-                    // Hide login overlay
                     document.getElementById('loginOverlay').style.display = 'none';
                     
-                    // Update UI
                     updateGreeting();
                     updateUserDisplay();
                     applyRoleBasedUI();
                     showView('home');
                     
-                    // Start session heartbeat
                     startSessionHeartbeat();
                     
-                    // Show time warning if needed
-                    if (isSystemLocked() && (user.role === 'super admin' || user.role === 'admin')) {
+                    if (isSystemLocked() && canAccessLockedSystem()) {
                         document.getElementById('timeWarning').style.display = 'block';
                         setTimeout(() => {
                             document.getElementById('timeWarning').style.display = 'none';
@@ -4008,13 +4312,11 @@ window.rejectRequestNow = async function(requestId) {
             console.error("Initialization error:", error);
         }
 
-        // Start background processes
         setInterval(syncBG, 5000);
         setInterval(updateDashboardStatus, 1000);
         syncBG();
         updateDashboardStatus();
 
-        // Add enter key handler for login
         const passInField = document.getElementById('passIn');
         if (passInField) {
             passInField.addEventListener('keypress', (e) => {
@@ -4022,7 +4324,7 @@ window.rejectRequestNow = async function(requestId) {
             });
         }
         
-        console.log("✅ Initialization complete - Real-time approval system active");
+        console.log("✅ Initialization complete - Delete button position fixed, login fields empty");
     }
 
     window.onload = initializeApp;
