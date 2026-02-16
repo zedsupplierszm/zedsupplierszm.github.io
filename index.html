@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1024">
-    <title>Zed Supplier Directory</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zed Supplier Directory · Role Based</title>
     <style>
         :root {
             --primary-green: #173979;
@@ -110,6 +110,134 @@
         .dot:nth-child(1) { animation-delay: -0.32s; }
         .dot:nth-child(2) { animation-delay: -0.16s; }
 
+        /* SYSTEM LOCK SCREEN */
+        #systemLockScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 40000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .lock-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 60px 40px;
+            border-radius: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+            animation: slideUp 0.6s ease;
+        }
+
+        .lock-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: lockPulse 2s infinite;
+        }
+
+        .lock-title {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .lock-message {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .lock-timer-container {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .countdown-timer {
+            font-size: 48px;
+            font-weight: 800;
+            font-family: monospace;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .unlock-time {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+
+        .lock-progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 5px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .lock-progress-fill {
+            height: 100%;
+            background: white;
+            border-radius: 5px;
+            transition: width 1s linear;
+        }
+
+        .back-to-login-btn {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .back-to-login-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        @keyframes lockPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -131,6 +259,38 @@
             40% { transform: scale(1); opacity: 1; }
         }
 
+        /* REJECT REASON MODAL */
+        #rejectReasonModal {
+            display: none;
+            position: fixed;
+            z-index: 50000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .reject-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            width: 450px;
+            max-width: 95%;
+        }
+
+        .reject-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+        }
 
         /* LOGIN OVERLAY */
         #loginOverlay {
@@ -169,7 +329,6 @@
 
         .top-nav li a:hover { color: var(--nav-yellow); }
 
-        /* BEAUTIFUL CATEGORY GRID - mainlogo3.png */
         .grid-section { padding: 40px 20px; max-width: 1200px; margin: 0 auto; }
         
         .grid-container {
@@ -245,7 +404,6 @@
         }
         .btn-del:hover { opacity: 0.85; }
 
-        /* ADMIN CONTROLS — visibility will be role toggled */
         .admin-controls {
             background: white; padding: 20px; text-align: center;
             border-radius: 50px; box-shadow: 0 5px 15px rgba(0,0,0,0.03);
@@ -266,7 +424,6 @@
         .btn-add { background: var(--primary-green); }
         .btn-back { background: #607d8b; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
         .btn-edit { background: #f39c12; padding: 5px 10px; font-size: 12px; border-radius: 4px; color: white; border: none; display: inline-block; margin-right: 5px; }
-        .btn-del { background: var(--danger-red); padding: 5px 10px; font-size: 12px; border-radius: 4px; color: white; border: none; display: inline-block; }
         .btn-request-delete { background: #e67e22; padding: 5px 10px; font-size: 12px; border-radius: 4px; color: white; border: none; display: inline-block; }
         .btn-approve { background: #9b59b6; padding: 5px 10px; font-size: 12px; border-radius: 4px; color: white; border: none; }
         .btn-super { background: #9b59b6; }
@@ -387,7 +544,6 @@
             border-left: 3px solid var(--primary-green);
         }
 
-        /* COMPLIANCE BAR */
         .compliance-bar-container {
             width: 100%;
             height: 8px;
@@ -403,7 +559,6 @@
         .compliance-bar-fill.good { background: linear-gradient(90deg, #2ecc71, #27ae60); }
         .compliance-bar-fill.poor { background: linear-gradient(90deg, #e74c3c, #c0392b); }
 
-        /* APPROVAL MODAL */
         .approval-request-item {
             background: #f9f9f9;
             border-left: 4px solid var(--warning-orange);
@@ -412,7 +567,6 @@
             border-radius: 8px;
         }
 
-        /* REASON INPUT MODAL */
         .reason-modal {
             display: none;
             position: fixed;
@@ -443,7 +597,6 @@
             min-height: 100px;
         }
 
-        /* DOCUMENT UPLOAD */
         .document-upload-area {
             border: 2px dashed #ccc;
             border-radius: 8px;
@@ -476,7 +629,6 @@
             color: var(--primary-green);
         }
 
-        /* RATING STARS */
         .rating {
             display: flex;
             flex-direction: row-reverse;
@@ -534,7 +686,6 @@
             flex-wrap: wrap;
         }
 
-        /* Request Count Badge */
         .request-count-badge {
             background: #ff4d4d;
             color: white;
@@ -550,7 +701,6 @@
             background: #95a5a6;
         }
 
-        /* Category Actions in Category Page */
         .category-actions-bar {
             display: flex;
             gap: 15px;
@@ -566,7 +716,6 @@
             padding: 12px 24px;
         }
 
-        /* Clickable links */
         .clickable-phone {
             color: var(--link-blue);
             text-decoration: none;
@@ -595,7 +744,6 @@
             text-decoration: underline;
         }
 
-        /* Modification History Dropdown */
         .modification-history {
             position: relative;
             display: inline-block;
@@ -683,7 +831,24 @@
     </div>
 </div>
 
-
+<!-- SYSTEM LOCK SCREEN -->
+<div id="systemLockScreen">
+    <div class="lock-container">
+        <div class="lock-icon">🔒</div>
+        <h1 class="lock-title">System Locked</h1>
+        <p class="lock-message">Access to the system is restricted to operating hours only</p>
+        
+        <div class="lock-timer-container">
+            <div class="countdown-timer" id="lockCountdown">00:00:00</div>
+            <div class="unlock-time" id="unlockTimeDisplay">Next unlock: 07:30:00</div>
+            <div class="lock-progress-bar">
+                <div class="lock-progress-fill" id="lockProgress" style="width: 0%;"></div>
+            </div>
+        </div>
+        
+        <button class="back-to-login-btn" onclick="backToLoginFromLock()">← Back to Login</button>
+    </div>
+</div>
 
 <!-- TIME WARNING -->
 <div id="timeWarning" style="display: none; position: fixed; top: 0; left: 0; width: 100%; background: #ff4d4d; color: white; text-align: center; padding: 15px; z-index: 30000; font-weight: bold;">
@@ -783,6 +948,20 @@
         <input type="hidden" id="pendingDeletionType">
         <input type="hidden" id="pendingDeletionId">
         <input type="hidden" id="pendingDeletionName">
+    </div>
+</div>
+
+<!-- ========== REJECT REASON MODAL ========== -->
+<div id="rejectReasonModal" class="modal">
+    <div class="reject-modal-content">
+        <h3 style="color: var(--danger-red); margin-bottom: 15px;">✗ Reason for Rejection</h3>
+        <p style="color: #666; margin-bottom: 10px;">Please provide a reason for rejecting this request:</p>
+        <textarea id="rejectReasonText" class="reject-textarea" placeholder="Enter rejection reason..."></textarea>
+        <div style="display: flex; gap: 15px; justify-content: flex-end;">
+            <button class="btn" style="background: var(--danger-red);" onclick="submitRejectionReason()">Confirm Rejection</button>
+            <button class="btn" style="background: #95a5a6;" onclick="closeRejectReasonModal()">Cancel</button>
+        </div>
+        <input type="hidden" id="pendingRejectRequestId">
     </div>
 </div>
 
@@ -1146,7 +1325,7 @@
         <div id="approvalActionDetails" style="margin-bottom: 25px; background: #f8f9fa; padding: 20px; border-radius: 12px;"></div>
         <div style="display: flex; gap: 15px;">
             <button class="btn" style="flex: 1; background: var(--primary-green);" onclick="confirmApproval(true)">✓ Approve</button>
-            <button class="btn" style="flex: 1; background: var(--danger-red);" onclick="confirmApproval(false)">✗ Reject</button>
+            <button class="btn" style="flex: 1; background: var(--danger-red);" onclick="openRejectReasonModal()">✗ Reject</button>
             <button class="btn" style="flex: 1; background: #95a5a6;" onclick="closeApprovalActionModal()">Cancel</button>
         </div>
     </div>
@@ -1554,6 +1733,7 @@
     nrc: null
 };
     let pendingDeletionCallback = null;
+    let lockScreenInterval = null;
 
     // ========== REQUESTS MANAGEMENT & HISTORY ==========
     let requestsHistory = [];
@@ -1747,13 +1927,20 @@ async function saveNewUser() {
         return;
     }
 
+    // Staff can only create staff users
+    const currentUser = getUser(getCurrentUser());
+    if (currentUser.role === 'staff' && role !== 'staff') {
+        alert("Staff can only create staff users");
+        return;
+    }
+
     if (userAccounts.find(u => u.username === username)) {
         alert("Username already exists");
         return;
     }
 
     const newUser = {
-        fullName, // NEW
+        fullName,
         username,
         password,
         role,
@@ -1762,7 +1949,7 @@ async function saveNewUser() {
         phone,
         institution,
         position,
-        documents: { // NEW - Store all uploaded documents
+        documents: {
             degree: userUploadedDocuments.degree,
             zips: userUploadedDocuments.zips,
             nrc: userUploadedDocuments.nrc
@@ -1773,7 +1960,8 @@ async function saveNewUser() {
     };
 
     try {
-        if (canAddUserWithoutApproval()) {
+        if (currentUser.role === 'super admin') {
+            // Super Admin - Add directly
             await db.collection(COLLECTIONS.USERS).add(newUser);
             
             await logAudit('CREATE_USER', {
@@ -1788,15 +1976,14 @@ async function saveNewUser() {
             manageUsersModal();
             showNotification(`User ${fullName} (${username}) created successfully`);
             
-            // Reset uploaded documents
             userUploadedDocuments = { degree: null, zips: null, nrc: null };
         } else {
-            const currentUser = getUser(getCurrentUser());
+            // Admin or Staff - Create approval request
             await createApprovalRequest('user', newUser, 'add', null);
             closeAddUserModal();
-            showNotification(`User addition request submitted for ${currentUser.role === 'admin' ? 'super admin' : 'admin/super admin'} approval`, 'info');
+            manageUsersModal();
+            showNotification('User addition request submitted for approval', 'info');
             
-            // Reset uploaded documents
             userUploadedDocuments = { degree: null, zips: null, nrc: null };
         }
     } catch (error) {
@@ -1815,6 +2002,12 @@ function openEditUserModal(userId) {
 
     const currentUser = getUser(getCurrentUser());
     
+    // Staff can only edit staff users
+    if (currentUser.role === 'staff' && user.role !== 'staff') {
+        alert('You can only edit staff users');
+        return;
+    }
+    
     if (currentUser.role !== 'super admin') {
         if (user.role === 'super admin') {
             alert('You cannot edit a super admin user');
@@ -1823,7 +2016,7 @@ function openEditUserModal(userId) {
     }
 
     document.getElementById('editUserId').value = user.id;
-    document.getElementById('editFullName').value = user.fullName || ''; // NEW
+    document.getElementById('editFullName').value = user.fullName || '';
     document.getElementById('editUsername').value = user.username;
     document.getElementById('editRole').value = user.role;
     document.getElementById('editNrc').value = user.nrc || '';
@@ -1869,7 +2062,7 @@ function openEditUserModal(userId) {
 
 // Update saveUserEdit to include full name and documents
 async function saveUserEdit() {
-    if (!isCurrentUserSuperAdmin() && !isCurrentUserAdmin()) {
+    if (!canEditUser()) {
         alert("You don't have permission to edit users");
         return;
     }
@@ -1882,6 +2075,12 @@ async function saveUserEdit() {
     }
 
     const currentUser = getUser(getCurrentUser());
+    
+    // Staff can only edit staff users
+    if (currentUser.role === 'staff' && user.role !== 'staff') {
+        alert('You can only edit staff users');
+        return;
+    }
     
     if (currentUser.role !== 'super admin' && user.role === 'super admin') {
         alert('You cannot edit a super admin user');
@@ -1896,7 +2095,7 @@ async function saveUserEdit() {
     }
 
     const updatedData = {
-        fullName, // NEW
+        fullName,
         role: document.getElementById('editRole').value,
         nrc: document.getElementById('editNrc').value.trim(),
         email: document.getElementById('editEmail').value.trim(),
@@ -1947,20 +2146,71 @@ async function saveUserEdit() {
             manageUsersModal();
             showNotification(`User ${fullName} updated successfully`);
             
-            // Reset edit documents
             window.editUserDocuments = {};
         } else {
             await createApprovalRequest('user', updatedData, 'edit', userId);
             closeEditUserModal();
             manageUsersModal();
-            showNotification('User edit request submitted for super admin approval', 'info');
+            showNotification('User edit request submitted for approval', 'info');
             
-            // Reset edit documents
             window.editUserDocuments = {};
         }
     } catch (error) {
         console.error("Error updating user:", error);
         alert("Failed to update user: " + error.message);
+    }
+}
+
+// Delete user function
+async function deleteUser(userId) {
+    if (!canDeleteUser()) {
+        alert("You don't have permission to delete users");
+        return;
+    }
+
+    const user = userAccounts.find(u => u.id === userId);
+    if (!user) return;
+
+    const currentUser = getUser(getCurrentUser());
+    
+    // Staff can only delete staff users
+    if (currentUser.role === 'staff' && user.role !== 'staff') {
+        alert('You can only delete staff users');
+        return;
+    }
+
+    if (isJoseph(user.username)) {
+        alert('JOSEPH cannot be deleted');
+        return;
+    }
+
+    if (currentUser.role === 'super admin') {
+        // Super Admin - Delete directly
+        if (confirm(`Are you sure you want to permanently delete user ${user.username}?`)) {
+            try {
+                await db.collection(COLLECTIONS.USERS).doc(userId).delete();
+                
+                await logAudit('DELETE_USER', {
+                    username: user.username,
+                    role: user.role,
+                    deletedBy: getCurrentUser()
+                });
+                
+                await getAllUsers(true);
+                manageUsersModal();
+                showNotification(`User ${user.username} deleted successfully`);
+            } catch (error) {
+                console.error("Error deleting user:", error);
+                alert("Failed to delete user");
+            }
+        }
+    } else {
+        // Admin or Staff - Require approval
+        openReasonModal('user', userId, user.username, async (type, id, name, reason) => {
+            await createApprovalRequest('user', { name: name, role: user.role, fullName: user.fullName }, 'delete', id, reason);
+            showNotification('User deletion request submitted for approval', 'info');
+            manageUsersModal();
+        });
     }
 }
 
@@ -1995,7 +2245,7 @@ async function ensureDefaultUsers() {
         if (usersSnapshot.empty) {
             const defaultUsers = [
                 { 
-                    fullName: "Joseph Zulu", // NEW
+                    fullName: "Joseph Zulu",
                     username: "JOSEPH", 
                     password: "RIGHTJOSEPH", 
                     role: "super admin", 
@@ -2005,12 +2255,12 @@ async function ensureDefaultUsers() {
                     phone: "+260973031254", 
                     institution: "ZAMCOM", 
                     position: "Procurement Lead",
-                    documents: {}, // Empty documents for default users
+                    documents: {},
                     createdAt: new Date().toISOString(),
                     lastActive: null
                 },
                 { 
-                    fullName: "Chishala Banda", // NEW
+                    fullName: "Chishala Banda",
                     username: "CHISHALA", 
                     password: "RIGHTCHISHALA", 
                     role: "staff", 
@@ -2020,7 +2270,7 @@ async function ensureDefaultUsers() {
                     phone: "+260977123456", 
                     institution: "ZAMCOM", 
                     position: "Procurement Officer",
-                    documents: {}, // Empty documents for default users
+                    documents: {},
                     createdAt: new Date().toISOString(),
                     lastActive: null
                 }
@@ -2107,6 +2357,7 @@ async function ensureDefaultUsers() {
                                    req.action === 'edit' ? '#fef5e7' : '#e8f0fe';
                     
                     const itemName = req.requestedData?.name || 
+                                   req.requestedData?.fullName ||
                                    (req.type === 'category' ? 'Category' : 'Supplier') + 
                                    (req.itemId ? ` (${req.itemId.substring(0, 6)}...)` : '');
                     
@@ -2179,7 +2430,7 @@ async function ensureDefaultUsers() {
                                 </div>
                                 <div style="background: #fff3e0; border-radius: 16px; padding: 16px;">
                                     ${Object.entries(req.requestedData)
-                                        .filter(([key]) => !['id', 'createdAt', 'updatedAt', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
+                                        .filter(([key]) => !['id', 'createdAt', 'updatedAt', 'lastModifiedAt', 'lastModifiedBy', 'documents'].includes(key))
                                         .map(([key, value]) => {
                                             if (typeof value === 'object') {
                                                 return `<div style="margin-bottom: 8px; font-size: 12px;">
@@ -2200,7 +2451,7 @@ async function ensureDefaultUsers() {
                                 <button onclick="approveRequestNow('${req.id}')" style="background: #27ae60; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(39, 174, 96, 0.2);">
                                     <span style="font-size: 18px;">✓</span> APPROVE REQUEST
                                 </button>
-                                <button onclick="rejectRequestNow('${req.id}')" style="background: #e74c3c; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);">
+                                <button onclick="openRejectReasonModalForRequest('${req.id}')" style="background: #e74c3c; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);">
                                     <span style="font-size: 18px;">✗</span> REJECT REQUEST
                                 </button>
                                 ${isCurrentUserSuperAdmin() ? 
@@ -2224,10 +2475,10 @@ async function ensureDefaultUsers() {
                 `;
             } else {
                 historyRequests.slice(0, 20).forEach(req => {
-                    const created = req.createdAt ? new Date(req.createdAt).toLocaleString() : 'Unknown';
+                    const created = req.createdAt ? new Date(req.createdAt.seconds ? req.createdAt.seconds * 1000 : req.createdAt).toLocaleString() : 'Unknown';
                     const statusColor = req.status === 'approved' ? '#2ecc71' : '#e74c3c';
                     const statusBg = req.status === 'approved' ? '#e8f8f0' : '#fee9e7';
-                    const reason = req.reason || 'No reason provided';
+                    const reason = req.rejectionReason || req.reason || 'No reason provided';
                     
                     historyHtml += `
                         <div style="background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #f0f0f0;">
@@ -2253,10 +2504,10 @@ async function ensureDefaultUsers() {
                                     ${created}
                                 </div>
                             </div>
-                            ${req.reason ? `
+                            ${reason ? `
                             <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-top: 10px; border-left: 3px solid ${statusColor};">
-                                <span style="font-weight: 600; font-size: 12px; color: #555;">Reason:</span>
-                                <span style="font-size: 13px; color: #333; margin-left: 8px;">${req.reason}</span>
+                                <span style="font-weight: 600; font-size: 12px; color: #555;">${req.status === 'rejected' ? 'Rejection Reason' : 'Reason'}:</span>
+                                <span style="font-size: 13px; color: #333; margin-left: 8px;">${reason}</span>
                             </div>
                             ` : ''}
                         </div>
@@ -2387,6 +2638,75 @@ async function ensureDefaultUsers() {
         if (modal) modal.remove();
     }
 
+    // ========== REJECT REASON MODAL FUNCTIONS ==========
+    function openRejectReasonModalForRequest(requestId) {
+        document.getElementById('pendingRejectRequestId').value = requestId;
+        document.getElementById('rejectReasonText').value = '';
+        document.getElementById('rejectReasonModal').style.display = 'flex';
+    }
+
+    function openRejectReasonModal() {
+        document.getElementById('rejectReasonText').value = '';
+        document.getElementById('rejectReasonModal').style.display = 'flex';
+    }
+
+    function closeRejectReasonModal() {
+        document.getElementById('rejectReasonModal').style.display = 'none';
+        document.getElementById('pendingRejectRequestId').value = '';
+        document.getElementById('rejectReasonText').value = '';
+    }
+
+    async function submitRejectionReason() {
+        const requestId = document.getElementById('pendingRejectRequestId').value || localStorage.getItem('currentApprovalRequestId');
+        const reason = document.getElementById('rejectReasonText').value.trim();
+        
+        if (!reason) {
+            alert('Please provide a reason for rejection');
+            return;
+        }
+
+        try {
+            const docRef = db.collection(COLLECTIONS.APPROVALS).doc(requestId);
+            
+            await docRef.update({
+                status: 'rejected',
+                reviewedBy: getCurrentUser(),
+                reviewedAt: new Date().toISOString(),
+                rejectionReason: reason
+            });
+
+            await logAudit('APPROVAL_REJECTED', {
+                requestId: requestId,
+                reason: reason,
+                reviewedBy: getCurrentUser()
+            });
+
+            showNotification('Request rejected successfully', 'success');
+            
+            closeRejectReasonModal();
+            document.getElementById('approvalActionModal').style.display = 'none';
+            document.getElementById('approvalRequestsModal').style.display = 'none';
+            
+            const modal = document.getElementById('requestsManagementModal');
+            if (modal) modal.remove();
+            
+            await loadAllData(true);
+            await loadApprovalRequests();
+            
+            const currentUser = getUser(getCurrentUser());
+            if (currentUser && currentUser.role !== 'super admin') {
+                await loadUserApprovalHistory();
+            }
+            
+            renderCategories();
+            applyRoleBasedUI();
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to reject request: ' + error.message);
+        }
+    }
+
     // ========== FIXED: USER APPROVAL HISTORY - NO INDEX REQUIRED ==========
     async function openUserApprovalHistory() {
         const currentUser = getUser(getCurrentUser());
@@ -2482,6 +2802,8 @@ async function ensureDefaultUsers() {
             const statusColor = req.status === 'approved' ? '#2ecc71' : 
                               req.status === 'rejected' ? '#e74c3c' : '#f39c12';
             
+            const rejectionReason = req.rejectionReason || '';
+            
             html += `
                 <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #e0e0e0; border-left: 6px solid ${actionColor};">
                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
@@ -2498,13 +2820,20 @@ async function ensureDefaultUsers() {
                     
                     <div style="margin-bottom: 12px;">
                         <span style="font-weight: 600; color: #555;">Item:</span>
-                        <span style="color: #333; margin-left: 8px;">${req.requestedData?.name || req.itemId || 'N/A'}</span>
+                        <span style="color: #333; margin-left: 8px;">${req.requestedData?.name || req.requestedData?.fullName || req.itemId || 'N/A'}</span>
                     </div>
                     
                     ${req.reason ? `
                     <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-                        <span style="font-weight: 600; color: #f39c12;">Reason:</span>
+                        <span style="font-weight: 600; color: #f39c12;">Reason provided:</span>
                         <span style="color: #333; margin-left: 8px;">${req.reason}</span>
+                    </div>
+                    ` : ''}
+                    
+                    ${req.status === 'rejected' && req.rejectionReason ? `
+                    <div style="background: #fee9e7; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #e74c3c;">
+                        <span style="font-weight: 600; color: #e74c3c;">Rejection reason:</span>
+                        <span style="color: #333; margin-left: 8px;">${req.rejectionReason}</span>
                     </div>
                     ` : ''}
                     
@@ -2593,14 +2922,14 @@ async function ensureDefaultUsers() {
         return user.role === 'super admin' || user.role === 'admin' || user.role === 'staff';
     }
     
-    function canAddUserWithoutApproval() {
+    function canEditUser() {
         const user = getUser(getCurrentUser());
-        return user && user.role === 'super admin';
+        return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
     }
     
     function canDeleteUser() {
         const user = getUser(getCurrentUser());
-        return user && (user.role === 'super admin' || user.role === 'admin');
+        return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
     }
     
     function canDeleteUserWithoutApproval() {
@@ -2642,11 +2971,6 @@ async function ensureDefaultUsers() {
         const user = getUser(getCurrentUser());
         return user && user.role === 'super admin';
     }
-    
-    function requiresReasonForCategoryDeletion() {
-        const user = getUser(getCurrentUser());
-        return user && (user.role === 'admin' || user.role === 'staff');
-    }
 
     // SUPPLIER PERMISSIONS
     function canCreateSupplier() {
@@ -2678,11 +3002,6 @@ async function ensureDefaultUsers() {
         const user = getUser(getCurrentUser());
         return user && user.role === 'super admin';
     }
-    
-    function requiresReasonForSupplierDeletion() {
-        const user = getUser(getCurrentUser());
-        return user && (user.role === 'admin' || user.role === 'staff');
-    }
 
     // LINK PERMISSIONS
     function canCreateLink() {
@@ -2713,11 +3032,6 @@ async function ensureDefaultUsers() {
     function canDeleteLinkWithoutApproval() {
         const user = getUser(getCurrentUser());
         return user && user.role === 'super admin';
-    }
-    
-    function requiresReasonForLinkDeletion() {
-        const user = getUser(getCurrentUser());
-        return user && (user.role === 'admin' || user.role === 'staff');
     }
 
     // AUDIT LOG PERMISSIONS
@@ -2761,6 +3075,88 @@ async function ensureDefaultUsers() {
         const lockTotal = (LOCK_TIME.hr * 60) + LOCK_TIME.min;
         const openTotal = (OPEN_TIME.hr * 60) + OPEN_TIME.min;
         return (currentTotal >= lockTotal || currentTotal < openTotal);
+    }
+
+    // ========== LOCK SCREEN FUNCTIONS ==========
+    function showLockScreen() {
+        const lockScreen = document.getElementById('systemLockScreen');
+        if (lockScreen) {
+            lockScreen.style.display = 'flex';
+            startLockCountdown();
+        }
+    }
+
+    function hideLockScreen() {
+        const lockScreen = document.getElementById('systemLockScreen');
+        if (lockScreen) {
+            lockScreen.style.display = 'none';
+            if (lockScreenInterval) {
+                clearInterval(lockScreenInterval);
+                lockScreenInterval = null;
+            }
+        }
+    }
+
+    function startLockCountdown() {
+        if (lockScreenInterval) {
+            clearInterval(lockScreenInterval);
+        }
+        
+        updateLockDisplay();
+        lockScreenInterval = setInterval(updateLockDisplay, 1000);
+    }
+
+    function updateLockDisplay() {
+        const now = new Date();
+        const openTime = new Date(now);
+        openTime.setHours(OPEN_TIME.hr, OPEN_TIME.min, 0, 0);
+        
+        // If current time is after lock time, set unlock to tomorrow
+        if (now.getHours() >= LOCK_TIME.hr) {
+            openTime.setDate(openTime.getDate() + 1);
+        }
+        
+        const timeUntilUnlock = openTime - now;
+        
+        if (timeUntilUnlock <= 0) {
+            // Time to unlock - hide lock screen
+            hideLockScreen();
+            return;
+        }
+        
+        // Format countdown
+        const hours = Math.floor(timeUntilUnlock / (1000 * 60 * 60));
+        const minutes = Math.floor((timeUntilUnlock % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeUntilUnlock % (1000 * 60)) / 1000);
+        
+        const countdownEl = document.getElementById('lockCountdown');
+        if (countdownEl) {
+            countdownEl.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Calculate progress percentage (24 hour cycle)
+        const totalLockHours = 24 - (LOCK_TIME.hr - OPEN_TIME.hr);
+        const totalLockMs = totalLockHours * 60 * 60 * 1000;
+        const progress = ((totalLockMs - timeUntilUnlock) / totalLockMs) * 100;
+        
+        const progressBar = document.getElementById('lockProgress');
+        if (progressBar) {
+            progressBar.style.width = `${progress}%`;
+        }
+        
+        const unlockTimeEl = document.getElementById('unlockTimeDisplay');
+        if (unlockTimeEl) {
+            const unlockHour = openTime.getHours().toString().padStart(2, '0');
+            const unlockMin = openTime.getMinutes().toString().padStart(2, '0');
+            unlockTimeEl.textContent = `Next unlock: ${unlockHour}:${unlockMin}:00`;
+        }
+    }
+
+    function backToLoginFromLock() {
+        hideLockScreen();
+        document.getElementById('loginOverlay').style.display = 'flex';
+        localStorage.removeItem('logged_user');
+        localStorage.removeItem('last_login');
     }
 
     // ========== AUDIT LOGGING WITH DETAILED ACTIONS ==========
@@ -2809,7 +3205,7 @@ async function ensureDefaultUsers() {
                 if (action.includes('GRANTED')) {
                     detailedMessage = `Approved request for ${details.type} ${details.action} by ${details.requestedBy}`;
                 } else if (action.includes('REJECTED')) {
-                    detailedMessage = `Rejected request for ${details.type} ${details.action} by ${details.requestedBy}`;
+                    detailedMessage = `Rejected request for ${details.type} ${details.action} by ${details.requestedBy}. Reason: ${details.reason}`;
                 }
             } else if (action.includes('LOGIN')) {
                 detailedMessage = `User logged in`;
@@ -3103,10 +3499,16 @@ async function ensureDefaultUsers() {
         // Filter requests based on user role
         let visibleRequests = approvalRequests;
         if (currentUser.role === 'admin') {
-            visibleRequests = approvalRequests.filter(req => req.requestedByRole === 'staff');
+            // Admin sees requests from staff and admin (but not super admin)
+            visibleRequests = approvalRequests.filter(req => 
+                req.requestedByRole === 'staff' || req.requestedByRole === 'admin'
+            );
         } else if (currentUser.role === 'super admin') {
             // Super admin sees ALL pending requests
             visibleRequests = approvalRequests;
+        } else if (currentUser.role === 'staff') {
+            // Staff doesn't see approval button
+            visibleRequests = [];
         }
         
         const count = visibleRequests.length;
@@ -3200,7 +3602,9 @@ async function ensureDefaultUsers() {
         
         let visibleRequests = approvalRequests;
         if (currentUser.role === 'admin') {
-            visibleRequests = approvalRequests.filter(req => req.requestedByRole === 'staff');
+            visibleRequests = approvalRequests.filter(req => 
+                req.requestedByRole === 'staff' || req.requestedByRole === 'admin'
+            );
         } else if (currentUser.role === 'super admin') {
             visibleRequests = approvalRequests;
         }
@@ -3246,7 +3650,9 @@ async function ensureDefaultUsers() {
             
             let visibleRequests = approvalRequests;
             if (currentUser.role === 'admin') {
-                visibleRequests = approvalRequests.filter(req => req.requestedByRole === 'staff');
+                visibleRequests = approvalRequests.filter(req => 
+                    req.requestedByRole === 'staff' || req.requestedByRole === 'admin'
+                );
             } else if (currentUser.role === 'super admin') {
                 visibleRequests = approvalRequests;
             }
@@ -3262,6 +3668,7 @@ async function ensureDefaultUsers() {
                                       req.action === 'edit' ? '#f39c12' : '#3498db';
                     
                     const itemName = req.requestedData?.name || 
+                                   req.requestedData?.fullName ||
                                    (req.type === 'category' ? 'Category' : 'Supplier') + 
                                    (req.itemId ? ` (${req.itemId.substring(0, 6)}...)` : '');
                     
@@ -3343,7 +3750,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
         const detailsDiv = document.getElementById('approvalActionDetails');
         let detailsHtml = `<p><strong>Request Type:</strong> ${request.action} ${request.type}</p>`;
         detailsHtml += `<p><strong>Requested By:</strong> ${request.requestedBy} (${request.requestedByRole})</p>`;
-        detailsHtml += `<p><strong>Date:</strong> ${new Date(request.createdAt).toLocaleString()}</p>`;
+        detailsHtml += `<p><strong>Date:</strong> ${new Date(request.createdAt?.toDate ? request.createdAt.toDate() : request.createdAt).toLocaleString()}</p>`;
         detailsHtml += `<p><strong>Item ID:</strong> ${request.itemId || 'N/A'}</p>`;
         
         if (request.reason) {
@@ -3410,20 +3817,28 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
                         showNotification('User updated', 'success');
                     }
                 } else if (request.action === 'add') {
-                    if (request.type === 'user') {
-                        await db.collection(COLLECTIONS.USERS).add(request.requestedData);
-                        showNotification('User added', 'success');
+                    if (request.type === 'user' || request.type === 'category' || request.type === 'supplier' || request.type === 'link') {
+                        // Add the item to the appropriate collection
+                        const collectionMap = {
+                            'user': COLLECTIONS.USERS,
+                            'category': COLLECTIONS.CATEGORIES,
+                            'supplier': COLLECTIONS.SUPPLIERS,
+                            'link': COLLECTIONS.LINKS
+                        };
+                        
+                        await db.collection(collectionMap[request.type]).add(request.requestedData);
+                        showNotification(`${request.type} added successfully`, 'success');
                     }
                 }
             }
 
             await docRef.update({
-                status: approved ? 'approved' : 'rejected',
+                status: approved ? 'approved' : 'pending', // Will be updated by reject function
                 reviewedBy: getCurrentUser(),
                 reviewedAt: new Date().toISOString()
             });
 
-            await logAudit(approved ? 'APPROVAL_GRANTED' : 'APPROVAL_REJECTED', {
+            await logAudit(approved ? 'APPROVAL_GRANTED' : 'APPROVAL_PENDING', {
                 requestId: requestId,
                 type: request.type,
                 action: request.action,
@@ -3431,8 +3846,10 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
                 reason: request.reason
             });
 
-            showNotification(`Request ${approved ? 'approved' : 'rejected'} successfully`, 'success');
-            
+            if (approved) {
+                showNotification('Request approved successfully', 'success');
+            }
+
             document.getElementById('approvalActionModal').style.display = 'none';
             document.getElementById('approvalRequestsModal').style.display = 'none';
             
@@ -3442,7 +3859,6 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
             await loadAllData(true);
             await loadApprovalRequests();
             
-            // Only load user approval history if not super admin
             const currentUser = getUser(getCurrentUser());
             if (currentUser && currentUser.role !== 'super admin') {
                 await loadUserApprovalHistory();
@@ -3472,8 +3888,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
 
     window.rejectRequestNow = async function(requestId) {
         localStorage.setItem('currentApprovalRequestId', requestId);
-        await confirmApproval(false);
-        openRequestsManagement();
+        openRejectReasonModal();
     };
 
     window.deleteRequestNow = async function(requestId) {
@@ -3603,49 +4018,6 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
     }
 
     // ========== FIREBASE DATA FUNCTIONS ==========
-    async function ensureDefaultUsers() {
-        try {
-            const usersSnapshot = await db.collection(COLLECTIONS.USERS).get();
-            if (usersSnapshot.empty) {
-                const defaultUsers = [
-                    { 
-                        username: "JOSEPH", 
-                        password: "RIGHTJOSEPH", 
-                        role: "super admin", 
-                        enabled: true, 
-                        nrc: "123456/78/1", 
-                        email: "zulujosephp@gmail.com", 
-                        phone: "+260973031254", 
-                        institution: "ZAMCOM", 
-                        position: "Procurement Lead", 
-                        createdAt: new Date().toISOString(),
-                        lastActive: null
-                    },
-                    { 
-                        username: "CHISHALA", 
-                        password: "RIGHTCHISHALA", 
-                        role: "staff", 
-                        enabled: true, 
-                        nrc: "998877/66/5", 
-                        email: "chishala@zamcom.zm", 
-                        phone: "+260977123456", 
-                        institution: "ZAMCOM", 
-                        position: "Procurement Officer", 
-                        createdAt: new Date().toISOString(),
-                        lastActive: null
-                    }
-                ];
-                for (const user of defaultUsers) {
-                    await db.collection(COLLECTIONS.USERS).add(user);
-                }
-                await logAudit('SYSTEM_INIT', { action: 'Default users created' });
-                console.log("Default users created");
-            }
-        } catch (error) { 
-            console.error("Error ensuring users:", error); 
-        }
-    }
-
     async function getAllUsers(forceRefresh = false) {
     try {
         userAccounts = await getCachedData('users', forceRefresh);
@@ -3731,8 +4103,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
         if (pField) pField.type = pField.type === "password" ? "text" : "password";
     }
 
-    // Update the beginning of handleLogin function
-async function handleLogin() {
+    async function handleLogin() {
         const username = document.getElementById('userIn').value.toUpperCase().trim();
         const password = document.getElementById('passIn').value.trim();
         
@@ -3747,16 +4118,17 @@ async function handleLogin() {
             
             if (user && user.password === password && user.enabled) {
                 
+                // Check system lock for staff users
+                if (isSystemLocked() && user.role === 'staff') {
+                    showLockScreen();
+                    return;
+                }
+                
                 localStorage.setItem('logged_user', username);
                 localStorage.setItem('last_login', new Date().toDateString());
                 
                 if (isSystemLocked()) {
-                    if (!canAccessLockedSystem()) {
-                        localStorage.removeItem('logged_user');
-                        localStorage.removeItem('last_login');
-                        alert("System is currently locked. Operating hours: 07:30 - 16:50 CAT.\nOnly Super Admin and Admin users have after-hours access.");
-                        return;
-                    } else {
+                    if (canAccessLockedSystem()) {
                         document.getElementById('timeWarning').style.display = 'block';
                         setTimeout(() => {
                             document.getElementById('timeWarning').style.display = 'none';
@@ -3826,6 +4198,7 @@ async function handleLogin() {
         if (el) el.style.display = 'none';
     });
 
+    hideLockScreen();
     document.getElementById('loginOverlay').style.display = 'flex';
     document.getElementById('userIn').value = '';
     document.getElementById('passIn').value = '';
@@ -3845,8 +4218,8 @@ async function handleLogin() {
             el.style.display = isSuper ? 'inline-block' : 'none';
         });
 
-        // User Management Button - Admin and Super Admin only
-        document.getElementById('userMgmtBtn').style.display = (isSuper || isAdmin) ? 'inline-block' : 'none';
+        // User Management Button - All roles can access now (Staff can add staff users)
+        document.getElementById('userMgmtBtn').style.display = 'inline-block';
         
         // Sessions Button - All roles can view
         document.getElementById('sessionsBtn').style.display = canViewSessions() ? 'inline-block' : 'none';
@@ -3857,7 +4230,9 @@ async function handleLogin() {
             if (canApproveRequests()) {
                 let visibleRequests = approvalRequests;
                 if (user.role === 'admin') {
-                    visibleRequests = approvalRequests.filter(req => req.requestedByRole === 'staff');
+                    visibleRequests = approvalRequests.filter(req => 
+                        req.requestedByRole === 'staff' || req.requestedByRole === 'admin'
+                    );
                 } else if (user.role === 'super admin') {
                     visibleRequests = approvalRequests;
                 }
@@ -3871,10 +4246,10 @@ async function handleLogin() {
             }
         }
 
-        // My Requests Button - Staff and Admin only (NOT super admin)
+        // My Requests Button - All roles except super admin
         const historyBtn = document.getElementById('approvalHistoryNavBtn');
         if (historyBtn) {
-            if (getCurrentUser() && (isStaff || isAdmin)) {
+            if (getCurrentUser() && !isSuper) {
                 historyBtn.style.display = 'inline-block';
             } else {
                 historyBtn.style.display = 'none';
@@ -3919,14 +4294,6 @@ async function handleLogin() {
         const addLinkBtn = document.getElementById('addLinkBtn');
         if (addLinkBtn) {
             addLinkBtn.style.display = canCreateLink() ? 'inline-block' : 'none';
-        }
-
-        // User Management Modal - Admin and Super Admin can view/edit, Staff cannot
-        if (!isSuper && !isAdmin) {
-            const userMgmtModal = document.getElementById('userManagementModal');
-            if (userMgmtModal && userMgmtModal.style.display === 'flex') {
-                userMgmtModal.style.display = 'none';
-            }
         }
 
         renderCategories();
@@ -4079,7 +4446,9 @@ async function handleLogin() {
         const category = categories.find(c => c.id === categoryId);
         if (!category) return;
 
-        if (canDeleteCategoryWithoutApproval()) {
+        const currentUser = getUser(getCurrentUser());
+
+        if (currentUser.role === 'super admin') {
             // Super Admin - Delete directly
             if (confirm(`Delete category "${category.name}"?`)) {
                 try {
@@ -4097,7 +4466,7 @@ async function handleLogin() {
                     alert('Failed to delete');
                 }
             }
-        } else if (requiresReasonForCategoryDeletion()) {
+        } else {
             // Admin or Staff - Require reason and create approval request
             openReasonModal('category', categoryId, category.name, async (type, id, name, reason) => {
                 await createApprovalRequest('category', { name: name }, 'delete', id, reason);
@@ -4123,7 +4492,8 @@ async function handleLogin() {
             const supplierCount = suppliers.filter(s => s.category === cat.name).length;
             const fallbackColor = `hsl(${(index * 45) % 360}, 70%, 55%)`;
             
-            const showDelete = canDeleteCategory() && canDeleteCategoryWithoutApproval();
+            const showDelete = canDeleteCategory();
+            const isSuperAdmin = user && user.role === 'super admin';
             
             return `
                 <div class="grid-item" onclick="openCategoryPage('${cat.id}')">
@@ -4137,8 +4507,8 @@ async function handleLogin() {
                             ${supplierCount} ${supplierCount === 1 ? 'Supplier' : 'Suppliers'}
                         </span>
                     </div>
-                    ${showDelete ? `<button class="btn-del" onclick="event.stopPropagation(); deleteCategory('${cat.id}')">Delete</button>` : ''}
-                    ${!showDelete && canDeleteCategory() ? `<button class="btn-request-delete" onclick="event.stopPropagation(); deleteCategory('${cat.id}')">Request Delete</button>` : ''}
+                    ${showDelete && isSuperAdmin ? `<button class="btn-del" onclick="event.stopPropagation(); deleteCategory('${cat.id}')">Delete</button>` : ''}
+                    ${showDelete && !isSuperAdmin ? `<button class="btn-request-delete" onclick="event.stopPropagation(); deleteCategory('${cat.id}')">Request Delete</button>` : ''}
                 </div>
             `;
         }).join('');
@@ -4265,13 +4635,14 @@ async function handleLogin() {
 
         const editingId = document.getElementById('editingSupplierId').value;
         const actionType = document.getElementById('supplierActionType').value;
+        const currentUser = getUser(getCurrentUser());
 
         try {
             if (actionType === 'edit' && editingId) {
                 // Get old data for audit log
                 const oldSupplier = suppliers.find(s => s.id === editingId);
                 
-                if (canEditSupplierWithoutApproval()) {
+                if (currentUser.role === 'super admin' || currentUser.role === 'admin') {
                     // Admin or Super Admin - Update directly
                     await db.collection(COLLECTIONS.SUPPLIERS).doc(editingId).update(supplierData);
                     
@@ -4301,7 +4672,7 @@ async function handleLogin() {
                     return;
                 }
             } else {
-                if (canCreateSupplierWithoutApproval()) {
+                if (currentUser.role === 'super admin' || currentUser.role === 'admin') {
                     // Admin or Super Admin - Add directly
                     await db.collection(COLLECTIONS.SUPPLIERS).add({
                         ...supplierData,
@@ -4398,7 +4769,9 @@ async function handleLogin() {
         const supplier = suppliers.find(s => s.id === supplierId);
         if (!supplier) return;
 
-        if (canDeleteSupplierWithoutApproval()) {
+        const currentUser = getUser(getCurrentUser());
+
+        if (currentUser.role === 'super admin') {
             // Super Admin - Delete directly
             if (confirm(`Delete supplier "${supplier.name}"?`)) {
                 try {
@@ -4420,7 +4793,7 @@ async function handleLogin() {
                     alert('Failed to delete');
                 }
             }
-        } else if (requiresReasonForSupplierDeletion()) {
+        } else {
             // Admin or Staff - Require reason and create approval request
             openReasonModal('supplier', supplierId, supplier.name, async (type, id, name, reason) => {
                 await createApprovalRequest('supplier', { name: name }, 'delete', id, reason);
@@ -4459,8 +4832,7 @@ async function handleLogin() {
             
             const canEdit = canEditSupplier();
             const canDelete = canDeleteSupplier();
-            const canDeleteDirect = canDeleteSupplierWithoutApproval();
-            const requiresReason = requiresReasonForSupplierDeletion();
+            const isSuperAdmin = user && user.role === 'super admin';
             
             // Get modification history
             const modifications = s.modifications || [];
@@ -4506,9 +4878,8 @@ async function handleLogin() {
                 <td>
                     <div class="action-buttons">
                         ${canEdit ? `<button class="btn-edit" onclick="editSupplier('${s.id}')">Edit</button>` : ''}
-                        ${canDelete && canDeleteDirect ? `<button class="btn-del" onclick="deleteSupplier('${s.id}')">Delete</button>` : ''}
-                        ${canDelete && !canDeleteDirect && requiresReason ? 
-                            `<button class="btn-request-delete" onclick="deleteSupplier('${s.id}')">Request Delete</button>` : ''}
+                        ${canDelete && isSuperAdmin ? `<button class="btn-del" onclick="deleteSupplier('${s.id}')">Delete</button>` : ''}
+                        ${canDelete && !isSuperAdmin ? `<button class="btn-request-delete" onclick="deleteSupplier('${s.id}')">Request Delete</button>` : ''}
                     </div>
                 </td>
             </tr>
@@ -4522,8 +4893,7 @@ async function handleLogin() {
 
         const user = getUser(getCurrentUser());
         const canDelete = canDeleteLink();
-        const canDeleteDirect = canDeleteLinkWithoutApproval();
-        const requiresReason = requiresReasonForLinkDeletion();
+        const isSuperAdmin = user && user.role === 'super admin';
 
         if (!links || links.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No links found.</td></tr>';
@@ -4537,9 +4907,9 @@ async function handleLogin() {
                 <td>${link.email || ''}</td>
                 <td>
                     <div class="action-buttons">
-                        ${canDelete && canDeleteDirect ? 
+                        ${canDelete && isSuperAdmin ? 
                             `<button class="btn-del" onclick="deleteLink('${link.id}')">Delete</button>` : 
-                            canDelete && !canDeleteDirect && requiresReason ? 
+                            canDelete && !isSuperAdmin ? 
                             `<button class="btn-request-delete" onclick="deleteLink('${link.id}')">Request Delete</button>` : 
                             '—'}
                     </div>
@@ -4557,6 +4927,7 @@ async function handleLogin() {
         const institution = document.getElementById('instName').value.trim();
         const website = document.getElementById('instWeb').value.trim();
         const email = document.getElementById('instEmail').value.trim();
+        const currentUser = getUser(getCurrentUser());
         
         if (!institution || !website) {
             alert("Institution and website are required");
@@ -4564,7 +4935,7 @@ async function handleLogin() {
         }
 
         try {
-            if (canCreateLinkWithoutApproval()) {
+            if (currentUser.role === 'super admin' || currentUser.role === 'admin') {
                 // Admin or Super Admin - Add directly
                 const newLink = {
                     institution,
@@ -4601,7 +4972,9 @@ async function handleLogin() {
         const link = links.find(l => l.id === id);
         if (!link) return;
 
-        if (canDeleteLinkWithoutApproval()) {
+        const currentUser = getUser(getCurrentUser());
+
+        if (currentUser.role === 'super admin') {
             // Super Admin - Delete directly
             if (confirm('Are you sure you want to delete this link?')) {
                 try {
@@ -4619,7 +4992,7 @@ async function handleLogin() {
                     alert("Failed to delete link");
                 }
             }
-        } else if (requiresReasonForLinkDeletion()) {
+        } else {
             // Admin or Staff - Require reason and create approval request
             openReasonModal('link', id, link.institution, async (type, id, name, reason) => {
                 await createApprovalRequest('link', { name: name }, 'delete', id, reason);
@@ -4648,8 +5021,8 @@ async function handleLogin() {
         const currentUser = getCurrentUser();
         const curUser = getUser(currentUser);
         
-        if (!curUser || (curUser.role !== 'super admin' && curUser.role !== 'admin')) {
-            alert("Access denied - Only Admin and Super Admin can manage users");
+        if (!curUser) {
+            alert("Please log in first");
             return;
         }
 
@@ -4659,9 +5032,8 @@ async function handleLogin() {
         let html = '';
 
         for (let u of userAccounts) {
-            const isSuperAdmin = (curUser.role === 'super admin');
-            const canEdit = (curUser.role === 'super admin') || (curUser.role === 'admin' && u.role !== 'super admin');
-            const canDelete = (curUser.role === 'super admin') && !isJoseph(u.username);
+            // Staff can only see staff users with masked data
+            const canSeeFullData = (curUser.role === 'super admin' || curUser.role === 'admin');
             
             let displayEmail = '';
             let displayNrc = '';
@@ -4671,7 +5043,17 @@ async function handleLogin() {
                 displayEmail = u.email || '';
                 displayNrc = u.nrc || '';
             } else if (curUser.role === 'admin') {
-                // Admin sees masked data for privacy
+                // Admin sees all but with masked data for non-super admin users
+                if (u.role === 'super admin') {
+                    continue; // Admin shouldn't see super admin users
+                }
+                displayEmail = u.email || '****@****';
+                displayNrc = '******';
+            } else if (curUser.role === 'staff') {
+                // Staff only sees staff users with masked data
+                if (u.role !== 'staff') {
+                    continue;
+                }
                 displayEmail = '****@****';
                 displayNrc = '******';
             }
@@ -4679,6 +5061,15 @@ async function handleLogin() {
             const status = u.enabled ? 
                 '<span style="color:green; font-weight:bold;">Enabled</span>' : 
                 '<span style="color:red; font-weight:bold;">Disabled</span>';
+            
+            // Check if current user can edit/delete this user
+            const canEdit = (curUser.role === 'super admin') || 
+                           (curUser.role === 'admin' && u.role !== 'super admin' && u.role !== 'admin') ||
+                           (curUser.role === 'staff' && u.role === 'staff');
+            
+            const canDelete = (curUser.role === 'super admin' && !isJoseph(u.username)) ||
+                             (curUser.role === 'admin' && u.role === 'staff') ||
+                             (curUser.role === 'staff' && u.role === 'staff' && !isJoseph(u.username));
             
             let actions = '';
             if (canEdit) {
@@ -4691,9 +5082,7 @@ async function handleLogin() {
 
             const roleClass = u.role.replace(' ', '');
             
-            // In manageUsersModal function, update the table row generation:
-// In manageUsersModal function, update the table row generation:
-html += `<tr>
+            html += `<tr>
     <td>
         ${u.username}
         ${isJoseph(u.username) ? ' 🔒' : ''}
@@ -4705,21 +5094,21 @@ html += `<tr>
     <td>
         ${status}
         <div style="display: flex; gap: 5px; justify-content: center; margin-top: 8px;">
-            ${u.documents?.degree ? 
+            ${u.documents?.degree && canSeeFullData ? 
                 `<button onclick="viewUserDocument('${u.id}', 'degree', event)" style="background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" title="View Degree/Diploma">
                     <span>🎓</span> Degree
                 </button>` 
                 : '<span style="color: #ccc; font-size: 11px; background: #f0f0f0; padding: 5px 10px; border-radius: 20px;">🎓 No Degree</span>'}
         </div>
         <div style="display: flex; gap: 5px; justify-content: center; margin-top: 5px;">
-            ${u.documents?.zips ? 
+            ${u.documents?.zips && canSeeFullData ? 
                 `<button onclick="viewUserDocument('${u.id}', 'zips', event)" style="background: #27ae60; color: white; border: none; padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" title="View ZIPS Certificate">
                     <span>📜</span> ZIPS
                 </button>` 
                 : '<span style="color: #ccc; font-size: 11px; background: #f0f0f0; padding: 5px 10px; border-radius: 20px;">📜 No ZIPS</span>'}
         </div>
         <div style="display: flex; gap: 5px; justify-content: center; margin-top: 5px;">
-            ${u.documents?.nrc ? 
+            ${u.documents?.nrc && canSeeFullData ? 
                 `<button onclick="viewUserDocument('${u.id}', 'nrc', event)" style="background: #e67e22; color: white; border: none; padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" title="View NRC">
                     <span>🪪</span> NRC
                 </button>` 
@@ -4734,116 +5123,8 @@ html += `<tr>
         document.getElementById('userManagementModal').style.display = 'flex';
     }
 
-
-
-    function openEditUserModal(userId) {
-        const user = userAccounts.find(u => u.id === userId);
-        if (!user) {
-            alert('User not found');
-            return;
-        }
-
-        const currentUser = getUser(getCurrentUser());
-        
-        if (currentUser.role !== 'super admin') {
-            if (user.role === 'super admin') {
-                alert('You cannot edit a super admin user');
-                return;
-            }
-        }
-
-        document.getElementById('editUserId').value = user.id;
-        document.getElementById('editUsername').value = user.username;
-        document.getElementById('editRole').value = user.role;
-        document.getElementById('editNrc').value = user.nrc || '';
-        document.getElementById('editEmail').value = user.email || '';
-        document.getElementById('editPhone').value = user.phone || '';
-        document.getElementById('editInstitution').value = user.institution || '';
-        document.getElementById('editPosition').value = user.position || '';
-        document.getElementById('editPassword').value = '';
-        document.getElementById('editEnabled').checked = user.enabled !== false;
-
-        if (currentUser.role !== 'super admin') {
-            document.getElementById('editRole').disabled = true;
-        } else {
-            document.getElementById('editRole').disabled = false;
-        }
-
-        document.getElementById('editUserModal').style.display = 'flex';
-    }
-
-    async function saveUserEdit() {
-        if (!isCurrentUserSuperAdmin() && !isCurrentUserAdmin()) {
-            alert("You don't have permission to edit users");
-            return;
-        }
-
-        const userId = document.getElementById('editUserId').value;
-        const user = userAccounts.find(u => u.id === userId);
-        if (!user) {
-            alert('User not found');
-            return;
-        }
-
-        const currentUser = getUser(getCurrentUser());
-        
-        if (currentUser.role !== 'super admin' && user.role === 'super admin') {
-            alert('You cannot edit a super admin user');
-            closeEditUserModal();
-            return;
-        }
-
-        const updatedData = {
-            role: document.getElementById('editRole').value,
-            nrc: document.getElementById('editNrc').value.trim(),
-            email: document.getElementById('editEmail').value.trim(),
-            phone: document.getElementById('editPhone').value.trim(),
-            institution: document.getElementById('editInstitution').value.trim(),
-            position: document.getElementById('editPosition').value.trim(),
-            enabled: document.getElementById('editEnabled').checked
-        };
-
-        const newPassword = document.getElementById('editPassword').value.trim();
-        if (newPassword) {
-            updatedData.password = newPassword;
-        }
-
-        if (currentUser.role !== 'super admin' && updatedData.role === 'super admin') {
-            alert('Only super admin can assign super admin role');
-            return;
-        }
-
-        try {
-            if (currentUser.role === 'super admin') {
-                // Super Admin - Update directly
-                await db.collection(COLLECTIONS.USERS).doc(userId).update(updatedData);
-                
-                await logAudit('EDIT_USER', {
-                    username: user.username,
-                    changes: updatedData,
-                    editedBy: getCurrentUser()
-                });
-                
-                await getAllUsers(true);
-                closeEditUserModal();
-                manageUsersModal();
-                showNotification(`User ${user.username} updated successfully`);
-            } else {
-                // Admin - Require super admin approval
-                await createApprovalRequest('user', updatedData, 'edit', userId);
-                closeEditUserModal();
-                manageUsersModal();
-                showNotification('User edit request submitted for super admin approval', 'info');
-            }
-        } catch (error) {
-            console.error("Error updating user:", error);
-            alert("Failed to update user: " + error.message);
-        }
-    }
-
-    function closeEditUserModal() {
-        document.getElementById('editUserModal').style.display = 'none';
-        document.getElementById('editPassword').value = '';
+    function closeUserMgmtModal() { 
+        document.getElementById('userManagementModal').style.display = 'none'; 
     }
 
     function openAddUserModal() {
@@ -4854,16 +5135,25 @@ html += `<tr>
 
         document.getElementById('addUserTitle').innerText = '➕ Add New User';
         
-        ['newUsername', 'newNrc', 'newEmail', 'newPhone', 'newInstitution', 'newPosition', 'newPassword'].forEach(id => {
-            document.getElementById(id).value = '';
+        ['newFullName', 'newUsername', 'newNrc', 'newEmail', 'newPhone', 'newInstitution', 'newPosition', 'newPassword'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
         });
+        
+        // Reset document previews
+        ['newDegreeDocPreview', 'newZipsDocPreview', 'newNrcDocPreview'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '';
+        });
+        
+        userUploadedDocuments = { degree: null, zips: null, nrc: null };
         
         document.getElementById('newRole').value = 'staff';
 
         const currentUser = getUser(getCurrentUser());
         
         if (currentUser.role === 'staff') {
-            // Staff can only add staff users
+            // Staff can only add staff users - disable other options
             const roleSelect = document.getElementById('newRole');
             for (let i = 0; i < roleSelect.options.length; i++) {
                 if (roleSelect.options[i].value !== 'staff') {
@@ -4871,11 +5161,13 @@ html += `<tr>
                 }
             }
         } else if (currentUser.role === 'admin') {
-            // Admin can add staff users (requires super admin approval)
+            // Admin can add staff and admin users
             const roleSelect = document.getElementById('newRole');
             for (let i = 0; i < roleSelect.options.length; i++) {
-                if (roleSelect.options[i].value !== 'staff') {
+                if (roleSelect.options[i].value === 'super admin') {
                     roleSelect.options[i].disabled = true;
+                } else {
+                    roleSelect.options[i].disabled = false;
                 }
             }
         } else if (currentUser.role === 'super admin') {
@@ -4884,130 +5176,6 @@ html += `<tr>
         }
 
         document.getElementById('addUserModal').style.display = 'flex';
-    }
-
-    async function saveNewUser() {
-        if (!canAddUser()) {
-            alert("You don't have permission to add users");
-            return;
-        }
-
-        const username = document.getElementById('newUsername').value.toUpperCase().trim();
-        const role = document.getElementById('newRole').value;
-        const nrc = document.getElementById('newNrc').value.trim();
-        const email = document.getElementById('newEmail').value.trim();
-        const phone = document.getElementById('newPhone').value.trim();
-        const institution = document.getElementById('newInstitution').value.trim();
-        const position = document.getElementById('newPosition').value.trim();
-        const password = document.getElementById('newPassword').value.trim();
-
-        if (!username || !password || !role) {
-            alert("Username, password and role are required");
-            return;
-        }
-
-        if (role === 'super admin' && !isCurrentUserSuperAdmin()) {
-            alert("Only super admin can create super admin users");
-            return;
-        }
-
-        if (userAccounts.find(u => u.username === username)) {
-            alert("Username already exists");
-            return;
-        }
-
-        const newUser = {
-            username,
-            password,
-            role,
-            nrc,
-            email,
-            phone,
-            institution,
-            position,
-            enabled: true,
-            createdAt: new Date().toISOString(),
-            lastActive: null
-        };
-
-        try {
-            if (canAddUserWithoutApproval()) {
-                // Super Admin - Add directly
-                await db.collection(COLLECTIONS.USERS).add(newUser);
-                
-                await logAudit('CREATE_USER', {
-                    username,
-                    role,
-                    createdBy: getCurrentUser()
-                });
-                
-                await getAllUsers(true);
-                closeAddUserModal();
-                manageUsersModal();
-                showNotification(`User ${username} created successfully`);
-            } else {
-                // Staff or Admin - Create approval request
-                const currentUser = getUser(getCurrentUser());
-                await createApprovalRequest('user', newUser, 'add', null);
-                closeAddUserModal();
-                showNotification(`User addition request submitted for ${currentUser.role === 'admin' ? 'super admin' : 'admin/super admin'} approval`, 'info');
-            }
-        } catch (error) {
-            console.error("Error creating user:", error);
-            alert("Failed to create user");
-        }
-    }
-
-    async function deleteUser(userId) {
-        if (!canDeleteUser()) {
-            alert("You don't have permission to delete users");
-            return;
-        }
-
-        const user = userAccounts.find(u => u.id === userId);
-        if (!user) return;
-
-        if (isJoseph(user.username)) {
-            alert('JOSEPH cannot be deleted');
-            return;
-        }
-
-        if (canDeleteUserWithoutApproval()) {
-            // Super Admin - Delete directly
-            if (confirm(`Are you sure you want to permanently delete user ${user.username}?`)) {
-                try {
-                    await db.collection(COLLECTIONS.USERS).doc(userId).delete();
-                    
-                    await logAudit('DELETE_USER', {
-                        username: user.username,
-                        role: user.role,
-                        deletedBy: getCurrentUser()
-                    });
-                    
-                    await getAllUsers(true);
-                    manageUsersModal();
-                    showNotification(`User ${user.username} deleted successfully`);
-                } catch (error) {
-                    console.error("Error deleting user:", error);
-                    alert("Failed to delete user");
-                }
-            }
-        } else {
-            // Admin - Require super admin approval
-            openReasonModal('user', userId, user.username, async (type, id, name, reason) => {
-                await createApprovalRequest('user', { name: name, role: user.role }, 'delete', id, reason);
-                showNotification('User deletion request submitted for super admin approval', 'info');
-                manageUsersModal();
-            });
-        }
-    }
-
-    function closeUserMgmtModal() { 
-        document.getElementById('userManagementModal').style.display = 'none'; 
-    }
-    
-    function closeAddUserModal() { 
-        document.getElementById('addUserModal').style.display = 'none'; 
     }
 
     // ========== SESSIONS PANEL ==========
@@ -5457,34 +5625,6 @@ function debugPasswordModal() {
     alert('Check console (F12) for debug info');
 }
 
-// Make sure the change password modal is properly hidden on logout
-function logout() {
-    const username = getCurrentUser();
-    logAudit('USER_LOGOUT', { username: username });
-    
-    localStorage.removeItem('logged_user');
-    localStorage.removeItem('last_login');
-    
-    // Close change password modal if open
-    const changePwModal = document.getElementById('changePasswordModal');
-    if (changePwModal) changePwModal.style.display = 'none';
-    
-    if (sessionHeartbeat) {
-        clearInterval(sessionHeartbeat);
-        sessionHeartbeat = null;
-    }
-
-    ['homeView','categoryPageView','aboutView','contactView','linksView','auditLogsView','userApprovalHistoryView'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-    });
-
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('userIn').value = '';
-    document.getElementById('passIn').value = '';
-    document.getElementById('timeWarning').style.display = 'none';
-}
-
     function updateDashboardStatus() {
         const clockEl = document.getElementById('liveClock');
         if (clockEl) {
@@ -5700,10 +5840,11 @@ function logout() {
                 .where('status', '==', 'pending')
                 .orderBy('createdAt', 'desc');
         } else {
+            // Admin sees requests from staff and admin
             query = db.collection(COLLECTIONS.APPROVALS)
                 .where('status', '==', 'pending')
-                .where('requestedByRole', '==', 'staff')
                 .orderBy('createdAt', 'desc');
+            // We'll filter client-side for admin
         }
         
         unsubscribeApprovals = query.onSnapshot((snapshot) => {
@@ -5783,6 +5924,14 @@ function logout() {
             if (savedUser) {
                 const user = getUser(savedUser);
                 if (user && user.enabled) {
+                    // Check system lock for staff users
+                    if (isSystemLocked() && user.role === 'staff') {
+                        localStorage.removeItem('logged_user');
+                        hideLoadingSpinner();
+                        showLockScreen();
+                        return;
+                    }
+                    
                     localStorage.setItem('last_login', new Date().toDateString());
                     
                     await loadAllData(false);
@@ -5858,4 +6007,3 @@ function logout() {
 
 </body>
 </html>
-
