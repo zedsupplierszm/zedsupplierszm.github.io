@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZAMCOM Supplier Directory · Role Based</title>
+    <title>Zed Supplier Directory</title>
     <style>
         :root {
-            --primary-green: #4CAF50;
+            --primary-green: #173979;
             --danger-red: #ff4d4d;
             --link-blue: #007bff;
             --nav-yellow: #ffe400;
@@ -33,6 +33,104 @@
             margin: 0;
             padding: 0;
         }
+
+        #loadingSpinner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a2f3f, #0f1a24);
+            z-index: 30000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .spinner-container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            animation: fadeInScale 0.5s ease;
+        }
+
+        .spinner {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 25px;
+            border: 5px solid rgba(76, 175, 80, 0.1);
+            border-top: 5px solid var(--primary-green);
+            border-right: 5px solid var(--primary-green);
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .spinner-text {
+            color: white;
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            margin-top: 15px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #fff, #173979, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% auto;
+            animation: shimmer 2s linear infinite;
+        }
+
+        .spinner-subtext {
+            color: #95a5a6;
+            font-size: 14px;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .spinner-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: var(--primary-green);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInScale {
+            0% { opacity: 0; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
 
         /* LOGIN OVERLAY */
         #loginOverlay {
@@ -125,7 +223,7 @@
         .category-fallback {
             width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
             font-size: 56px; font-weight: 300; color: white; text-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            background: radial-gradient(circle at 30% 30%, #4CAF50, #2c6b2c);
+            background: radial-gradient(circle at 30% 30%, #173979, #2c6b2c);
         }
 
         .grid-item span {
@@ -185,7 +283,7 @@
             width: 20px; height: 60px; background: #f0f0f0; border-radius: 10px; overflow: hidden;
             position: relative; border: 1px solid #ddd; margin: 0 auto;
         }
-        .vertical-life-bar-fill { width: 100%; background: linear-gradient(to top, #2ecc71, #4CAF50); transition: height 0.5s ease; position: absolute; bottom: 0; }
+        .vertical-life-bar-fill { width: 100%; background: linear-gradient(to top, #2ecc71, #173979); transition: height 0.5s ease; position: absolute; bottom: 0; }
         .vertical-life-bar-fill.expiring { background: linear-gradient(to top, #f39c12, #e67e22); }
         .vertical-life-bar-fill.expired { background: linear-gradient(to top, #e74c3c, #c0392b); }
         .vertical-life-bar-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: white; text-shadow: 0 0 3px rgba(0,0,0,0.5); }
@@ -211,7 +309,7 @@
         }
 
         .notification {
-            position: fixed; top: 20px; right: 20px; padding: 15px 20px; background: #4CAF50;
+            position: fixed; top: 20px; right: 20px; padding: 15px 20px; background: #173979;
             color: white; border-radius: 5px; z-index: 10000; display: none;
         }
 
@@ -568,8 +666,24 @@
 <div id="tabConflictWarning" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 99999; color: white; text-align: center; padding-top: 20%; font-size: 24px; font-weight: bold;">
     ⚠️ THIS APPLICATION CAN ONLY BE OPENED IN ONE TAB<br>
     <span style="font-size: 18px; color: #ff4d4d; margin-top: 20px; display: block;">Please close this tab and use the existing tab.</span>
-    <button onclick="forceTakeover()" style="margin-top: 40px; padding: 15px 30px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">FORCE TAKEOVER (Close Other Tab)</button>
+    <button onclick="forceTakeover()" style="margin-top: 40px; padding: 15px 30px; background: #173979; color: white; border: none; border-radius: 5px; cursor: pointer;">FORCE TAKEOVER (Close Other Tab)</button>
 </div>
+
+<!-- LOADING SPINNER -->
+<div id="loadingSpinner">
+    <div class="spinner-container">
+        <div class="spinner"></div>
+        <div class="spinner-text">Zed Supplier Directory</div>
+        <div class="spinner-subtext">Loading your experience...</div>
+        <div class="spinner-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+</div>
+
+
 
 <!-- TIME WARNING -->
 <div id="timeWarning" style="display: none; position: fixed; top: 0; left: 0; width: 100%; background: #ff4d4d; color: white; text-align: center; padding: 15px; z-index: 30000; font-weight: bold;">
@@ -579,7 +693,7 @@
 <!-- LOGIN OVERLAY - EMPTY FIELDS -->
 <div id="loginOverlay" style="display: flex;">
     <div class="login-card">
-        <img src="./images/mainlogo.png" width="100" alt="logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' fill=\'%234CAF50\'/><text x=\'50\' y=\'55\' font-size=\'40\' text-anchor=\'middle\' fill=\'white\' font-weight=\'bold\'>Z</text></svg>'">
+        <img src="./images/mainlogo.png" width="100" alt="logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' fill=\'%23173979\'/><text x=\'50\' y=\'55\' font-size=\'40\' text-anchor=\'middle\' fill=\'white\' font-weight=\'bold\'>Z</text></svg>'">
         <div id="loginFieldsContent">
             <h2>System Login</h2>
             <input type="text" id="userIn" placeholder="Username" value="">
@@ -595,8 +709,8 @@
 
 <!-- HEADER -->
 <div class="topmenu" id="headerSection">
-    <img src="./images/mainlogo.png" width="120" alt="zamcom" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' fill=\'%234CAF50\'/><text x=\'50\' y=\'55\' font-size=\'40\' text-anchor=\'middle\' fill=\'white\' font-weight=\'bold\'>Z</text></svg>'">
-    <h1>ZAMCOM SUPPLIER DIRECTORY</h1>
+    <img src="./images/mainlogo.png" width="120" alt="zamcom" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' fill=\'%23173979\'/><text x=\'50\' y=\'55\' font-size=\'40\' text-anchor=\'middle\' fill=\'white\' font-weight=\'bold\'>Z</text></svg>'">
+    <h1>Zed Supplier Directory</h1>
     <h2>PROCUREMENT</h2>
     <marquee style="background: rgba(0,0,0,0.3); padding: 2px 0;">Right Quality - Right Quantity - Right Time - Right Price - Right Place</marquee>
     <h4 id="greeting" style="margin-top:20px;"><i>Welcome</i></h4>
@@ -623,11 +737,13 @@
         <span id="statusDot" style="height: 12px; width: 12px; border-radius: 50%; display: inline-block;"></span>
         <span id="statusText" style="font-weight: bold; font-size: 14px;">Checking Status...</span>
     </div>
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <div id="currentUserInfo" style="font-size: 12px; color: #555;">
-            <span id="currentUserDisplay">Not logged in</span>
-            <span id="userRoleBadge" style="display: none; padding:2px 6px; border-radius:12px; color:white;"></span>
-        </div>
+
+    <div id="currentUserInfo" style="font-size: 12px; color: #555; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+    <span id="currentUserDisplay">Not logged in</span>
+    <span id="userRoleBadge" style="display: none; padding:2px 6px; border-radius:12px; color:white;"></span>
+    <a href="javascript:void(0);" onclick="openChangePasswordModal()" id="changePasswordLink" style="color: var(--primary-green); text-decoration: none; font-size: 11px; display: none; background: #f0f7f0; padding: 3px 8px; border-radius: 12px; cursor: pointer;">🔑 Change Password</a>
+</div>
+
         <div id="liveClock" style="font-family: monospace; font-weight: bold;"></div>
     </div>
 </div>
@@ -1036,6 +1152,23 @@
     </div>
 </div>
 
+<!-- USER DOCUMENT VIEWER MODAL -->
+<div id="userDocumentViewerModal" class="modal" style="display: none; z-index: 30000;">
+    <div class="modal-content" style="width: 90%; max-width: 1200px; height: 90vh; padding: 0; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="background: var(--primary-green); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 id="userDocumentViewerTitle" style="margin: 0; font-size: 1.2rem;">Document Viewer</h3>
+            <button onclick="closeUserDocumentViewer()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">✕</button>
+        </div>
+        <div id="userDocumentViewerContent" style="flex: 1; padding: 20px; overflow: auto; background: #f5f5f5; display: flex; flex-direction: column; align-items: center;">
+            <!-- Document will be loaded here -->
+        </div>
+        <div style="padding: 15px; background: #f8f9fa; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="downloadUserDocumentBtn" class="btn btn-add" style="padding: 8px 20px;" onclick="downloadCurrentUserDocument()">📥 Download</button>
+            <button class="btn" style="background: #6c757d; padding: 8px 20px;" onclick="closeUserDocumentViewer()">Close</button>
+        </div>
+    </div>
+</div>
+
 <!-- USER MANAGEMENT MODAL -->
 <div id="userManagementModal" class="modal" style="display:none;">
     <div class="modal-content" style="width:600px; border-radius: 24px;">
@@ -1064,29 +1197,84 @@
     </div>
 </div>
 
-<!-- EDIT USER MODAL -->
+<!-- EDIT USER MODAL - Updated with Full Name and Document Uploads -->
 <div id="editUserModal" class="modal" style="display:none;">
-    <div class="modal-content" style="border-radius: 24px;">
+    <div class="modal-content" style="border-radius: 24px; max-width: 600px;">
         <h3 id="editUserTitle">✏️ Edit User</h3>
         <input type="hidden" id="editUserId">
+        
+        <!-- Full Name (NEW) -->
+        <input type="text" id="editFullName" placeholder="Full Name *" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
+        
         <input type="text" id="editUsername" placeholder="Username" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;" readonly>
         <select id="editRole" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
             <option value="staff">Staff</option>
             <option value="admin">Admin</option>
             <option value="super admin">Super Admin</option>
         </select>
-        <input type="text" id="editNrc" placeholder="NRC Number" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
+        <input type="text" id="editNrc" placeholder="NRC Number *" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
         <input type="email" id="editEmail" placeholder="Email Address" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
         <input type="text" id="editPhone" placeholder="Phone Number" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
         <input type="text" id="editInstitution" placeholder="Institution / Dept" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
         <input type="text" id="editPosition" placeholder="Position" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
         <input type="password" id="editPassword" placeholder="New Password (leave blank to keep current)" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
+        
+        <!-- Document Upload Section for Edit (NEW) -->
+        <div style="margin-top: 20px; border-top: 2px solid #e0e0e0; padding-top: 20px;">
+            <h4 style="color: var(--primary-green); margin-bottom: 15px;">📄 Documents</h4>
+            
+            <div style="display: grid; gap: 15px;">
+                <!-- Degree/Diploma -->
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Degree/Diploma Certificate</label>
+                    <div class="document-upload-area" onclick="document.getElementById('editDegreeDoc').click()" style="padding: 15px;">
+                        <span style="font-size: 24px;">🎓</span>
+                        <p style="margin: 5px 0; font-weight: 600;">Upload New Degree/Diploma</p>
+                        <p style="font-size: 10px; color: #666;">Click to upload (PDF, PNG, JPEG)</p>
+                    </div>
+                    <input type="file" id="editDegreeDoc" style="display:none;" accept=".pdf,.jpg,.jpeg,.png" onchange="handleUserDocumentUpload('editDegree', this)">
+                    <div id="editDegreeDocPreview" style="margin-top: 5px; font-size: 11px;"></div>
+                </div>
+                
+                <!-- ZIPS Membership -->
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">ZIPS Membership Certificate</label>
+                    <div class="document-upload-area" onclick="document.getElementById('editZipsDoc').click()" style="padding: 15px;">
+                        <span style="font-size: 24px;">📜</span>
+                        <p style="margin: 5px 0; font-weight: 600;">Upload New ZIPS Certificate</p>
+                        <p style="font-size: 10px; color: #666;">Click to upload (PDF, PNG, JPEG)</p>
+                    </div>
+                    <input type="file" id="editZipsDoc" style="display:none;" accept=".pdf,.jpg,.jpeg,.png" onchange="handleUserDocumentUpload('editZips', this)">
+                    <div id="editZipsDocPreview" style="margin-top: 5px; font-size: 11px;"></div>
+                </div>
+                
+                <!-- NRC -->
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">NRC (National Registration Card)</label>
+                    <div class="document-upload-area" onclick="document.getElementById('editNrcDoc').click()" style="padding: 15px;">
+                        <span style="font-size: 24px;">🪪</span>
+                        <p style="margin: 5px 0; font-weight: 600;">Upload New NRC</p>
+                        <p style="font-size: 10px; color: #666;">Click to upload (PDF, PNG, JPEG)</p>
+                    </div>
+                    <input type="file" id="editNrcDoc" style="display:none;" accept=".pdf,.jpg,.jpeg,.png" onchange="handleUserDocumentUpload('editNrc', this)">
+                    <div id="editNrcDocPreview" style="margin-top: 5px; font-size: 11px;"></div>
+                </div>
+            </div>
+            
+            <!-- Current Documents Display -->
+            <div id="editCurrentDocs" style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <h5 style="margin: 0 0 10px 0; color: #555;">Current Documents:</h5>
+                <div id="editCurrentDocsList"></div>
+            </div>
+        </div>
+        
         <div style="display:flex; align-items:center; margin:10px 0;">
             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
                 <input type="checkbox" id="editEnabled" style="width:16px; height:16px;">
                 <span style="font-size:14px;">Account Enabled</span>
             </label>
         </div>
+        
         <div style="display:flex; gap:10px; margin-top:15px;">
             <button class="btn btn-add" style="flex:1;" onclick="saveUserEdit()">💾 Save Changes</button>
             <button class="btn" style="background:#777; flex:1;" onclick="closeEditUserModal()">Cancel</button>
@@ -1094,28 +1282,115 @@
     </div>
 </div>
 
-<!-- ADD USER MODAL -->
+<!-- ADD USER MODAL - Updated with Full Name and Document Uploads -->
 <div id="addUserModal" class="modal" style="display:none;">
-    <div class="modal-content" style="border-radius: 24px;">
+    <div class="modal-content" style="border-radius: 24px; max-width: 600px;">
         <h3 id="addUserTitle">➕ Add New User</h3>
-        <input type="text" id="newUsername" placeholder="Username" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
+        
+        <!-- Full Name (NEW) -->
+        <input type="text" id="newFullName" placeholder="Full Name *" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
+        
+        <input type="text" id="newUsername" placeholder="Username *" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
         <select id="newRole" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
             <option value="staff">Staff</option>
             <option value="admin">Admin</option>
             <option value="super admin">Super Admin</option>
         </select>
-        <input type="text" id="newNrc" placeholder="NRC Number" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
+        <input type="text" id="newNrc" placeholder="NRC Number *" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
         <input type="email" id="newEmail" placeholder="Email Address" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
         <input type="text" id="newPhone" placeholder="Phone Number" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
         <input type="text" id="newInstitution" placeholder="Institution / Dept" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
         <input type="text" id="newPosition" placeholder="Position" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
-        <input type="password" id="newPassword" placeholder="Password" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
-        <div style="display:flex; gap:10px; margin-top:15px;">
+        <input type="password" id="newPassword" placeholder="Password *" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
+        
+        <!-- Document Upload Section (NEW) -->
+        <div style="margin-top: 20px; border-top: 2px solid #e0e0e0; padding-top: 20px;">
+            <h4 style="color: var(--primary-green); margin-bottom: 15px;">📄 Required Documents (Max 3MB each)</h4>
+            
+            <div style="display: grid; gap: 15px;">
+                <!-- Degree/Diploma -->
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Degree/Diploma Certificate *</label>
+                    <div class="document-upload-area" onclick="document.getElementById('newDegreeDoc').click()" style="padding: 15px;">
+                        <span style="font-size: 24px;">🎓</span>
+                        <p style="margin: 5px 0; font-weight: 600;">Upload Degree/Diploma</p>
+                        <p style="font-size: 10px; color: #666;">Click to upload (PDF, PNG, JPEG)</p>
+                    </div>
+                    <input type="file" id="newDegreeDoc" style="display:none;" accept=".pdf,.jpg,.jpeg,.png" onchange="handleUserDocumentUpload('degree', this)">
+                    <div id="newDegreeDocPreview" style="margin-top: 5px; font-size: 11px;"></div>
+                </div>
+                
+                <!-- ZIPS Membership -->
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">ZIPS Membership Certificate *</label>
+                    <div class="document-upload-area" onclick="document.getElementById('newZipsDoc').click()" style="padding: 15px;">
+                        <span style="font-size: 24px;">📜</span>
+                        <p style="margin: 5px 0; font-weight: 600;">Upload ZIPS Certificate</p>
+                        <p style="font-size: 10px; color: #666;">Click to upload (PDF, PNG, JPEG)</p>
+                    </div>
+                    <input type="file" id="newZipsDoc" style="display:none;" accept=".pdf,.jpg,.jpeg,.png" onchange="handleUserDocumentUpload('zips', this)">
+                    <div id="newZipsDocPreview" style="margin-top: 5px; font-size: 11px;"></div>
+                </div>
+                
+                <!-- NRC -->
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">NRC (National Registration Card) *</label>
+                    <div class="document-upload-area" onclick="document.getElementById('newNrcDoc').click()" style="padding: 15px;">
+                        <span style="font-size: 24px;">🪪</span>
+                        <p style="margin: 5px 0; font-weight: 600;">Upload NRC</p>
+                        <p style="font-size: 10px; color: #666;">Click to upload (PDF, PNG, JPEG)</p>
+                    </div>
+                    <input type="file" id="newNrcDoc" style="display:none;" accept=".pdf,.jpg,.jpeg,.png" onchange="handleUserDocumentUpload('nrc', this)">
+                    <div id="newNrcDocPreview" style="margin-top: 5px; font-size: 11px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-top:20px;">
             <button class="btn btn-add" style="flex:1;" onclick="saveNewUser()">Save User</button>
             <button class="btn" style="background:#777; flex:1;" onclick="closeAddUserModal()">Cancel</button>
         </div>
     </div>
 </div>
+
+<!-- CHANGE PASSWORD MODAL - SIMPLIFIED VERSION -->
+<div id="changePasswordModal" class="modal" style="display:none;">
+    <div class="modal-content" style="width: 400px; border-radius: 24px; padding: 30px;">
+        <h3 style="color: var(--primary-green); margin-bottom: 20px; text-align: center;">🔐 Change Password</h3>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Current Password</label>
+            <input type="password" id="currentPassword" placeholder="Enter current password" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px;">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">New Password</label>
+            <input type="password" id="newPassword" placeholder="Enter new password" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px;">
+            <div style="font-size: 11px; color: #666; margin-top: 5px;">Minimum 6 characters</div>
+        </div>
+        
+        <div style="margin-bottom: 25px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Confirm New Password</label>
+            <input type="password" id="confirmPassword" placeholder="Confirm new password" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px;">
+        </div>
+        
+        <div style="display: flex; gap: 15px; margin-bottom: 10px;">
+            <button class="btn btn-add" style="flex: 1; padding: 12px;" onclick="changePassword()">Update Password</button>
+            <button class="btn" style="flex: 1; background: #95a5a6; padding: 12px;" onclick="closeChangePasswordModal()">Cancel</button>
+        </div>
+        
+        <!-- TEST BUTTONS -->
+        <div style="display: flex; gap: 10px; margin-top: 5px;">
+            <button class="btn" style="flex: 1; background: #3498db; padding: 10px;" onclick="testFillPasswordFields()">🔧 Test Fill</button>
+            <button class="btn" style="flex: 1; background: #95a5a6; padding: 10px;" onclick="debugPasswordModal()">🔍 Debug</button>
+        </div>
+        
+        <div style="margin-top: 15px; font-size: 12px; color: #666; text-align: center; background: #f8f9fa; padding: 10px; border-radius: 8px;">
+            ⚡ Test with: Current: RIGHTJOSEPH / New: test123
+        </div>
+    </div>
+</div>
+
 
 <!-- LINK MODAL -->
 <div id="linkModal" class="modal">
@@ -1221,8 +1496,11 @@
         categories: { data: null, timestamp: 0 },
         suppliers: { data: null, timestamp: 0 },
         links: { data: null, timestamp: 0 },
-        users: { data: null, timestamp: 0 }
+        users: { data: null, timestamp: 0 },
+        approvalRequests: { data: null, timestamp: 0 }
     };
+
+    
 
     async function getCachedData(collectionName, forceRefresh = false) {
         const cache = dataCache[collectionName];
@@ -1232,7 +1510,16 @@
             return cache.data;
         }
         
-        const snapshot = await db.collection(COLLECTIONS[collectionName.toUpperCase()]).get();
+        let snapshot;
+        if (collectionName === 'approvalRequests') {
+            snapshot = await db.collection(COLLECTIONS.APPROVALS)
+                .where('status', '==', 'pending')
+                .orderBy('createdAt', 'desc')
+                .get();
+        } else {
+            snapshot = await db.collection(COLLECTIONS[collectionName.toUpperCase()]).get();
+        }
+        
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
         cache.data = data;
@@ -1260,10 +1547,504 @@
         zra: null,
         zppa: null
     };
+
+    let userUploadedDocuments = {
+    degree: null,
+    zips: null,
+    nrc: null
+};
     let pendingDeletionCallback = null;
 
     // ========== REQUESTS MANAGEMENT & HISTORY ==========
     let requestsHistory = [];
+
+    function handleUserDocumentUpload(docType, input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    if (file.size > 3 * 1024 * 1024) {
+        alert(`File size exceeds 3MB limit for ${docType} document`);
+        input.value = '';
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Store in appropriate location based on prefix
+        if (docType.startsWith('edit')) {
+            // For edit modal
+            const actualType = docType.replace('edit', '').toLowerCase();
+            if (!window.editUserDocuments) window.editUserDocuments = {};
+            window.editUserDocuments[actualType] = {
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                data: e.target.result,
+                uploadedAt: new Date().toISOString()
+            };
+            
+            const previewEl = document.getElementById(`${docType}DocPreview`);
+            if (previewEl) {
+                previewEl.innerHTML = `<span style="color: var(--primary-green);">✓ ${file.name.substring(0, 20)}${file.name.length > 20 ? '...' : ''}</span>`;
+            }
+        } else {
+            // For add modal
+            userUploadedDocuments[docType] = {
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                data: e.target.result,
+                uploadedAt: new Date().toISOString()
+            };
+            
+            const previewEl = document.getElementById(`new${docType.charAt(0).toUpperCase() + docType.slice(1)}DocPreview`);
+            if (previewEl) {
+                previewEl.innerHTML = `<span style="color: var(--primary-green);">✓ ${file.name.substring(0, 20)}${file.name.length > 20 ? '...' : ''}</span>`;
+            }
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+// Global variable to track current document being viewed
+let currentViewingDocument = null;
+
+// View user document in full screen
+function viewUserDocument(userId, docType, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    console.log(`Viewing document for user ${userId}, type: ${docType}`);
+    
+    const user = userAccounts.find(u => u.id === userId);
+    if (!user) {
+        alert('User not found');
+        return;
+    }
+    
+    if (!user.documents || !user.documents[docType]) {
+        alert('Document not found for this user');
+        return;
+    }
+    
+    const doc = user.documents[docType];
+    currentViewingDocument = { userId, docType, doc };
+    
+    // Set title
+    const titleMap = {
+        degree: '🎓 Degree/Diploma Certificate',
+        zips: '📜 ZIPS Membership Certificate',
+        nrc: '🪪 National Registration Card (NRC)'
+    };
+    
+    document.getElementById('userDocumentViewerTitle').innerHTML = 
+        `${titleMap[docType] || 'Document'} - ${user.fullName || user.username}`;
+    
+    // Set content
+    const contentDiv = document.getElementById('userDocumentViewerContent');
+    const isImage = doc.type && (doc.type.startsWith('image/') || doc.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i));
+    
+    let contentHtml = '';
+    
+    if (isImage) {
+        contentHtml = `
+            <div style="text-align: center; width: 100%;">
+                <img src="${doc.data}" style="max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px; text-align: left; width: 100%; max-width: 600px;">
+                    <p><strong>File Name:</strong> ${doc.name}</p>
+                    <p><strong>Uploaded:</strong> ${new Date(doc.uploadedAt).toLocaleString()}</p>
+                    <p><strong>File Size:</strong> ${(doc.size / 1024).toFixed(1)} KB</p>
+                    <p><strong>File Type:</strong> ${doc.type || 'Unknown'}</p>
+                </div>
+            </div>
+        `;
+    } else {
+        // For PDFs and other documents
+        contentHtml = `
+            <div style="width: 100%; height: 70vh; display: flex; flex-direction: column; align-items: center;">
+                <iframe src="${doc.data}" style="width: 100%; height: 100%; border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></iframe>
+                <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px; text-align: left; width: 100%; max-width: 600px;">
+                    <p><strong>File Name:</strong> ${doc.name}</p>
+                    <p><strong>Uploaded:</strong> ${new Date(doc.uploadedAt).toLocaleString()}</p>
+                    <p><strong>File Size:</strong> ${(doc.size / 1024).toFixed(1)} KB</p>
+                    <p><strong>File Type:</strong> ${doc.type || 'PDF Document'}</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    contentDiv.innerHTML = contentHtml;
+    
+    // Show modal
+    document.getElementById('userDocumentViewerModal').style.display = 'flex';
+}
+
+// Close document viewer
+function closeUserDocumentViewer() {
+    document.getElementById('userDocumentViewerModal').style.display = 'none';
+    document.getElementById('userDocumentViewerContent').innerHTML = '';
+    currentViewingDocument = null;
+}
+
+// Download current document
+function downloadCurrentUserDocument() {
+    if (!currentViewingDocument) {
+        alert('No document selected');
+        return;
+    }
+    
+    const { doc } = currentViewingDocument;
+    
+    // Create a temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = doc.data;
+    link.download = doc.name || 'document';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Also add this to close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('userDocumentViewerModal');
+    if (event.target === modal) {
+        closeUserDocumentViewer();
+    }
+}
+
+// Update saveNewUser function to include full name and documents
+async function saveNewUser() {
+    if (!canAddUser()) {
+        alert("You don't have permission to add users");
+        return;
+    }
+
+    const fullName = document.getElementById('newFullName').value.trim();
+    const username = document.getElementById('newUsername').value.toUpperCase().trim();
+    const role = document.getElementById('newRole').value;
+    const nrc = document.getElementById('newNrc').value.trim();
+    const email = document.getElementById('newEmail').value.trim();
+    const phone = document.getElementById('newPhone').value.trim();
+    const institution = document.getElementById('newInstitution').value.trim();
+    const position = document.getElementById('newPosition').value.trim();
+    const password = document.getElementById('newPassword').value.trim();
+
+    // Validate required fields including full name and documents
+    if (!fullName || !username || !password || !role || !nrc) {
+        alert("Full Name, Username, Password, Role, and NRC are required");
+        return;
+    }
+
+    // Check if documents are uploaded
+    if (!userUploadedDocuments.degree || !userUploadedDocuments.zips || !userUploadedDocuments.nrc) {
+        alert("Please upload all required documents: Degree/Diploma, ZIPS Certificate, and NRC");
+        return;
+    }
+
+    if (role === 'super admin' && !isCurrentUserSuperAdmin()) {
+        alert("Only super admin can create super admin users");
+        return;
+    }
+
+    if (userAccounts.find(u => u.username === username)) {
+        alert("Username already exists");
+        return;
+    }
+
+    const newUser = {
+        fullName, // NEW
+        username,
+        password,
+        role,
+        nrc,
+        email,
+        phone,
+        institution,
+        position,
+        documents: { // NEW - Store all uploaded documents
+            degree: userUploadedDocuments.degree,
+            zips: userUploadedDocuments.zips,
+            nrc: userUploadedDocuments.nrc
+        },
+        enabled: true,
+        createdAt: new Date().toISOString(),
+        lastActive: null
+    };
+
+    try {
+        if (canAddUserWithoutApproval()) {
+            await db.collection(COLLECTIONS.USERS).add(newUser);
+            
+            await logAudit('CREATE_USER', {
+                username,
+                fullName,
+                role,
+                createdBy: getCurrentUser()
+            });
+            
+            await getAllUsers(true);
+            closeAddUserModal();
+            manageUsersModal();
+            showNotification(`User ${fullName} (${username}) created successfully`);
+            
+            // Reset uploaded documents
+            userUploadedDocuments = { degree: null, zips: null, nrc: null };
+        } else {
+            const currentUser = getUser(getCurrentUser());
+            await createApprovalRequest('user', newUser, 'add', null);
+            closeAddUserModal();
+            showNotification(`User addition request submitted for ${currentUser.role === 'admin' ? 'super admin' : 'admin/super admin'} approval`, 'info');
+            
+            // Reset uploaded documents
+            userUploadedDocuments = { degree: null, zips: null, nrc: null };
+        }
+    } catch (error) {
+        console.error("Error creating user:", error);
+        alert("Failed to create user");
+    }
+}
+
+// Update openEditUserModal to include full name and documents
+function openEditUserModal(userId) {
+    const user = userAccounts.find(u => u.id === userId);
+    if (!user) {
+        alert('User not found');
+        return;
+    }
+
+    const currentUser = getUser(getCurrentUser());
+    
+    if (currentUser.role !== 'super admin') {
+        if (user.role === 'super admin') {
+            alert('You cannot edit a super admin user');
+            return;
+        }
+    }
+
+    document.getElementById('editUserId').value = user.id;
+    document.getElementById('editFullName').value = user.fullName || ''; // NEW
+    document.getElementById('editUsername').value = user.username;
+    document.getElementById('editRole').value = user.role;
+    document.getElementById('editNrc').value = user.nrc || '';
+    document.getElementById('editEmail').value = user.email || '';
+    document.getElementById('editPhone').value = user.phone || '';
+    document.getElementById('editInstitution').value = user.institution || '';
+    document.getElementById('editPosition').value = user.position || '';
+    document.getElementById('editPassword').value = '';
+    document.getElementById('editEnabled').checked = user.enabled !== false;
+
+    // Reset edit documents
+    window.editUserDocuments = {};
+    ['editDegreeDocPreview', 'editZipsDocPreview', 'editNrcDocPreview'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '';
+    });
+
+    // Display current documents
+    const currentDocsDiv = document.getElementById('editCurrentDocsList');
+    if (currentDocsDiv) {
+        let docsHtml = '';
+        if (user.documents?.degree) {
+            docsHtml += `<div style="margin-bottom: 5px;"><span style="background: #3498db; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">🎓 Degree</span> ${user.documents.degree.name} <button onclick="viewUserDocument('${user.id}', 'degree')" style="background: none; border: none; color: var(--link-blue); cursor: pointer;">View</button></div>`;
+        }
+        if (user.documents?.zips) {
+            docsHtml += `<div style="margin-bottom: 5px;"><span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">📜 ZIPS</span> ${user.documents.zips.name} <button onclick="viewUserDocument('${user.id}', 'zips')" style="background: none; border: none; color: var(--link-blue); cursor: pointer;">View</button></div>`;
+        }
+        if (user.documents?.nrc) {
+            docsHtml += `<div style="margin-bottom: 5px;"><span style="background: #e67e22; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">🪪 NRC</span> ${user.documents.nrc.name} <button onclick="viewUserDocument('${user.id}', 'nrc')" style="background: none; border: none; color: var(--link-blue); cursor: pointer;">View</button></div>`;
+        }
+        if (!docsHtml) docsHtml = '<p style="color: #999; font-style: italic;">No documents uploaded</p>';
+        currentDocsDiv.innerHTML = docsHtml;
+    }
+
+    if (currentUser.role !== 'super admin') {
+        document.getElementById('editRole').disabled = true;
+    } else {
+        document.getElementById('editRole').disabled = false;
+    }
+
+    document.getElementById('editUserModal').style.display = 'flex';
+}
+
+// Update saveUserEdit to include full name and documents
+async function saveUserEdit() {
+    if (!isCurrentUserSuperAdmin() && !isCurrentUserAdmin()) {
+        alert("You don't have permission to edit users");
+        return;
+    }
+
+    const userId = document.getElementById('editUserId').value;
+    const user = userAccounts.find(u => u.id === userId);
+    if (!user) {
+        alert('User not found');
+        return;
+    }
+
+    const currentUser = getUser(getCurrentUser());
+    
+    if (currentUser.role !== 'super admin' && user.role === 'super admin') {
+        alert('You cannot edit a super admin user');
+        closeEditUserModal();
+        return;
+    }
+
+    const fullName = document.getElementById('editFullName').value.trim();
+    if (!fullName) {
+        alert('Full Name is required');
+        return;
+    }
+
+    const updatedData = {
+        fullName, // NEW
+        role: document.getElementById('editRole').value,
+        nrc: document.getElementById('editNrc').value.trim(),
+        email: document.getElementById('editEmail').value.trim(),
+        phone: document.getElementById('editPhone').value.trim(),
+        institution: document.getElementById('editInstitution').value.trim(),
+        position: document.getElementById('editPosition').value.trim(),
+        enabled: document.getElementById('editEnabled').checked
+    };
+
+    // Handle document updates
+    if (window.editUserDocuments && Object.keys(window.editUserDocuments).length > 0) {
+        updatedData.documents = { ...user.documents };
+        
+        if (window.editUserDocuments.degree) {
+            updatedData.documents.degree = window.editUserDocuments.degree;
+        }
+        if (window.editUserDocuments.zips) {
+            updatedData.documents.zips = window.editUserDocuments.zips;
+        }
+        if (window.editUserDocuments.nrc) {
+            updatedData.documents.nrc = window.editUserDocuments.nrc;
+        }
+    }
+
+    const newPassword = document.getElementById('editPassword').value.trim();
+    if (newPassword) {
+        updatedData.password = newPassword;
+    }
+
+    if (currentUser.role !== 'super admin' && updatedData.role === 'super admin') {
+        alert('Only super admin can assign super admin role');
+        return;
+    }
+
+    try {
+        if (currentUser.role === 'super admin') {
+            await db.collection(COLLECTIONS.USERS).doc(userId).update(updatedData);
+            
+            await logAudit('EDIT_USER', {
+                username: user.username,
+                fullName: fullName,
+                changes: updatedData,
+                editedBy: getCurrentUser()
+            });
+            
+            await getAllUsers(true);
+            closeEditUserModal();
+            manageUsersModal();
+            showNotification(`User ${fullName} updated successfully`);
+            
+            // Reset edit documents
+            window.editUserDocuments = {};
+        } else {
+            await createApprovalRequest('user', updatedData, 'edit', userId);
+            closeEditUserModal();
+            manageUsersModal();
+            showNotification('User edit request submitted for super admin approval', 'info');
+            
+            // Reset edit documents
+            window.editUserDocuments = {};
+        }
+    } catch (error) {
+        console.error("Error updating user:", error);
+        alert("Failed to update user: " + error.message);
+    }
+}
+
+// Reset function for add user modal
+function closeAddUserModal() {
+    document.getElementById('addUserModal').style.display = 'none';
+    // Reset form fields
+    document.getElementById('newFullName').value = '';
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newRole').value = 'staff';
+    document.getElementById('newNrc').value = '';
+    document.getElementById('newEmail').value = '';
+    document.getElementById('newPhone').value = '';
+    document.getElementById('newInstitution').value = '';
+    document.getElementById('newPosition').value = '';
+    document.getElementById('newPassword').value = '';
+    
+    // Reset document previews
+    ['newDegreeDocPreview', 'newZipsDocPreview', 'newNrcDocPreview'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '';
+    });
+    
+    // Reset uploaded documents
+    userUploadedDocuments = { degree: null, zips: null, nrc: null };
+}
+
+// Update default users to include fullName
+async function ensureDefaultUsers() {
+    try {
+        const usersSnapshot = await db.collection(COLLECTIONS.USERS).get();
+        if (usersSnapshot.empty) {
+            const defaultUsers = [
+                { 
+                    fullName: "Joseph Zulu", // NEW
+                    username: "JOSEPH", 
+                    password: "RIGHTJOSEPH", 
+                    role: "super admin", 
+                    enabled: true, 
+                    nrc: "123456/78/1", 
+                    email: "zulujosephp@gmail.com", 
+                    phone: "+260973031254", 
+                    institution: "ZAMCOM", 
+                    position: "Procurement Lead",
+                    documents: {}, // Empty documents for default users
+                    createdAt: new Date().toISOString(),
+                    lastActive: null
+                },
+                { 
+                    fullName: "Chishala Banda", // NEW
+                    username: "CHISHALA", 
+                    password: "RIGHTCHISHALA", 
+                    role: "staff", 
+                    enabled: true, 
+                    nrc: "998877/66/5", 
+                    email: "chishala@zamcom.zm", 
+                    phone: "+260977123456", 
+                    institution: "ZAMCOM", 
+                    position: "Procurement Officer",
+                    documents: {}, // Empty documents for default users
+                    createdAt: new Date().toISOString(),
+                    lastActive: null
+                }
+            ];
+            for (const user of defaultUsers) {
+                await db.collection(COLLECTIONS.USERS).add(user);
+            }
+            await logAudit('SYSTEM_INIT', { action: 'Default users created' });
+            console.log("Default users created with full names");
+        }
+    } catch (error) { 
+        console.error("Error ensuring users:", error); 
+    }
+}
+
+    function hideLoadingSpinner() {
+        const spinner = document.getElementById('loadingSpinner');
+        if (spinner) {
+            spinner.style.opacity = '0';
+            setTimeout(() => {
+                spinner.style.display = 'none';
+            }, 500);
+        }
+    }
 
     async function loadRequestsHistory() {
         try {
@@ -2323,6 +3104,9 @@
         let visibleRequests = approvalRequests;
         if (currentUser.role === 'admin') {
             visibleRequests = approvalRequests.filter(req => req.requestedByRole === 'staff');
+        } else if (currentUser.role === 'super admin') {
+            // Super admin sees ALL pending requests
+            visibleRequests = approvalRequests;
         }
         
         const count = visibleRequests.length;
@@ -2417,6 +3201,8 @@
         let visibleRequests = approvalRequests;
         if (currentUser.role === 'admin') {
             visibleRequests = approvalRequests.filter(req => req.requestedByRole === 'staff');
+        } else if (currentUser.role === 'super admin') {
+            visibleRequests = approvalRequests;
         }
         
         if (visibleRequests.length > 0) {
@@ -2461,6 +3247,8 @@
             let visibleRequests = approvalRequests;
             if (currentUser.role === 'admin') {
                 visibleRequests = approvalRequests.filter(req => req.requestedByRole === 'staff');
+            } else if (currentUser.role === 'super admin') {
+                visibleRequests = approvalRequests;
             }
             
             if (visibleRequests.length === 0) {
@@ -2859,12 +3647,17 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
     }
 
     async function getAllUsers(forceRefresh = false) {
-        try {
-            userAccounts = await getCachedData('users', forceRefresh);
-        } catch (error) { 
-            console.error("Error getting users:", error); 
-        }
+    try {
+        userAccounts = await getCachedData('users', forceRefresh);
+        console.log('Loaded users with documents:', userAccounts.map(u => ({
+            username: u.username,
+            hasDocs: !!u.documents,
+            docKeys: u.documents ? Object.keys(u.documents) : []
+        })));
+    } catch (error) { 
+        console.error("Error getting users:", error); 
     }
+}
 
     async function loadAllData(forceRefresh = false) {
         try {
@@ -2938,7 +3731,8 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
         if (pField) pField.type = pField.type === "password" ? "text" : "password";
     }
 
-    async function handleLogin() {
+    // Update the beginning of handleLogin function
+async function handleLogin() {
         const username = document.getElementById('userIn').value.toUpperCase().trim();
         const password = document.getElementById('passIn').value.trim();
         
@@ -2988,6 +3782,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
                 });
 
                 document.getElementById('loginOverlay').style.display = 'none';
+                hideLoadingSpinner();
 
                 updateGreeting();
                 updateUserDisplay();
@@ -3008,29 +3803,34 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
         }
     }
 
+
     // ========== LOGOUT WITH CLEANUP ==========
     function logout() {
-        const username = getCurrentUser();
-        logAudit('USER_LOGOUT', { username: username });
-        
-        localStorage.removeItem('logged_user');
-        localStorage.removeItem('last_login');
-        
-        if (sessionHeartbeat) {
-            clearInterval(sessionHeartbeat);
-            sessionHeartbeat = null;
-        }
-
-        ['homeView','categoryPageView','aboutView','contactView','linksView','auditLogsView','userApprovalHistoryView'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        });
-
-        document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('userIn').value = '';
-        document.getElementById('passIn').value = '';
-        document.getElementById('timeWarning').style.display = 'none';
+    const username = getCurrentUser();
+    logAudit('USER_LOGOUT', { username: username });
+    
+    localStorage.removeItem('logged_user');
+    localStorage.removeItem('last_login');
+    
+    // Close change password modal if open
+    const changePwModal = document.getElementById('changePasswordModal');
+    if (changePwModal) changePwModal.style.display = 'none';
+    
+    if (sessionHeartbeat) {
+        clearInterval(sessionHeartbeat);
+        sessionHeartbeat = null;
     }
+
+    ['homeView','categoryPageView','aboutView','contactView','linksView','auditLogsView','userApprovalHistoryView'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('userIn').value = '';
+    document.getElementById('passIn').value = '';
+    document.getElementById('timeWarning').style.display = 'none';
+}
 
     // ========== ROLE BASED UI ==========
     function applyRoleBasedUI() {
@@ -3054,8 +3854,18 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
         // Approvals Button - Admin and Super Admin only (will be shown/hidden by count)
         const approvalsBtn = document.getElementById('approvalRequestsNavBtn');
         if (approvalsBtn) {
-            if (canApproveRequests() && approvalRequests.length > 0) {
-                approvalsBtn.style.display = 'inline-block';
+            if (canApproveRequests()) {
+                let visibleRequests = approvalRequests;
+                if (user.role === 'admin') {
+                    visibleRequests = approvalRequests.filter(req => req.requestedByRole === 'staff');
+                } else if (user.role === 'super admin') {
+                    visibleRequests = approvalRequests;
+                }
+                if (visibleRequests.length > 0) {
+                    approvalsBtn.style.display = 'inline-block';
+                } else {
+                    approvalsBtn.style.display = 'none';
+                }
             } else {
                 approvalsBtn.style.display = 'none';
             }
@@ -3121,6 +3931,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
 
         renderCategories();
         renderLinks();
+        updateRequestCounts();
     }
 
     // ========== SESSION HEARTBEAT ==========
@@ -3322,7 +4133,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
                     </div>
                     <div style="display: flex; flex-direction: column; align-items: center; padding: 18px 12px;">
                         <span style="font-weight: 600; font-size: 1rem; color: #1e3b37; margin-bottom: 8px;">${cat.name}</span>
-                        <span style="background: #4CAF50; color: white; padding: 6px 16px; border-radius: 40px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);">
+                        <span style="background: #173979; color: white; padding: 6px 16px; border-radius: 40px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);">
                             ${supplierCount} ${supplierCount === 1 ? 'Supplier' : 'Suppliers'}
                         </span>
                     </div>
@@ -3880,19 +4691,50 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
 
             const roleClass = u.role.replace(' ', '');
             
-            html += `<tr>
-                <td>${u.username}${isJoseph(u.username) ? ' 🔒' : ''}</td>
-                <td><span class="role-badge role-${roleClass}">${u.role}</span></td>
-                <td>${displayPhone}</td>
-                <td>${displayEmail}<br><span style="font-size:11px; color:#666;">NRC: ${displayNrc}</span></td>
-                <td>${status}</td>
-                <td><div class="action-buttons">${actions}</div></td>
-            </tr>`;
+            // In manageUsersModal function, update the table row generation:
+// In manageUsersModal function, update the table row generation:
+html += `<tr>
+    <td>
+        ${u.username}
+        ${isJoseph(u.username) ? ' 🔒' : ''}
+        <br><span style="font-size: 11px; color: #666;">${u.fullName || ''}</span>
+    </td>
+    <td><span class="role-badge role-${roleClass}">${u.role}</span></td>
+    <td>${displayPhone}</td>
+    <td>${displayEmail}<br><span style="font-size:11px; color:#666;">NRC: ${displayNrc}</span></td>
+    <td>
+        ${status}
+        <div style="display: flex; gap: 5px; justify-content: center; margin-top: 8px;">
+            ${u.documents?.degree ? 
+                `<button onclick="viewUserDocument('${u.id}', 'degree', event)" style="background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" title="View Degree/Diploma">
+                    <span>🎓</span> Degree
+                </button>` 
+                : '<span style="color: #ccc; font-size: 11px; background: #f0f0f0; padding: 5px 10px; border-radius: 20px;">🎓 No Degree</span>'}
+        </div>
+        <div style="display: flex; gap: 5px; justify-content: center; margin-top: 5px;">
+            ${u.documents?.zips ? 
+                `<button onclick="viewUserDocument('${u.id}', 'zips', event)" style="background: #27ae60; color: white; border: none; padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" title="View ZIPS Certificate">
+                    <span>📜</span> ZIPS
+                </button>` 
+                : '<span style="color: #ccc; font-size: 11px; background: #f0f0f0; padding: 5px 10px; border-radius: 20px;">📜 No ZIPS</span>'}
+        </div>
+        <div style="display: flex; gap: 5px; justify-content: center; margin-top: 5px;">
+            ${u.documents?.nrc ? 
+                `<button onclick="viewUserDocument('${u.id}', 'nrc', event)" style="background: #e67e22; color: white; border: none; padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" title="View NRC">
+                    <span>🪪</span> NRC
+                </button>` 
+                : '<span style="color: #ccc; font-size: 11px; background: #f0f0f0; padding: 5px 10px; border-radius: 20px;">🪪 No NRC</span>'}
+        </div>
+    </td>
+    <td><div class="action-buttons">${actions}</div></td>
+</tr>`;
         }
 
         tbody.innerHTML = html;
         document.getElementById('userManagementModal').style.display = 'flex';
     }
+
+
 
     function openEditUserModal(userId) {
         const user = userAccounts.find(u => u.id === userId);
@@ -4319,25 +5161,329 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
     }
 
     function updateUserDisplay() {
-        const currentUser = getCurrentUser();
-        const userInfo = document.getElementById('currentUserDisplay');
-        const roleBadge = document.getElementById('userRoleBadge');
-        
-        if (currentUser && userInfo) {
-            userInfo.textContent = currentUser;
-            const user = getUser(currentUser);
-            if (user && roleBadge) {
-                roleBadge.textContent = user.role.toUpperCase();
-                roleBadge.style.display = 'inline-block';
-                roleBadge.style.background = 
-                    user.role === 'super admin' ? '#9b59b6' : 
-                    user.role === 'admin' ? '#3498db' : '#2ecc71';
-            }
-        } else if (userInfo) {
-            userInfo.textContent = 'Not logged in';
-            if (roleBadge) roleBadge.style.display = 'none';
+    const currentUser = getCurrentUser();
+    const userInfo = document.getElementById('currentUserDisplay');
+    const roleBadge = document.getElementById('userRoleBadge');
+    const changePasswordLink = document.getElementById('changePasswordLink');
+    
+    if (currentUser && userInfo) {
+        userInfo.textContent = currentUser;
+        const user = getUser(currentUser);
+        if (user && roleBadge) {
+            roleBadge.textContent = user.role.toUpperCase();
+            roleBadge.style.display = 'inline-block';
+            roleBadge.style.background = 
+                user.role === 'super admin' ? '#9b59b6' : 
+                user.role === 'admin' ? '#3498db' : '#2ecc71';
         }
+        
+        // Show change password link for logged in users
+        if (changePasswordLink) {
+            changePasswordLink.style.display = 'inline-block';
+            console.log('Change password link should be visible');
+        }
+    } else if (userInfo) {
+        userInfo.textContent = 'Not logged in';
+        if (roleBadge) roleBadge.style.display = 'none';
+        if (changePasswordLink) changePasswordLink.style.display = 'none';
     }
+}
+
+    // ========== CHANGE PASSWORD FUNCTIONS ==========
+function openChangePasswordModal() {
+    console.log('Opening change password modal');
+    
+    // Get elements
+    const modal = document.getElementById('changePasswordModal');
+    const currentPw = document.getElementById('currentPassword');
+    const newPw = document.getElementById('newPassword');
+    const confirmPw = document.getElementById('confirmPassword');
+    
+    console.log('Modal found:', modal !== null);
+    console.log('Current password field found:', currentPw !== null);
+    console.log('New password field found:', newPw !== null);
+    console.log('Confirm password field found:', confirmPw !== null);
+    
+    if (!modal) {
+        alert('Error: Change password modal not found. Please refresh the page.');
+        return;
+    }
+    
+    if (!currentPw || !newPw || !confirmPw) {
+        alert('Error: Password input fields not found. Please refresh the page.');
+        return;
+    }
+    
+    // Clear fields
+    currentPw.value = '';
+    newPw.value = '';
+    confirmPw.value = '';
+    
+    // Show modal
+    modal.style.display = 'flex';
+    
+    // Focus on current password field
+    setTimeout(() => {
+        currentPw.focus();
+    }, 100);
+}
+
+function closeChangePasswordModal() {
+    const modal = document.getElementById('changePasswordModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// ========== SIMPLIFIED CHANGE PASSWORD FUNCTIONS ==========
+
+function openChangePasswordModal() {
+    console.log('Opening change password modal');
+    
+    // Get the modal
+    const modal = document.getElementById('changePasswordModal');
+    if (!modal) {
+        alert('ERROR: Change password modal not found in the HTML!');
+        return;
+    }
+    
+    // Get input fields
+    const currentField = document.getElementById('currentPassword');
+    const newField = document.getElementById('newPassword');
+    const confirmField = document.getElementById('confirmPassword');
+    
+    console.log('Input fields found:', {
+        current: currentField ? 'YES' : 'NO',
+        new: newField ? 'YES' : 'NO',
+        confirm: confirmField ? 'YES' : 'NO'
+    });
+    
+    if (!currentField || !newField || !confirmField) {
+        alert('ERROR: Password input fields not found in the HTML!');
+        return;
+    }
+    
+    // Clear fields
+    currentField.value = '';
+    newField.value = '';
+    confirmField.value = '';
+    
+    // Show modal
+    modal.style.display = 'flex';
+    
+    // Focus on first field
+    setTimeout(() => {
+        currentField.focus();
+    }, 100);
+}
+
+function closeChangePasswordModal() {
+    const modal = document.getElementById('changePasswordModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Simple test function - this should definitely work
+function testFillPasswordFields() {
+    console.log('Test fill function called');
+    
+    // Get fields directly
+    const currentField = document.getElementById('currentPassword');
+    const newField = document.getElementById('newPassword');
+    const confirmField = document.getElementById('confirmPassword');
+    
+    console.log('Fields in test function:', {
+        current: currentField,
+        new: newField,
+        confirm: confirmField
+    });
+    
+    if (!currentField || !newField || !confirmField) {
+        alert('Cannot find password fields!');
+        return;
+    }
+    
+    // Set values directly
+    currentField.value = 'RIGHTJOSEPH';
+    newField.value = 'test123';
+    confirmField.value = 'test123';
+    
+    console.log('Values set:', {
+        current: currentField.value,
+        new: newField.value,
+        confirm: confirmField.value
+    });
+    
+    // Visual feedback
+    currentField.style.borderColor = 'green';
+    newField.style.borderColor = 'green';
+    confirmField.style.borderColor = 'green';
+    
+    alert('✓ Test values filled! Current: RIGHTJOSEPH, New: test123');
+}
+
+// Simple password change function
+async function changePassword() {
+    console.log('Change password called');
+    
+    // Get fields
+    const currentField = document.getElementById('currentPassword');
+    const newField = document.getElementById('newPassword');
+    const confirmField = document.getElementById('confirmPassword');
+    
+    if (!currentField || !newField || !confirmField) {
+        alert('Cannot find password fields!');
+        return;
+    }
+    
+    // Get values
+    const currentPassword = currentField.value;
+    const newPassword = newField.value;
+    const confirmPassword = confirmField.value;
+    
+    console.log('Values entered:', {
+        current: currentPassword ? '✓' : '✗',
+        new: newPassword ? '✓' : '✗',
+        confirm: confirmPassword ? '✓' : '✗'
+    });
+    
+    // Check if empty
+    if (currentPassword === '') {
+        alert('Please enter your current password');
+        currentField.focus();
+        return;
+    }
+    
+    if (newPassword === '') {
+        alert('Please enter a new password');
+        newField.focus();
+        return;
+    }
+    
+    if (confirmPassword === '') {
+        alert('Please confirm your new password');
+        confirmField.focus();
+        return;
+    }
+    
+    // Check if match
+    if (newPassword !== confirmPassword) {
+        alert('New passwords do not match!');
+        confirmField.focus();
+        return;
+    }
+    
+    // Check length
+    if (newPassword.length < 6) {
+        alert('Password must be at least 6 characters');
+        newField.focus();
+        return;
+    }
+    
+    // Get current user
+    const username = getCurrentUser();
+    if (!username) {
+        alert('Not logged in!');
+        return;
+    }
+    
+    // Get user data
+    await getAllUsers(true);
+    const user = getUser(username);
+    
+    if (!user) {
+        alert('User not found!');
+        return;
+    }
+    
+    // Check current password
+    if (user.password !== currentPassword) {
+        alert('Current password is incorrect!');
+        currentField.focus();
+        return;
+    }
+    
+    // Update password
+    try {
+        console.log('Updating password for:', user.id);
+        
+        await db.collection(COLLECTIONS.USERS).doc(user.id).update({
+            password: newPassword,
+            lastPasswordChange: new Date().toISOString()
+        });
+        
+        console.log('Password updated');
+        
+        // Log audit
+        await logAudit('CHANGE_PASSWORD', { username: username });
+        
+        // Clear fields and close
+        currentField.value = '';
+        newField.value = '';
+        confirmField.value = '';
+        
+        closeChangePasswordModal();
+        
+        alert('✅ Password changed successfully!');
+        showNotification('Password changed successfully!', 'success');
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to update password: ' + error.message);
+    }
+}
+
+// Debug function
+function debugPasswordModal() {
+    console.log('=== DEBUG PASSWORD MODAL ===');
+    
+    const modal = document.getElementById('changePasswordModal');
+    console.log('Modal:', modal);
+    
+    const fields = ['currentPassword', 'newPassword', 'confirmPassword'];
+    
+    fields.forEach(id => {
+        const field = document.getElementById(id);
+        console.log(`${id}:`, {
+            exists: field !== null,
+            type: field ? field.type : 'N/A',
+            value: field ? `"${field.value}"` : 'N/A',
+            parent: field ? field.parentElement : 'N/A'
+        });
+    });
+    
+    console.log('===========================');
+    alert('Check console (F12) for debug info');
+}
+
+// Make sure the change password modal is properly hidden on logout
+function logout() {
+    const username = getCurrentUser();
+    logAudit('USER_LOGOUT', { username: username });
+    
+    localStorage.removeItem('logged_user');
+    localStorage.removeItem('last_login');
+    
+    // Close change password modal if open
+    const changePwModal = document.getElementById('changePasswordModal');
+    if (changePwModal) changePwModal.style.display = 'none';
+    
+    if (sessionHeartbeat) {
+        clearInterval(sessionHeartbeat);
+        sessionHeartbeat = null;
+    }
+
+    ['homeView','categoryPageView','aboutView','contactView','linksView','auditLogsView','userApprovalHistoryView'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('userIn').value = '';
+    document.getElementById('passIn').value = '';
+    document.getElementById('timeWarning').style.display = 'none';
+}
 
     function updateDashboardStatus() {
         const clockEl = document.getElementById('liveClock');
@@ -4520,7 +5666,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
         notification.textContent = message;
         notification.className = `notification ${type}`;
         notification.style.display = 'block';
-        notification.style.background = type === 'success' ? '#4CAF50' : type === 'info' ? '#3498db' : '#ff4d4d';
+        notification.style.background = type === 'success' ? '#173979' : type === 'info' ? '#3498db' : '#ff4d4d';
         setTimeout(() => {
             notification.style.display = 'none';
         }, 4000);
@@ -4595,13 +5741,23 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
         });
     }
 
-    // ========== INITIALIZATION WITH CACHING ==========
+
+    // Update the initializeApp function (replace the existing one)
+// ========== INITIALIZATION WITH LOADING SPINNER ==========
     async function initializeApp() {
-        console.log("Initializing ZAMCOM Supplier Directory with all requested features...");
+        console.log("Initializing Zed Supplier Directory with loading spinner...");
         
         if (!enforceSingleTab()) {
             return;
         }
+        
+        // Keep spinner visible, hide login overlay initially
+        document.getElementById('loadingSpinner').style.display = 'flex';
+        document.getElementById('loginOverlay').style.display = 'none';
+        const userDocModal = document.getElementById('userDocumentViewerModal');
+    if (userDocModal) {
+        userDocModal.style.display = 'none';
+    }
         
         try {
             await ensureDefaultUsers();
@@ -4616,7 +5772,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
                 }
             });
             
-            // IMPORTANT: Login fields are EMPTY - user must enter credentials
+            // Login fields are EMPTY
             const userIn = document.getElementById('userIn');
             const passIn = document.getElementById('passIn');
             if (userIn) userIn.value = '';
@@ -4631,6 +5787,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
                     
                     await loadAllData(false);
                     await initializeFirestoreCollections();
+                    await loadApprovalRequests();
                     
                     if (user.id) {
                         await db.collection(COLLECTIONS.USERS).doc(user.id).update({
@@ -4638,6 +5795,8 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
                         });
                     }
                     
+                    // Hide spinner and show home
+                    hideLoadingSpinner();
                     document.getElementById('loginOverlay').style.display = 'none';
                     
                     updateGreeting();
@@ -4654,12 +5813,22 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
                         }, 5000);
                     }
                 } else {
+                    // Invalid saved user - show login
                     localStorage.removeItem('logged_user');
                     localStorage.removeItem('last_login');
+                    hideLoadingSpinner();
+                    document.getElementById('loginOverlay').style.display = 'flex';
                 }
+            } else {
+                // No saved user - show login
+                hideLoadingSpinner();
+                document.getElementById('loginOverlay').style.display = 'flex';
             }
         } catch (error) {
             console.error("Initialization error:", error);
+            // On error, show login
+            hideLoadingSpinner();
+            document.getElementById('loginOverlay').style.display = 'flex';
         }
 
         setInterval(syncBG, 5000);
@@ -4674,7 +5843,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
             });
         }
         
-        console.log("✅ Initialization complete - All requested features implemented");
+        console.log("✅ Initialization complete");
     }
 
     window.onload = initializeApp;
@@ -4683,7 +5852,7 @@ ${JSON.stringify(req.requestedData, null, 2)}</pre>
 <!-- FOOTER -->
 <footer style="text-align:center; padding: 40px; background: #333; color: white; margin-top: 40px;">
     <img src="./images/logo1.png" width="130" height="50" alt="ZAMCOM" onerror="this.style.display='none';">
-    <p>Designed by Joseph Zulu <br> ZAMCOM Procurement Department © 2026 - Present</p>
+    <p>Designed by Joseph Zulu <br> Zed Supplier Directory <br>Procurement Departments<br> © 2026 - Present</p>
     <a href="#headerSection" style="color: var(--primary-green); text-decoration: none;">Back to Top</a>
 </footer>
 
