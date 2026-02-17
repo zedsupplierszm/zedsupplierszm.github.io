@@ -1518,7 +1518,8 @@
             </div>
             <button class="btn btn-add" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">Login</button>
             <p style="font-size: 12px; margin-top: 15px; color: #666;">
-    <span style="cursor: pointer;" onclick="forgotPasswordSimple()">Forgot Password?</span>
+    <!-- Find this section in your HTML and update the forgot password link -->
+<span style="cursor: pointer;" onclick="openForgotPasswordModal()">Forgot Password?</span>
     <span style="margin: 0 10px;">|</span>
     <span style="cursor: pointer; color: var(--primary-green);" onclick="openAccountRequestModal()">Don't have an account? Request account creation here</span>
 </p>
@@ -1816,8 +1817,8 @@
     <h2 id="categoryTitle" style="color: #333; text-align: center;">Category Name</h2>
     
     <div class="category-actions-bar">
-        <button class="btn btn-add" onclick="openCategoryModal()" id="categoryNewCategoryBtn">+ New Category</button>
-        <button class="btn btn-add" style="background:#3498db" onclick="openSupplierModal()" id="categoryNewSupplierBtn">+ New Supplier</button>
+        <button class="btn btn-add" onclick="openCategoryModal()" id="categoryNewCategoryBtn" >+ New Category</button>
+        <button class="btn btn-add" style="background:#3498db " onclick="openSupplierModal()" id="categoryNewSupplierBtn">+ New Supplier</button>
         <button class="btn-edit" onclick="editCurrentCategory()" id="editCategoryBtn" style="padding: 12px 24px;">✏️ Edit Category</button>
     </div>
 
@@ -2361,6 +2362,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
 <script>
     // ========== SINGLE TAB ENFORCEMENT ==========
@@ -2413,6 +2416,8 @@
         
         return true;
     }
+
+
 
     function forceTakeover() {
         localStorage.setItem(TAB_LOCK_KEY, JSON.stringify({
@@ -3568,9 +3573,9 @@ async function openRequestsManagement() {
                         </div>
                         
                         <div style="display: flex; gap: 16px; justify-content: flex-end; border-top: 1px solid #f0f0f0; padding-top: 24px;">
-                            <button onclick="approveAccountRequest('${req.id}')" style="background: #27ae60; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(39, 174, 96, 0.2);">
-                                <span style="font-size: 18px;">✓</span> APPROVE ACCOUNT
-                            </button>
+                            <button onclick="approveAccountRequest('${req.id}')" style="background: #27ae60; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer;">
+    ✓ APPROVE ACCOUNT
+</button>
                             <button onclick="openRejectAccountReasonModal('${req.id}')" style="background: #e74c3c; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);">
                                 <span style="font-size: 18px;">✗</span> REJECT ACCOUNT
                             </button>
@@ -3818,9 +3823,12 @@ async function viewRequestDocument(requestId, docType) {
     }
 }
 
-// ========== FIX: Approve account request ==========
+/// ========== FIXED: Approve account request (SINGLE VERSION) ==========
 async function approveAccountRequest(requestId) {
     try {
+        console.log('Approving account with ID:', requestId);
+        
+        // Get the request data
         const doc = await db.collection('account_requests').doc(requestId).get();
         if (!doc.exists) {
             alert('Request not found');
@@ -3828,8 +3836,15 @@ async function approveAccountRequest(requestId) {
         }
         
         const requestData = doc.data();
+        console.log('Request data:', requestData);
         
-        // Safe defaults
+        // Check if requestData exists
+        if (!requestData) {
+            alert('Request data is missing');
+            return;
+        }
+
+        // Create new user with safe defaults
         const newUser = {
             fullName: requestData.fullName || 'Unknown User',
             username: requestData.username || 'unknown',
@@ -3846,13 +3861,19 @@ async function approveAccountRequest(requestId) {
             lastActive: null
         };
 
+        console.log('Creating new user:', newUser);
+
+        // Add user to users collection
         await db.collection(COLLECTIONS.USERS).add(newUser);
+
+        // Update request status
         await db.collection('account_requests').doc(requestId).update({
             status: 'approved',
             approvedAt: new Date().toISOString(),
             approvedBy: getCurrentUser()
         });
 
+        // Log the approval
         await logAudit('ACCOUNT_APPROVED', {
             username: requestData.username,
             fullName: requestData.fullName,
@@ -3862,9 +3883,11 @@ async function approveAccountRequest(requestId) {
 
         showNotification(`Account for ${requestData.fullName || requestData.username} approved successfully`, 'success');
 
+        // Close and reopen the modal to refresh
         const modal = document.getElementById('requestsManagementModal');
         if (modal) modal.remove();
         
+        // Reopen if the function exists
         if (typeof openRequestsManagement === 'function') {
             openRequestsManagement();
         }
@@ -3953,13 +3976,353 @@ async function submitAccountRejection(requestId) {
     }
 }
 
+// ========== FORGOT PASSWORD FUNCTIONALITY WITH EMAILJS ==========
+// Initialize with your actual EmailJS credentials
+(function() {
+    // Your actual EmailJS credentials
+    const EMAILJS_PUBLIC_KEY = '9r7UMO_eQNrADd-xN';
+    const EMAILJS_SERVICE_ID = 'service_smyrjjn';
+    const EMAILJS_TEMPLATE_ID = 'template_s04e0xg';
+    
+    // Store for later use
+    window.emailJSConfig = {
+        publicKey: EMAILJS_PUBLIC_KEY,
+        serviceId: EMAILJS_SERVICE_ID,
+        templateId: EMAILJS_TEMPLATE_ID
+    };
+    
+    // Initialize EmailJS
+    try {
+        emailjs.init(EMAILJS_PUBLIC_KEY);
+        console.log('EmailJS initialized with credentials');
+    } catch (e) {
+        console.error('EmailJS initialization failed:', e);
+    }
+})();
+
+// Also check localStorage for saved config (optional - for super admin configuration)
+(function() {
+    try {
+        const savedConfig = localStorage.getItem('emailjs_config');
+        if (savedConfig) {
+            const config = JSON.parse(savedConfig);
+            window.emailJSConfig = config;
+            emailjs.init(config.publicKey);
+            console.log('EmailJS initialized from saved config');
+        }
+    } catch (e) {
+        console.log('No saved EmailJS config');
+    }
+})();
+
+// Configuration helper (optional - keep if you want super admin to configure)
+function configureEmailJS() {
+    const publicKey = prompt('Enter your EmailJS Public Key:');
+    if (!publicKey) return;
+    
+    const serviceId = prompt('Enter your EmailJS Service ID:');
+    if (!serviceId) return;
+    
+    const templateId = prompt('Enter your EmailJS Template ID:');
+    if (!templateId) return;
+    
+    const config = {
+        publicKey: publicKey,
+        serviceId: serviceId,
+        templateId: templateId
+    };
+    
+    window.emailJSConfig = config;
+    localStorage.setItem('emailjs_config', JSON.stringify(config));
+    emailjs.init(publicKey);
+    
+    alert('EmailJS configured successfully!');
+    showNotification('EmailJS configured and saved', 'success');
+}
+
+// Also check localStorage for saved config (overrides defaults if exists)
+(function() {
+    try {
+        const savedConfig = localStorage.getItem('emailjs_config');
+        if (savedConfig) {
+            const config = JSON.parse(savedConfig);
+            window.emailJSConfig = config;
+            emailjs.init(config.publicKey);
+            console.log('EmailJS initialized from saved config');
+        }
+    } catch (e) {
+        console.log('No saved EmailJS config or error loading:', e);
+    }
+})();
+
+
+
+// Forgot Password Modal HTML - Add this after the login card in your HTML
+function addForgotPasswordModal() {
+    // Check if modal already exists
+    if (document.getElementById('forgotPasswordModal')) return;
+    
+    const modalHTML = `
+    <div id="forgotPasswordModal" class="modal" style="display: none; z-index: 25000;">
+        <div class="modal-content" style="border-radius: 24px; max-width: 450px; padding: 35px;">
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="background: linear-gradient(135deg, var(--primary-green), #0f2a4a); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <span style="font-size: 32px; color: white;">🔐</span>
+                </div>
+                <h3 style="color: #2c3e50; margin: 0 0 5px 0; font-size: 1.8rem;">Forgot Password</h3>
+                <p style="color: #666; font-size: 14px; margin: 0;">Enter your details to retrieve your account</p>
+            </div>
+            
+            <div id="forgotPasswordStep1">
+                <div class="password-field" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #555;">NRC Number</label>
+                    <input type="text" id="fpNrc" placeholder="e.g., 123456/78/1" style="width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 15px;">
+                </div>
+                
+                <div class="password-field" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #555;">Phone Number</label>
+                    <input type="text" id="fpPhone" placeholder="e.g., +260977123456" style="width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 15px;">
+                </div>
+                
+                <div class="password-field" style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #555;">Email Address</label>
+                    <input type="email" id="fpEmail" placeholder="e.g., user@example.com" style="width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 15px;">
+                </div>
+                
+                <div style="display: flex; gap: 15px;">
+                    <button class="btn btn-add" style="flex: 2; padding: 14px; font-size: 16px;" onclick="verifyForgotPassword()">
+                        <span>🔍</span> Verify & Send
+                    </button>
+                    <button class="btn" style="flex: 1; background: #95a5a6; padding: 14px; font-size: 16px;" onclick="closeForgotPasswordModal()">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+            
+            <div id="forgotPasswordStep2" style="display: none; text-align: center;">
+                <div style="background: #2ecc71; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 20px auto;">
+                    <span style="font-size: 40px; color: white;">✓</span>
+                </div>
+                <h4 style="color: #2c3e50; margin: 20px 0 10px 0;">Email Sent Successfully!</h4>
+                <p style="color: #666; margin-bottom: 20px;">Your account details have been sent to:<br><strong id="sentEmailDisplay"></strong></p>
+                <p style="font-size: 13px; color: #888; margin-bottom: 25px; padding: 15px; background: #f8f9fa; border-radius: 12px;">
+                    ⚠️ Please check your inbox and spam folder.<br>
+                    For security, change your password after logging in.
+                </p>
+                <button class="btn btn-add" style="width: 100%; padding: 14px;" onclick="closeForgotPasswordModal()">
+                    Return to Login
+                </button>
+            </div>
+            
+            <div id="forgotPasswordError" style="display: none; margin-top: 15px; padding: 12px; background: #fee9e7; border-left: 4px solid #e74c3c; border-radius: 8px; color: #e74c3c; font-size: 14px;">
+                <span style="font-weight: bold;">✗ Error:</span> <span id="fpErrorMessage"></span>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// Call this function after page load
+addForgotPasswordModal();
+
+// Open forgot password modal
+function openForgotPasswordModal() {
+    // Reset form
+    document.getElementById('fpNrc').value = '';
+    document.getElementById('fpPhone').value = '';
+    document.getElementById('fpEmail').value = '';
+    document.getElementById('forgotPasswordStep1').style.display = 'block';
+    document.getElementById('forgotPasswordStep2').style.display = 'none';
+    document.getElementById('forgotPasswordError').style.display = 'none';
+    
+    // Show modal
+    document.getElementById('forgotPasswordModal').style.display = 'flex';
+}
+
+// Close forgot password modal
+function closeForgotPasswordModal() {
+    document.getElementById('forgotPasswordModal').style.display = 'none';
+}
+
+// Verify user details and send email
+// Enhanced verifyForgotPassword with better error handling
+async function verifyForgotPassword() {
+    const nrc = document.getElementById('fpNrc').value.trim();
+    const phone = document.getElementById('fpPhone').value.trim();
+    const email = document.getElementById('fpEmail').value.trim();
+    
+    // Validate inputs
+    if (!nrc || !phone || !email) {
+        showForgotPasswordError('All fields are required');
+        return;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showForgotPasswordError('Please enter a valid email address');
+        return;
+    }
+
+    // Check EmailJS configuration
+    const config = window.emailJSConfig;
+    console.log('EmailJS Config:', config);
+    
+    if (!config || !config.publicKey) {
+        showForgotPasswordError('Email service not configured. Please contact administrator.');
+        console.error('EmailJS config missing:', config);
+        return;
+    }
+
+    // Show loading state
+    const sendBtn = document.querySelector('#forgotPasswordStep1 .btn-add');
+    const originalText = sendBtn.innerHTML;
+    sendBtn.innerHTML = '<span>⏳</span> Sending...';
+    sendBtn.disabled = true;
+    
+    try {
+        // Search for user with matching credentials
+        const users = userAccounts.filter(u => 
+            u.nrc && u.nrc.toLowerCase() === nrc.toLowerCase() &&
+            u.phone && u.phone.replace(/\D/g, '') === phone.replace(/\D/g, '') &&
+            u.email && u.email.toLowerCase() === email.toLowerCase()
+        );
+        
+        console.log('Found users:', users.length);
+        
+        if (users.length === 0) {
+            showForgotPasswordError('No account found with the provided details');
+            sendBtn.innerHTML = originalText;
+            sendBtn.disabled = false;
+            return;
+        }
+        
+        const user = users[0];
+        console.log('User found:', user.username);
+        
+        // Initialize EmailJS with public key
+        emailjs.init(config.publicKey);
+        
+        // Prepare template parameters
+        const templateParams = {
+            to_email: email,
+            to_name: user.fullName || user.username,
+            from_name: 'ZAMCOM Procurement',
+            username: user.username,
+            password: user.password,
+            fullName: user.fullName || user.username,
+            reply_to: 'noreply@zamcom.zm',
+            subject: 'Your Zed Supplier Directory Account Information',
+            message: `Hello ${user.fullName || user.username},\n\nYour account details are:\nUsername: ${user.username}\nPassword: ${user.password}\n\nPlease change your password after logging in.\n\nBest regards,\nZAMCOM Procurement Team`
+        };
+        
+        console.log('Sending email with params:', templateParams);
+        
+        // Send email via EmailJS
+        const response = await emailjs.send(
+            config.serviceId,
+            config.templateId,
+            templateParams
+        );
+        
+        console.log('Email sent successfully:', response);
+        
+        // Log the action
+        await logAudit('PASSWORD_RETRIEVAL', {
+            username: user.username,
+            email: email,
+            method: 'forgot_password'
+        });
+        
+        // Show success
+        document.getElementById('forgotPasswordStep1').style.display = 'none';
+        document.getElementById('sentEmailDisplay').textContent = email;
+        document.getElementById('forgotPasswordStep2').style.display = 'block';
+        document.getElementById('forgotPasswordError').style.display = 'none';
+        
+    } catch (error) {
+        console.error('Error sending email:', error);
+        
+        // Show specific error message
+        let errorMessage = 'Failed to send email. ';
+        
+        if (error.text) {
+            errorMessage += error.text;
+        } else if (error.message) {
+            errorMessage += error.message;
+        } else {
+            errorMessage += 'Please try again later.';
+        }
+        
+        showForgotPasswordError(errorMessage);
+        
+        // Log the full error for debugging
+        console.error('EmailJS Error Details:', {
+            error: error,
+            config: config,
+            userAccounts: userAccounts.length
+        });
+        
+    } finally {
+        // Reset button
+        const sendBtn = document.querySelector('#forgotPasswordStep1 .btn-add');
+        if (sendBtn) {
+            sendBtn.innerHTML = '<span>🔍</span> Verify & Send';
+            sendBtn.disabled = false;
+        }
+    }
+}
+
+// Add this to test your EmailJS configuration
+function testEmailJSConfig() {
+    const config = window.emailJSConfig;
+    console.log('EmailJS Config:', config);
+    
+    if (!config) {
+        alert('EmailJS config not found');
+        return;
+    }
+    
+    // Check if we can initialize
+    try {
+        emailjs.init(config.publicKey);
+        console.log('EmailJS initialized successfully');
+        
+        // Test if we can send (without actually sending)
+        alert(`EmailJS configured with:\nPublic Key: ${config.publicKey}\nService ID: ${config.serviceId}\nTemplate ID: ${config.templateId}`);
+        
+    } catch (error) {
+        console.error('EmailJS init error:', error);
+        alert('EmailJS initialization failed: ' + error.message);
+    }
+}
+
+// Call this from browser console to test: testEmailJSConfig()
+
+
+
+// Show error message
+function showForgotPasswordError(message) {
+    const errorDiv = document.getElementById('forgotPasswordError');
+    const errorMsg = document.getElementById('fpErrorMessage');
+    errorMsg.textContent = message;
+    errorDiv.style.display = 'block';
+}
+
+// Update the forgotPasswordSimple function
+function forgotPasswordSimple() {
+    openForgotPasswordModal();
+}
+
 function closeRejectAccountModal() {
     const modal = document.getElementById('rejectAccountReasonModal');
     if (modal) modal.remove();
     pendingAccountRejectId = null;
 }
 
-// ========== NEW: Approve account request ==========
+// ========== FIX: Approve account request ==========
 async function approveAccountRequest(requestId) {
     try {
         // Get the request data
@@ -3971,26 +4334,30 @@ async function approveAccountRequest(requestId) {
         
         const requestData = doc.data();
         
-        // Create new user
-        const newUser = {
-            fullName: requestData.fullName,
-            username: requestData.username,
-            password: requestData.password,
+        // Log the data to see what we're getting
+        console.log('Approving account:', requestData);
+        
+        // Create new user with safe defaults - use different variable names
+        const newUserAccount = {
+            fullName: requestData.fullName || 'Unknown User',
+            username: requestData.username || 'unknown',
+            password: requestData.password || 'default123',
             role: 'staff',
-            nrc: requestData.nrc,
-            phone: requestData.phone,
-            institution: requestData.institution,
-            position: requestData.position,
-            email: requestData.email,
-            documents: requestData.documents,
+            nrc: requestData.nrc || '',
+            phone: requestData.phone || '',
+            institution: requestData.institution || '',
+            position: requestData.position || '',
+            email: requestData.email || '',
+            documents: requestData.documents || {},
             enabled: true,
             createdAt: new Date().toISOString(),
-            lastActive: null,
-            createdBy: 'SYSTEM_APPROVAL'
+            lastActive: null
         };
 
+        console.log('Creating user:', newUserAccount);
+
         // Add user to users collection
-        await db.collection(COLLECTIONS.USERS).add(newUser);
+        await db.collection(COLLECTIONS.USERS).add(newUserAccount);
 
         // Update request status
         await db.collection('account_requests').doc(requestId).update({
@@ -4007,17 +4374,17 @@ async function approveAccountRequest(requestId) {
             approvedBy: getCurrentUser()
         });
 
-        // Send email notification
-        sendApprovalEmail(requestData.email, requestData.fullName, requestData.username);
+        showNotification(`Account for ${requestData.fullName || requestData.username} approved successfully`, 'success');
 
-        // Refresh the modal
+        // Close and reopen the modal to refresh
         const modal = document.getElementById('requestsManagementModal');
         if (modal) modal.remove();
         
-        openRequestsManagement();
-        
-        showNotification(`Account for ${requestData.fullName} approved successfully`, 'success');
-        
+        // Reopen if the function exists
+        if (typeof openRequestsManagement === 'function') {
+            openRequestsManagement();
+        }
+
     } catch (error) {
         console.error('Error approving account:', error);
         alert('Failed to approve account: ' + error.message);
@@ -5709,53 +6076,7 @@ async function loadAccountRequests() {
     }
 }
 
-// ========== NEW: Function to approve account request ==========
-async function approveAccountRequest(requestId, requestData) {
-    try {
-        // Create new user
-        const newUser = {
-            fullName: requestData.fullName,
-            username: requestData.username,
-            password: requestData.password,
-            role: 'staff',
-            nrc: requestData.nrc,
-            phone: requestData.phone,
-            institution: requestData.institution,
-            position: requestData.position,
-            email: requestData.email,
-            documents: requestData.documents,
-            enabled: true,
-            createdAt: new Date().toISOString(),
-            lastActive: null
-        };
 
-        // Add user to users collection
-        await db.collection(COLLECTIONS.USERS).add(newUser);
-
-        // Update request status
-        await db.collection('account_requests').doc(requestId).update({
-            status: 'approved',
-            approvedAt: new Date().toISOString(),
-            approvedBy: getCurrentUser()
-        });
-
-        // Log the approval
-        await logAudit('ACCOUNT_APPROVED', {
-            username: requestData.username,
-            fullName: requestData.fullName,
-            approvedBy: getCurrentUser()
-        });
-
-        // Send email (you'll need to implement this separately)
-        sendApprovalEmail(requestData.email, requestData.fullName);
-
-        showNotification(`Account for ${requestData.fullName} approved successfully`, 'success');
-        
-    } catch (error) {
-        console.error('Error approving account:', error);
-        alert('Failed to approve account: ' + error.message);
-    }
-}
 
 // ========== NEW: Function to reject account request ==========
 async function rejectAccountRequest(requestId, requestData, reason) {
