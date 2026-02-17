@@ -55,7 +55,7 @@
             border-radius: 30px;
             backdrop-filter: blur(10px);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             animation: fadeInScale 0.5s ease;
         }
 
@@ -63,7 +63,7 @@
             width: 80px;
             height: 80px;
             margin: 0 auto 25px;
-            border: 5px solid rgba(76, 175, 80, 0.1);
+            border: 5px solid rgba(255, 255, 255, 1);
             border-top: 5px solid var(--primary-green);
             border-right: 5px solid var(--primary-green);
             border-radius: 50%;
@@ -1510,6 +1510,7 @@
     <div class="login-card">
         <img src="./images/mainlogo.png" width="100" alt="logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' fill=\'%23173979\'/><text x=\'50\' y=\'55\' font-size=\'40\' text-anchor=\'middle\' fill=\'white\' font-weight=\'bold\'>Z</text></svg>'">
         <div id="loginFieldsContent">
+            <h2 style="color: var(--primary-green); text-align: center;">Zed Supplier Directory</h2>
             <h2>System Login</h2>
             <input type="text" id="userIn" placeholder="Username" value="">
             <div class="pass-wrapper">
@@ -1518,11 +1519,12 @@
             </div>
             <button class="btn btn-add" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">Login</button>
             <p style="font-size: 12px; margin-top: 15px; color: #666;">
+
     <!-- Find this section in your HTML and update the forgot password link -->
 <span style="cursor: pointer;" onclick="openForgotPasswordModal()">Forgot Password?</span>
     <span style="margin: 0 10px;">|</span>
-    <span style="cursor: pointer; color: var(--primary-green);" onclick="openAccountRequestModal()">Don't have an account? Request account creation here</span>
-</p>
+    <span style="cursor: pointer; color: var(--primary-green);" onclick="openAccountRequestModal()">Don't have an account? Request account creation here</span> </p>
+    <span style=" font-size: 10px; display: inline-block; margin-top: 0;"> <br>Powered by <br> a Jatkiss Empire Group</span>
         </div>
     </div>
 </div>
@@ -1850,19 +1852,18 @@
 <!-- ========== ABOUT VIEW ========== -->
 <div id="aboutView" style="display: none;">
     <div class="about-card">
-        <h2 style="color: var(--primary-green); text-align: center;">About ZAMCOM Procurement</h2>
+        <h2 style="color: var(--primary-green); text-align: center;">About Zed Supplier Directory</h2>
         <p style="color: #555; line-height: 1.6; padding: 0 30px;">
-            The ZAMCOM Procurement Department is dedicated to the systematic acquisition of goods and services 
-            that support the Zambia Institute of Mass Communication's mission.
+            The Zed Supplier Directory is a specialized digital platform designed to streamline and modernize procurement processes. Serving as a centralized repository for vetted vendors, the system bridges the gap between procurement departments and reliable service providers. <br> By maintaining a comprehensive database of suppliers across diverse industries—including ICT, Construction, Consultancy, and Office Supplies—the directory ensures that organizations can quickly identify, evaluate, and engage with businesses that meet their specific requirements. Our platform focuses on transparency and compliance, requiring suppliers to maintain up-to-date documentation such as TPIN, NAPSA, and ZRA certifications.
         </p>
         <div class="mission-vision-grid">
             <div style="padding:20px; border-left:5px solid var(--primary-green); background:#f9f9f9; border-radius:8px;">
                 <h3 style="color: #2c3e50;">Our Mission</h3>
-                <p style="color: #555;">To deliver timely, transparent, and ethical procurement solutions.</p>
+                <p style="color: #555;">To deliver timely, transparent, and ethical procurement solutions with easy supplier engangement.</p>
             </div>
             <div style="padding:20px; border-left:5px solid var(--link-blue); background:#f9f9f9; border-radius:8px;">
                 <h3 style="color: #2c3e50;">Our Vision</h3>
-                <p style="color: #555;">To lead ZAMCOM into digital procurement excellence.</p>
+                <p style="color: #555;">Our vision is to be the go-to place where the best businesses and organizations connect with ease and total confidence.</p>
             </div>
         </div>
     </div>
@@ -1873,9 +1874,9 @@
     <div class="about-card">
         <h2 style="color: var(--primary-green); text-align: center;">Contact Information</h2>
         <p style="color: #555; line-height: 1.6; padding: 0 30px;">
-            Plot No. 3529, Government Road, Ridgeway, Lusaka, Zambia.<br>
-            Email: zulujosephp@gmail.com<br>
+            Email: zedsupplierszm@gmail.com<br>
             Phone: +260973031254<br>
+            Powered by: a Jatkiss Empire Group<br>
         </p>
     </div>
 </div>
@@ -4081,7 +4082,7 @@ function addForgotPasswordModal() {
                 
                 <div class="password-field" style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #555;">Phone Number</label>
-                    <input type="text" id="fpPhone" placeholder="e.g., +260977123456" style="width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 15px;">
+                    <input type="text" id="fpPhone" placeholder="e.g., 0977123456" style="width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 15px;">
                 </div>
                 
                 <div class="password-field" style="margin-bottom: 25px;">
@@ -4090,13 +4091,16 @@ function addForgotPasswordModal() {
                 </div>
                 
                 <div style="display: flex; gap: 15px;">
+
                     <button class="btn btn-add" style="flex: 2; padding: 14px; font-size: 16px;" onclick="verifyForgotPassword()">
                         <span>🔍</span> Verify & Send
                     </button>
                     <button class="btn" style="flex: 1; background: #95a5a6; padding: 14px; font-size: 16px;" onclick="closeForgotPasswordModal()">
                         Cancel
                     </button>
-                </div>
+                        
+                    </div>
+        <p style="text-align:center;color: #666; font-size: 14px; margin: 0;">If you are unable to received your Password Recovery Email, contact support at <br>zedsupplierdirectoryzm@gmail.com</p>
             </div>
             
             <div id="forgotPasswordStep2" style="display: none; text-align: center;">
@@ -4106,7 +4110,7 @@ function addForgotPasswordModal() {
                 <h4 style="color: #2c3e50; margin: 20px 0 10px 0;">Email Sent Successfully!</h4>
                 <p style="color: #666; margin-bottom: 20px;">Your account details have been sent to:<br><strong id="sentEmailDisplay"></strong></p>
                 <p style="font-size: 13px; color: #888; margin-bottom: 25px; padding: 15px; background: #f8f9fa; border-radius: 12px;">
-                    ⚠️ Please check your inbox and spam folder.<br>
+                    ⚠️ Please check your inbox or spam folder.<br> If you still haven't received your Password Recovery Email, contact support at <br>zedsupplierdirectoryzm@gmail.com <br>
                     For security, change your password after logging in.
                 </p>
                 <button class="btn btn-add" style="width: 100%; padding: 14px;" onclick="closeForgotPasswordModal()">
@@ -4667,8 +4671,9 @@ async function submitAccountRequest() {
             requestedAt: new Date().toISOString()
         });
         
-        alert('Your account request has been submitted successfully! You will receive an email once your account is approved.');
+        alert('Your Account Creation request has been submitted successfully! If Approved, you will be able to access your account within 24 Hours. If rejected, contact: zedsupplierdirectoryzm@gmail.com');
         closeAccountRequestModal();
+
     } catch (error) {
         console.error('Error submitting account request:', error);
         alert('Failed to submit account request. Please try again.');
@@ -5250,7 +5255,7 @@ async function submitAccountRequest() {
         './images/bgx1.jpg'
     ];
 
-    const LOCK_TIME = { hr: 23, min: 50 };
+    const LOCK_TIME = { hr: 16, min: 50 };
     const OPEN_TIME = { hr: 7, min: 30 };
     const COLLECTIONS = {
         USERS: 'users',
