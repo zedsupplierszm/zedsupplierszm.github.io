@@ -3803,18 +3803,20 @@ function closeAddUserModal() {
 }
 
 
-    // Update default users to include fullName
     async function ensureDefaultUsers() {
     try {
         const usersSnapshot = await db.collection(COLLECTIONS.USERS).get();
+        
+        // Check if we have any users at all
         if (usersSnapshot.empty) {
+            // No users at all - add all default users
             const defaultUsers = [
                 { 
                     fullName: "Joseph Zulu",
                     username: "JOSEPH", 
                     password: "RIGHTJOSEPH", 
                     role: "super admin", 
-                    enabled: true, // Always enabled
+                    enabled: true,
                     nrc: "123456/78/1", 
                     email: "zulujosephp@gmail.com", 
                     phone: "+260973031254", 
@@ -3840,18 +3842,70 @@ function closeAddUserModal() {
                     lastActive: null
                 }
             ];
+            
             for (const user of defaultUsers) {
                 await db.collection(COLLECTIONS.USERS).add(user);
             }
             await logAudit('SYSTEM_INIT', { action: 'Default users created' });
             console.log("Default users created with full names");
         } else {
-            // Ensure JOSEPH is always enabled
-            const josephUser = usersSnapshot.docs.find(doc => 
-                doc.data().username === 'JOSEPH'
-            );
+            // Check for specific users by username to avoid duplicates
+            const existingUsers = usersSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
             
-            if (josephUser && josephUser.data().enabled === false) {
+            const usernames = existingUsers.map(u => u.username);
+            
+            // Check if JOSEPH exists
+            const josephExists = usernames.includes('JOSEPH');
+            const chishalaExists = usernames.includes('CHISHALA');
+            
+            console.log('Existing users:', usernames);
+            
+            // Add JOSEPH if missing
+            if (!josephExists) {
+                console.log('JOSEPH not found - adding default JOSEPH account');
+                await db.collection(COLLECTIONS.USERS).add({
+                    fullName: "Joseph Zulu",
+                    username: "JOSEPH", 
+                    password: "RIGHTJOSEPH", 
+                    role: "super admin", 
+                    enabled: true,
+                    nrc: "123456/78/1", 
+                    email: "zulujosephp@gmail.com", 
+                    phone: "+260973031254", 
+                    institution: "ZAMCOM", 
+                    position: "Procurement Lead",
+                    documents: {},
+                    createdAt: new Date().toISOString(),
+                    lastActive: null
+                });
+            }
+            
+            // Add CHISHALA if missing
+            if (!chishalaExists) {
+                console.log('CHISHALA not found - adding default CHISHALA account');
+                await db.collection(COLLECTIONS.USERS).add({
+                    fullName: "Chishala Banda",
+                    username: "CHISHALA", 
+                    password: "RIGHTCHISHALA", 
+                    role: "staff", 
+                    enabled: true, 
+                    nrc: "998877/66/5", 
+                    email: "chishala@zamcom.zm", 
+                    phone: "+260977123456", 
+                    institution: "ZAMCOM", 
+                    position: "Procurement Officer",
+                    documents: {},
+                    createdAt: new Date().toISOString(),
+                    lastActive: null
+                });
+            }
+            
+            // Ensure JOSEPH is always enabled (but don't duplicate)
+            const josephUser = existingUsers.find(u => u.username === 'JOSEPH');
+            if (josephUser && josephUser.enabled === false) {
                 await db.collection(COLLECTIONS.USERS).doc(josephUser.id).update({
                     enabled: true
                 });
@@ -6035,7 +6089,7 @@ await logAudit('APPROVAL_REJECTED', {
         './images/bgx1.jpg'
     ];
 
-    const LOCK_TIME = { hr: 16, min: 50 };
+    const LOCK_TIME = { hr: 23, min: 50 };
     const OPEN_TIME = { hr: 7, min: 30 };
     const COLLECTIONS = {
         USERS: 'users',
