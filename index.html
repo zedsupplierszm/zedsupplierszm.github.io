@@ -1829,7 +1829,7 @@
     <li><a onclick="openUserApprovalHistory()" id="approvalHistoryNavBtn" class="nav-item pulse-container" style="background:#9b59b6; display:none;">📜 MY REQUESTS</a></li>
     <li><button id="userMgmtBtn" class="btn pulse-container" style="background:#e67e22; margin: 10px; display:none;" onclick="manageUsersModal()">👥 User Management</button></li>
     <li><button id="sessionsBtn" class="btn pulse-container" style="background:#2196F3; margin: 10px; display:none;" onclick="toggleSessionsPanel()">👁️ Active Sessions</button></li>
-    <li><button id="requestsManagementBtn" class="btn exclusive-super pulse-container" style="background:#9b59b6; margin: 10px; display:none;" onclick="openRequestsManagement()">📋 REQUESTS MANAGEMENT</button></li>
+    <li><a onclick="showRequestsManagementView()" id="requestsManagementNavBtn" class="nav-item exclusive-super" style="display:none; background:#9b59b6;">📋 REQUESTS MANAGEMENT</a></li>
 </ul>
 
 <!-- Add this div for pulses - they will be positioned absolutely -->
@@ -2172,6 +2172,122 @@
         </div>
     </div>
 </div>
+
+<!-- Add this after the userApprovalHistoryView div (around line 1020) -->
+
+<!-- ========== REQUESTS MANAGEMENT VIEW ========== -->
+<div id="requestsManagementView" style="display: none; padding: 40px 20px; max-width: 1300px; margin: 0 auto;">
+    <div style="background: linear-gradient(145deg, #f8fafc, #f0f4f8); border-radius: 32px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="background: var(--primary-green); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 20px;">
+                    <span style="font-size: 32px; color: white;">📋</span>
+                </div>
+                <div>
+                    <h2 style="color: #1e3b37; margin: 0; font-size: 28px; font-weight: 700;">Requests Management</h2>
+                    <p style="color: #6b9080; margin: 5px 0 0 0; font-size: 15px;">Complete history of all account and approval requests</p>
+                </div>
+            </div>
+            <button onclick="showView('home')" style="background: white; border: none; width: 48px; height: 48px; border-radius: 16px; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #666; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                ✕
+            </button>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div id="requestsStatsCards" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 40px;">
+            <!-- Stats will be loaded dynamically -->
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div style="display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid #e9ecef; padding-bottom: 16px; flex-wrap: wrap;">
+            <button id="pendingAccountsTabBtn" onclick="showRequestsManagementTab('pendingAccounts')" style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 40px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <span>👤</span> PENDING ACCOUNTS <span id="pendingAccountsCount" class="request-count-badge">0</span>
+            </button>
+            <button id="pendingApprovalsTabBtn" onclick="showRequestsManagementTab('pendingApprovals')" style="background: #34495e; color: white; border: none; padding: 12px 24px; border-radius: 40px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <span>⏳</span> PENDING APPROVALS <span id="pendingApprovalsCount" class="request-count-badge">0</span>
+            </button>
+            <button id="approvedAccountsTabBtn" onclick="showRequestsManagementTab('approvedAccounts')" style="background: #34495e; color: white; border: none; padding: 12px 24px; border-radius: 40px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <span>✓</span> APPROVED ACCOUNTS
+            </button>
+            <button id="approvedApprovalsTabBtn" onclick="showRequestsManagementTab('approvedApprovals')" style="background: #34495e; color: white; border: none; padding: 12px 24px; border-radius: 40px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <span>✓</span> APPROVED APPROVALS
+            </button>
+            <button id="rejectedAccountsTabBtn" onclick="showRequestsManagementTab('rejectedAccounts')" style="background: #34495e; color: white; border: none; padding: 12px 24px; border-radius: 40px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <span>✗</span> REJECTED ACCOUNTS
+            </button>
+            <button id="rejectedApprovalsTabBtn" onclick="showRequestsManagementTab('rejectedApprovals')" style="background: #34495e; color: white; border: none; padding: 12px 24px; border-radius: 40px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <span>✗</span> REJECTED APPROVALS
+            </button>
+        </div>
+        
+        <!-- Content Sections -->
+        <div id="pendingAccountsSection" class="requests-section" style="display: block;">
+            <h3 style="margin-bottom: 20px; color: #2c3e50; display: flex; align-items: center; gap: 10px;">
+                <span style="background: #3498db; width: 8px; height: 30px; border-radius: 4px;"></span>
+                👤 Pending Account Requests
+            </h3>
+            <div id="pendingAccountsList" style="max-height: 600px; overflow-y: auto; padding-right: 8px;">
+                <div style="text-align: center; padding: 60px; color: #666;">Loading...</div>
+            </div>
+        </div>
+        
+        <div id="pendingApprovalsSection" class="requests-section" style="display: none;">
+            <h3 style="margin-bottom: 20px; color: #2c3e50; display: flex; align-items: center; gap: 10px;">
+                <span style="background: #f39c12; width: 8px; height: 30px; border-radius: 4px;"></span>
+                ⏳ Pending Approval Requests
+            </h3>
+            <div id="pendingApprovalsList" style="max-height: 600px; overflow-y: auto; padding-right: 8px;">
+                <div style="text-align: center; padding: 60px; color: #666;">Loading...</div>
+            </div>
+        </div>
+        
+        <div id="approvedAccountsSection" class="requests-section" style="display: none;">
+            <h3 style="margin-bottom: 20px; color: #2c3e50; display: flex; align-items: center; gap: 10px;">
+                <span style="background: #2ecc71; width: 8px; height: 30px; border-radius: 4px;"></span>
+                ✓ Approved Account Requests
+            </h3>
+            <div id="approvedAccountsList" style="max-height: 600px; overflow-y: auto; padding-right: 8px;">
+                <div style="text-align: center; padding: 60px; color: #666;">Loading...</div>
+            </div>
+        </div>
+        
+        <div id="approvedApprovalsSection" class="requests-section" style="display: none;">
+            <h3 style="margin-bottom: 20px; color: #2c3e50; display: flex; align-items: center; gap: 10px;">
+                <span style="background: #27ae60; width: 8px; height: 30px; border-radius: 4px;"></span>
+                ✓ Approved Approval Requests
+            </h3>
+            <div id="approvedApprovalsList" style="max-height: 600px; overflow-y: auto; padding-right: 8px;">
+                <div style="text-align: center; padding: 60px; color: #666;">Loading...</div>
+            </div>
+        </div>
+        
+        <div id="rejectedAccountsSection" class="requests-section" style="display: none;">
+            <h3 style="margin-bottom: 20px; color: #2c3e50; display: flex; align-items: center; gap: 10px;">
+                <span style="background: #e74c3c; width: 8px; height: 30px; border-radius: 4px;"></span>
+                ✗ Rejected Account Requests
+            </h3>
+            <div id="rejectedAccountsList" style="max-height: 600px; overflow-y: auto; padding-right: 8px;">
+                <div style="text-align: center; padding: 60px; color: #666;">Loading...</div>
+            </div>
+        </div>
+        
+        <div id="rejectedApprovalsSection" class="requests-section" style="display: none;">
+            <h3 style="margin-bottom: 20px; color: #2c3e50; display: flex; align-items: center; gap: 10px;">
+                <span style="background: #c0392b; width: 8px; height: 30px; border-radius: 4px;"></span>
+                ✗ Rejected Approval Requests
+            </h3>
+            <div id="rejectedApprovalsList" style="max-height: 600px; overflow-y: auto; padding-right: 8px;">
+                <div style="text-align: center; padding: 60px; color: #666;">Loading...</div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; text-align: center;">
+            <button class="btn-back" onclick="showView('home')" style="background: #173979;">← Back to Home</button>
+        </div>
+    </div>
+</div>
+
+
 
 <!-- SESSIONS PANEL -->
 <div id="sessionsPanel" class="sessions-panel">
@@ -2691,7 +2807,7 @@
     const auth = firebase.auth();
     const storage = firebase.storage();
 
-    // ========== PERFORMANCE CACHING ==========
+     // ========== PERFORMANCE CACHING ==========
     const CACHE_DURATION = 30000;
     const dataCache = {
         categories: { data: null, timestamp: 0 },
@@ -3428,36 +3544,47 @@ async function saveNewUser() {
         return;
     }
     
-    // Staff can only edit staff users
-    if (currentUser.role === 'staff' && user.role !== 'staff') {
-        alert('You can only edit staff users');
+    // Check if user can edit this target user
+    if (!canEditUser(userId)) {
+        alert('You do not have permission to edit this user');
         return;
-    }
-    
-    if (currentUser.role !== 'super admin') {
-        if (user.role === 'super admin') {
-            alert('You cannot edit a super admin user');
-            return;
-        }
     }
 
     document.getElementById('editUserId').value = user.id;
     document.getElementById('editFullName').value = user.fullName || '';
     document.getElementById('editUsername').value = user.username;
-    document.getElementById('editRole').value = user.role;
+    
+    // Only super admin can change roles of other users
+    // Users editing themselves cannot change their own role
+    if (currentUser.role === 'super admin' && user.username !== currentUser.username) {
+        document.getElementById('editRole').value = user.role;
+        document.getElementById('editRole').disabled = false;
+    } else {
+        // For self-editing or non-super admin editing, disable role change
+        document.getElementById('editRole').value = user.role;
+        document.getElementById('editRole').disabled = true;
+    }
+    
     document.getElementById('editNrc').value = user.nrc || '';
     document.getElementById('editEmail').value = user.email || '';
     document.getElementById('editPhone').value = user.phone || '';
     document.getElementById('editInstitution').value = user.institution || '';
     document.getElementById('editPosition').value = user.position || '';
     document.getElementById('editPassword').value = '';
-    document.getElementById('editEnabled').checked = user.enabled !== false;
-
-    // If this is JOSEPH, disable the enabled checkbox (always enabled)
-    if (isJoseph(user.username)) {
-        document.getElementById('editEnabled').disabled = true;
-    } else {
+    
+    // Only super admin can enable/disable other users
+    if (currentUser.role === 'super admin' && user.username !== currentUser.username) {
+        document.getElementById('editEnabled').checked = user.enabled !== false;
         document.getElementById('editEnabled').disabled = false;
+    } else {
+        document.getElementById('editEnabled').checked = user.enabled !== false;
+        document.getElementById('editEnabled').disabled = true; // Users can't disable themselves
+    }
+
+    // If this is JOSEPH, always enabled
+    if (isJoseph(user.username)) {
+        document.getElementById('editEnabled').checked = true;
+        document.getElementById('editEnabled').disabled = true;
     }
 
     // Reset edit documents
@@ -3472,33 +3599,22 @@ async function saveNewUser() {
     if (currentDocsDiv) {
         let docsHtml = '';
         if (user.documents?.degree) {
-            docsHtml += `<div style="margin-bottom: 5px;"><span style="background: #3498db; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">🎓 Degree</span> ${user.documents.degree.name} <button onclick="viewUserDocument('${user.id}', 'degree')" style="background: none; border: none; color: var(--link-blue); cursor: pointer;">View</button></div>`;
+            docsHtml += `<div style="margin-bottom: 5px;"><span style="background: #3498db; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">🎓 Degree</span> ${user.documents.degree.name} <button onclick="viewUserDocument('${user.id}', 'degree', event)" style="background: none; border: none; color: var(--link-blue); cursor: pointer;">View</button></div>`;
         }
         if (user.documents?.zips) {
-            docsHtml += `<div style="margin-bottom: 5px;"><span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">📜 ZIPS</span> ${user.documents.zips.name} <button onclick="viewUserDocument('${user.id}', 'zips')" style="background: none; border: none; color: var(--link-blue); cursor: pointer;">View</button></div>`;
+            docsHtml += `<div style="margin-bottom: 5px;"><span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">📜 ZIPS</span> ${user.documents.zips.name} <button onclick="viewUserDocument('${user.id}', 'zips', event)" style="background: none; border: none; color: var(--link-blue); cursor: pointer;">View</button></div>`;
         }
         if (user.documents?.nrc) {
-            docsHtml += `<div style="margin-bottom: 5px;"><span style="background: #e67e22; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">🪪 NRC</span> ${user.documents.nrc.name} <button onclick="viewUserDocument('${user.id}', 'nrc')" style="background: none; border: none; color: var(--link-blue); cursor: pointer;">View</button></div>`;
+            docsHtml += `<div style="margin-bottom: 5px;"><span style="background: #e67e22; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">🪪 NRC</span> ${user.documents.nrc.name} <button onclick="viewUserDocument('${user.id}', 'nrc', event)" style="background: none; border: none; color: var(--link-blue); cursor: pointer;">View</button></div>`;
         }
         if (!docsHtml) docsHtml = '<p style="color: #999; font-style: italic;">No documents uploaded</p>';
         currentDocsDiv.innerHTML = docsHtml;
-    }
-
-    if (currentUser.role !== 'super admin' && currentUser.username !== 'JOSEPH') {
-        document.getElementById('editRole').disabled = true;
-    } else {
-        document.getElementById('editRole').disabled = false;
     }
 
     document.getElementById('editUserModal').style.display = 'flex';
 }
 
    async function saveUserEdit() {
-    if (!canEditUser()) {
-        alert("You don't have permission to edit users");
-        return;
-    }
-
     const userId = document.getElementById('editUserId').value;
     const user = userAccounts.find(u => u.id === userId);
     if (!user) {
@@ -3508,21 +3624,9 @@ async function saveNewUser() {
 
     const currentUser = getUser(getCurrentUser());
     
-    // JOSEPH protection - only JOSEPH can edit his own account
-    if (isJoseph(user.username) && currentUser.username !== 'JOSEPH') {
-        alert('⚠️ Only JOSEPH can edit his own account details.');
-        closeEditUserModal();
-        return;
-    }
-    
-    // Staff can only edit staff users
-    if (currentUser.role === 'staff' && user.role !== 'staff') {
-        alert('You can only edit staff users');
-        return;
-    }
-    
-    if (currentUser.role !== 'super admin' && user.role === 'super admin') {
-        alert('You cannot edit a super admin user');
+    // Check if user can edit this target user
+    if (!canEditUser(userId)) {
+        alert('You do not have permission to edit this user');
         closeEditUserModal();
         return;
     }
@@ -3533,18 +3637,27 @@ async function saveNewUser() {
         return;
     }
 
+    // Prepare updated data
     const updatedData = {
         fullName,
-        role: document.getElementById('editRole').value,
         nrc: document.getElementById('editNrc').value.trim(),
         email: document.getElementById('editEmail').value.trim(),
         phone: document.getElementById('editPhone').value.trim(),
         institution: document.getElementById('editInstitution').value.trim(),
-        position: document.getElementById('editPosition').value.trim(),
-        enabled: document.getElementById('editEnabled').checked
+        position: document.getElementById('editPosition').value.trim()
     };
 
-    // JOSEPH's account must ALWAYS be enabled - override if someone tries to disable him
+    // Only super admin can change role or enabled status of other users
+    if (currentUser.role === 'super admin' && user.username !== currentUser.username) {
+        updatedData.role = document.getElementById('editRole').value;
+        updatedData.enabled = document.getElementById('editEnabled').checked;
+    } else {
+        // Keep original role and enabled status
+        updatedData.role = user.role;
+        updatedData.enabled = user.enabled;
+    }
+
+    // JOSEPH's account must ALWAYS be enabled
     if (isJoseph(user.username)) {
         updatedData.enabled = true;
     }
@@ -3553,9 +3666,6 @@ async function saveNewUser() {
     const changes = {};
     if (user.fullName !== fullName) {
         changes.fullName = { old: user.fullName || 'not set', new: fullName };
-    }
-    if (user.role !== updatedData.role) {
-        changes.role = { old: user.role, new: updatedData.role };
     }
     if (user.nrc !== updatedData.nrc) {
         changes.nrc = { old: user.nrc || 'not set', new: updatedData.nrc };
@@ -3571,12 +3681,6 @@ async function saveNewUser() {
     }
     if (user.position !== updatedData.position) {
         changes.position = { old: user.position || 'not set', new: updatedData.position };
-    }
-    if (user.enabled !== updatedData.enabled) {
-        changes.enabled = { 
-            old: user.enabled ? 'Enabled' : 'Disabled', 
-            new: updatedData.enabled ? 'Enabled' : 'Disabled' 
-        };
     }
 
     // Handle document updates
@@ -3603,35 +3707,23 @@ async function saveNewUser() {
         changes.password = { old: '********', new: '******** (changed)' };
     }
 
-    if (currentUser.role !== 'super admin' && updatedData.role === 'super admin') {
-        alert('Only super admin can assign super admin role');
-        return;
-    }
-
     try {
-        if (currentUser.role === 'super admin' || currentUser.username === 'JOSEPH') {
-            await db.collection(COLLECTIONS.USERS).doc(userId).update(updatedData);
-            
-            await logAudit('EDIT_USER', {
-                username: user.username,
-                fullName: fullName,
-                changes: changes
-            });
-            
-            await getAllUsers(true);
-            closeEditUserModal();
-            manageUsersModal();
-            showNotification(`User ${fullName} updated successfully`, 'success');
-            
-            window.editUserDocuments = {};
-        } else {
-            await createApprovalRequest('user', updatedData, 'edit', userId);
-            closeEditUserModal();
-            manageUsersModal();
-            showNotification('User edit request submitted for approval', 'info');
-            
-            window.editUserDocuments = {};
-        }
+        // Direct update for all users (since we've restricted who can edit what)
+        await db.collection(COLLECTIONS.USERS).doc(userId).update(updatedData);
+        
+        await logAudit('EDIT_USER', {
+            username: user.username,
+            fullName: fullName,
+            changes: changes
+        });
+        
+        await getAllUsers(true);
+        closeEditUserModal();
+        manageUsersModal();
+        showNotification(`Your profile has been updated successfully`, 'success');
+        
+        window.editUserDocuments = {};
+        
     } catch (error) {
         console.error("Error updating user:", error);
         alert("Failed to update user: " + error.message);
@@ -4131,7 +4223,7 @@ async function openRequestsManagement() {
     }
 }
 
-// Helper function to render pending account requests
+/// Update the renderPendingAccountRequests function
 function renderPendingAccountRequests(requests) {
     if (requests.length === 0) {
         return `
@@ -4144,6 +4236,7 @@ function renderPendingAccountRequests(requests) {
     
     return requests.map(req => {
         const requestedAt = req.requestedAt ? new Date(req.requestedAt).toLocaleString() : 'Unknown';
+        const docCount = req.documents ? Object.keys(req.documents).length : 0;
         
         return `
             <div style="background: white; border-radius: 24px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid #f0f0f0; border-left: 6px solid #3498db;">
@@ -4151,6 +4244,9 @@ function renderPendingAccountRequests(requests) {
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="background: #3498db; color: white; padding: 8px 20px; border-radius: 30px; font-weight: 700; font-size: 14px;">
                             👤 NEW ACCOUNT REQUEST
+                        </span>
+                        <span style="background: #27ae60; color: white; padding: 4px 12px; border-radius: 30px; font-size: 12px;">
+                            📄 ${docCount} Document${docCount !== 1 ? 's' : ''}
                         </span>
                     </div>
                     <span style="color: #888; font-size: 13px; background: #f8f9fa; padding: 6px 16px; border-radius: 30px;">
@@ -4192,10 +4288,13 @@ function renderPendingAccountRequests(requests) {
                 </div>
                 
                 <div style="display: flex; gap: 16px; justify-content: flex-end; border-top: 1px solid #f0f0f0; padding-top: 24px;">
-                    <button onclick="approveAccountRequest('${req.id}')" style="background: #27ae60; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer;">
-                        ✓ APPROVE ACCOUNT
+                    <button onclick="viewAccountRequestDetails('${req.id}')" style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 40px; font-weight: 600; font-size: 14px; cursor: pointer;">
+                        📋 VIEW DETAILS & DOCUMENTS
                     </button>
-                    <button onclick="openRejectAccountReasonModal('${req.id}')" style="background: #e74c3c; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 14px; cursor: pointer;">
+                    <button onclick="approveAccountRequest('${req.id}')" style="background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 40px; font-weight: 600; font-size: 14px; cursor: pointer;">
+                        ✓ APPROVE
+                    </button>
+                    <button onclick="openRejectAccountReasonModal('${req.id}')" style="background: #e74c3c; color: white; border: none; padding: 12px 24px; border-radius: 40px; font-weight: 600; font-size: 14px; cursor: pointer;">
                         ✗ REJECT
                     </button>
                 </div>
@@ -5284,6 +5383,204 @@ function closeAccountRequestModal() {
     document.getElementById('loginOverlay').style.display = 'flex';
 }
 
+// Add this after the existing functions (around line 5000)
+
+// ========== REQUESTS MANAGEMENT AS PAGE VIEW ==========
+
+// Show Requests Management page
+async function showRequestsManagementView() {
+    const currentUser = getUser(getCurrentUser());
+    
+    // Only super admin can access
+    if (!currentUser || currentUser.role !== 'super admin') {
+        alert('Only Super Admin can access Requests Management');
+        return;
+    }
+    
+    showView('requestsManagement');
+    await loadRequestsManagementData();
+}
+
+// Load all requests data for the page
+async function loadRequestsManagementData() {
+    try {
+        // Get all approval requests (both pending and history)
+        const approvalSnapshot = await db.collection(COLLECTIONS.APPROVALS)
+            .orderBy('createdAt', 'desc')
+            .get();
+        
+        // Get all account requests (both pending and history)
+        const accountSnapshot = await db.collection('account_requests')
+            .orderBy('requestedAt', 'desc')
+            .get();
+        
+        const allApprovalRequests = approvalSnapshot.docs.map(doc => ({ 
+            id: doc.id, 
+            type: 'approval',
+            ...doc.data() 
+        }));
+        
+        const allAccountRequests = accountSnapshot.docs.map(doc => ({ 
+            id: doc.id, 
+            type: 'account',
+            ...doc.data() 
+        }));
+        
+        // Separate pending and history for account requests
+        const pendingAccountRequests = allAccountRequests.filter(req => req.status === 'pending');
+        const approvedAccountRequests = allAccountRequests.filter(req => req.status === 'approved');
+        const rejectedAccountRequests = allAccountRequests.filter(req => req.status === 'rejected');
+        
+        // Separate pending and history for approval requests
+        const pendingApprovalRequests = allApprovalRequests.filter(req => req.status === 'pending');
+        const approvedApprovalRequests = allApprovalRequests.filter(req => req.status === 'approved');
+        const rejectedApprovalRequests = allApprovalRequests.filter(req => req.status === 'rejected');
+        
+        // Update stats cards
+        updateRequestsStats({
+            pendingAccounts: pendingAccountRequests.length,
+            pendingApprovals: pendingApprovalRequests.length,
+            approvedAccounts: approvedAccountRequests.length,
+            approvedApprovals: approvedApprovalRequests.length,
+            rejectedAccounts: rejectedAccountRequests.length,
+            rejectedApprovals: rejectedApprovalRequests.length,
+            totalAccounts: allAccountRequests.length,
+            totalApprovals: allApprovalRequests.length
+        });
+        
+        // Update count badges on tabs
+        document.getElementById('pendingAccountsCount').textContent = pendingAccountRequests.length;
+        document.getElementById('pendingApprovalsCount').textContent = pendingApprovalRequests.length;
+        
+        // Render each section
+        document.getElementById('pendingAccountsList').innerHTML = renderPendingAccountRequests(pendingAccountRequests);
+        document.getElementById('pendingApprovalsList').innerHTML = renderPendingApprovalRequests(pendingApprovalRequests);
+        document.getElementById('approvedAccountsList').innerHTML = renderHistoryAccountRequests(approvedAccountRequests, 'approved');
+        document.getElementById('approvedApprovalsList').innerHTML = renderHistoryApprovalRequests(approvedApprovalRequests, 'approved');
+        document.getElementById('rejectedAccountsList').innerHTML = renderHistoryAccountRequests(rejectedAccountRequests, 'rejected');
+        document.getElementById('rejectedApprovalsList').innerHTML = renderHistoryApprovalRequests(rejectedApprovalRequests, 'rejected');
+        
+    } catch (error) {
+        console.error('Error loading requests management data:', error);
+        showNotification('Failed to load requests data', 'error');
+    }
+}
+
+// Update stats cards
+function updateRequestsStats(stats) {
+    const statsHtml = `
+        <div style="background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); border-left: 4px solid #3498db;">
+            <div style="font-size: 28px; margin-bottom: 8px;">👤</div>
+            <div style="font-size: 28px; font-weight: 800; color: #3498db;">${stats.pendingAccounts}</div>
+            <div style="font-size: 12px; color: #666;">Pending Accounts</div>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); border-left: 4px solid #f39c12;">
+            <div style="font-size: 28px; margin-bottom: 8px;">⏳</div>
+            <div style="font-size: 28px; font-weight: 800; color: #f39c12;">${stats.pendingApprovals}</div>
+            <div style="font-size: 12px; color: #666;">Pending Approvals</div>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); border-left: 4px solid #2ecc71;">
+            <div style="font-size: 28px; margin-bottom: 8px;">✓</div>
+            <div style="font-size: 28px; font-weight: 800; color: #2ecc71;">${stats.approvedAccounts + stats.approvedApprovals}</div>
+            <div style="font-size: 12px; color: #666;">Total Approved</div>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); border-left: 4px solid #e74c3c;">
+            <div style="font-size: 28px; margin-bottom: 8px;">✗</div>
+            <div style="font-size: 28px; font-weight: 800; color: #e74c3c;">${stats.rejectedAccounts + stats.rejectedApprovals}</div>
+            <div style="font-size: 12px; color: #666;">Total Rejected</div>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); border-left: 4px solid #9b59b6;">
+            <div style="font-size: 28px; margin-bottom: 8px;">📊</div>
+            <div style="font-size: 28px; font-weight: 800; color: #9b59b6;">${stats.totalAccounts}</div>
+            <div style="font-size: 12px; color: #666;">Total Accounts</div>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); border-left: 4px solid #e67e22;">
+            <div style="font-size: 28px; margin-bottom: 8px;">📋</div>
+            <div style="font-size: 28px; font-weight: 800; color: #e67e22;">${stats.totalApprovals}</div>
+            <div style="font-size: 12px; color: #666;">Total Approvals</div>
+        </div>
+    `;
+    
+    document.getElementById('requestsStatsCards').innerHTML = statsHtml;
+}
+
+// Tab switching function for Requests Management page
+function showRequestsManagementTab(tabName) {
+    // Hide all sections
+    document.querySelectorAll('.requests-section').forEach(section => {
+        section.style.display = 'none';
+    });
+    
+    // Reset all tab buttons to default color
+    const tabs = [
+        'pendingAccountsTabBtn',
+        'pendingApprovalsTabBtn',
+        'approvedAccountsTabBtn',
+        'approvedApprovalsTabBtn',
+        'rejectedAccountsTabBtn',
+        'rejectedApprovalsTabBtn'
+    ];
+    
+    tabs.forEach(tabId => {
+        const btn = document.getElementById(tabId);
+        if (btn) {
+            if (tabId.includes('pendingAccounts')) btn.style.background = '#34495e';
+            else if (tabId.includes('pendingApprovals')) btn.style.background = '#34495e';
+            else if (tabId.includes('approvedAccounts')) btn.style.background = '#34495e';
+            else if (tabId.includes('approvedApprovals')) btn.style.background = '#34495e';
+            else if (tabId.includes('rejectedAccounts')) btn.style.background = '#34495e';
+            else if (tabId.includes('rejectedApprovals')) btn.style.background = '#34495e';
+        }
+    });
+    
+    // Show selected section and highlight button
+    switch(tabName) {
+        case 'pendingAccounts':
+            document.getElementById('pendingAccountsSection').style.display = 'block';
+            document.getElementById('pendingAccountsTabBtn').style.background = '#3498db';
+            break;
+        case 'pendingApprovals':
+            document.getElementById('pendingApprovalsSection').style.display = 'block';
+            document.getElementById('pendingApprovalsTabBtn').style.background = '#f39c12';
+            break;
+        case 'approvedAccounts':
+            document.getElementById('approvedAccountsSection').style.display = 'block';
+            document.getElementById('approvedAccountsTabBtn').style.background = '#2ecc71';
+            break;
+        case 'approvedApprovals':
+            document.getElementById('approvedApprovalsSection').style.display = 'block';
+            document.getElementById('approvedApprovalsTabBtn').style.background = '#27ae60';
+            break;
+        case 'rejectedAccounts':
+            document.getElementById('rejectedAccountsSection').style.display = 'block';
+            document.getElementById('rejectedAccountsTabBtn').style.background = '#e74c3c';
+            break;
+        case 'rejectedApprovals':
+            document.getElementById('rejectedApprovalsSection').style.display = 'block';
+            document.getElementById('rejectedApprovalsTabBtn').style.background = '#c0392b';
+            break;
+    }
+}
+
+// Update the showView function to include requestsManagement
+const originalShowView = showView;
+showView = function(viewName) {
+    // Call the original function first
+    originalShowView(viewName);
+    
+    // Hide requests management view when other views are shown
+    document.getElementById('requestsManagementView').style.display = 'none';
+    
+    if (viewName === 'requestsManagement') {
+        document.getElementById('requestsManagementView').style.display = 'block';
+    }
+};
+
 function handleRequestDocumentUpload(docType, input) {
     const file = input.files[0];
     if (!file) return;
@@ -5395,7 +5692,7 @@ async function submitAccountRequest() {
             requestedAt: new Date().toISOString()
         });
         
-        alert('Your Account Creation request has been submitted successfully! If Approved, you will be able to access your account within 24 Hours. If rejected, contact: zedsupplierdirectoryzm@gmail.com');
+        alert('Your Account Creation request has been submitted successfully! You will receive an email if your account is approved or rejected within 24 Hours. Contact customer support for any other queries: zedsupplierdirectoryzm@gmail.com');
         closeAccountRequestModal();
 
     } catch (error) {
@@ -5596,6 +5893,7 @@ await logAudit('APPROVAL_REJECTED', {
     function renderUserManagementTable() {
         const tbody = document.getElementById('userMgmtTableBody');
         const currentUser = getUser(getCurrentUser());
+
         
         if (!currentUser) return;
 
@@ -6133,26 +6431,79 @@ await logAudit('APPROVAL_REJECTED', {
     // ========== PERMISSION CHECKS ==========
     
     // USER MANAGEMENT PERMISSIONS
-    function canAddUser() {
-        const user = getUser(getCurrentUser());
-        if (!user) return false;
-        return user.role === 'super admin' || user.role === 'admin' || user.role === 'staff';
+    // Replace these permission functions
+function canAddUser() {
+    const user = getUser(getCurrentUser());
+    if (!user) return false;
+    // Staff can add users (requires approval)
+    return user.role === 'super admin' || user.role === 'admin' || user.role === 'staff';
+}
+
+function canEditUser(targetUserId) {
+    const currentUser = getUser(getCurrentUser());
+    if (!currentUser) return false;
+    
+    // Get the target user
+    const targetUser = userAccounts.find(u => u.id === targetUserId);
+    if (!targetUser) return false;
+    
+    // JOSEPH protection
+    if (isJoseph(targetUser.username)) {
+        return currentUser.username === 'JOSEPH';
     }
     
-    function canEditUser() {
-        const user = getUser(getCurrentUser());
-        return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
+    // Users can edit their own profile
+    if (targetUser.username === currentUser.username) {
+        return true;
     }
     
-    function canDeleteUser() {
-        const user = getUser(getCurrentUser());
-        return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
+    // Super admin can edit anyone
+    if (currentUser.role === 'super admin') {
+        return true;
     }
     
-    function canDeleteUserWithoutApproval() {
-        const user = getUser(getCurrentUser());
-        return user && user.role === 'super admin';
+    // Admin can edit staff and admin (but not super admin)
+    if (currentUser.role === 'admin') {
+        return targetUser.role === 'staff' || targetUser.role === 'admin';
     }
+    
+    // Staff cannot edit other users
+    if (currentUser.role === 'staff') {
+        return false;
+    }
+    
+    return false;
+}
+
+function canDeleteUser(targetUserId) {
+    const currentUser = getUser(getCurrentUser());
+    const targetUser = userAccounts.find(u => u.id === targetUserId);
+    
+    if (!currentUser || !targetUser) return false;
+    
+    // NO ONE can delete JOSEPH
+    if (isJoseph(targetUser.username)) {
+        return false;
+    }
+    
+    // Users cannot delete themselves
+    if (targetUser.username === currentUser.username) {
+        return false;
+    }
+    
+    // Super admin can delete anyone except JOSEPH
+    if (currentUser.role === 'super admin') {
+        return true;
+    }
+    
+    // Admin can delete staff only
+    if (currentUser.role === 'admin') {
+        return targetUser.role === 'staff';
+    }
+    
+    // Staff cannot delete anyone
+    return false;
+}
     
     function isJoseph(username) {
         return username === 'JOSEPH';
@@ -6368,6 +6719,306 @@ await logAudit('APPROVAL_REJECTED', {
             unlockTimeEl.textContent = `Next unlock: ${unlockHour}:${unlockMin}:00`;
         }
     }
+
+    // Add this function to toggle password visibility (JOSEPH only)
+function toggleUserPasswordVisibility(userId) {
+    const currentUser = getUser(getCurrentUser());
+    if (!currentUser || currentUser.username !== 'JOSEPH') {
+        alert('Only JOSEPH can view passwords');
+        return;
+    }
+    
+    const user = userAccounts.find(u => u.id === userId);
+    if (!user) return;
+    
+    // Create a modal to show password
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 400px; border-radius: 24px; padding: 30px;">
+            <h3 style="color: var(--primary-green); margin-bottom: 20px;">🔐 User Password</h3>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <p><strong>Username:</strong> ${user.username}</p>
+                <p><strong>Full Name:</strong> ${user.fullName || 'N/A'}</p>
+                <p><strong>Password:</strong> 
+                    <span style="font-family: monospace; font-size: 18px; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #ddd; display: inline-block; margin-top: 8px;">
+                        ${user.password}
+                    </span>
+                </p>
+                <p style="color: #e67e22; font-size: 12px; margin-top: 10px;">⚠️ This password is visible only to JOSEPH</p>
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <button class="btn" style="flex: 1; background: var(--primary-green);" onclick="this.closest('.modal').remove()">Close</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Add password view button in user management for JOSEPH only
+// Update the renderUserManagementTable function
+function renderUserManagementTable() {
+    const tbody = document.getElementById('userMgmtTableBody');
+    const currentUser = getUser(getCurrentUser());
+    
+    if (!currentUser) return;
+
+    let html = '';
+
+    for (let u of userAccounts) {
+        // Filter users based on role
+        if (currentUser.role === 'staff' && u.role !== 'staff') continue;
+        if (currentUser.role === 'admin' && u.role === 'super admin') continue;
+
+        const status = u.enabled ? 
+            '<span style="color:green; font-weight:bold;">Enabled</span>' : 
+            '<span style="color:red; font-weight:bold;">Disabled</span>';
+
+        // Check permissions
+        const canEdit = (currentUser.role === 'super admin') || 
+                       (currentUser.role === 'admin' && u.role !== 'super admin') ||
+                       (currentUser.role === 'staff' && u.role === 'staff');
+
+        const canDelete = (currentUser.role === 'super admin' && !isJoseph(u.username)) ||
+                         (currentUser.role === 'admin' && u.role === 'staff') ||
+                         (currentUser.role === 'staff' && u.role === 'staff' && !isJoseph(u.username));
+
+        // Password view button - ONLY for JOSEPH
+        const passwordViewBtn = (currentUser.username === 'JOSEPH') ? 
+            `<button class="btn-edit" style="background: #9b59b6;" onclick="toggleUserPasswordVisibility('${u.id}')">
+                <span>🔐</span> View Password
+            </button>` : '';
+
+        // Create document thumbnail
+        const docThumbnail = createDocumentThumbnail(u.documents, 'user', u.id, u.fullName || u.username);
+
+        html += `
+            <tr>
+                <td>
+                    <div style="font-weight: 600;">${u.fullName || u.username}</div>
+                    <div style="font-size: 11px; color: #666;">@${u.username}</div>
+                    ${isJoseph(u.username) ? '<span style="color: #f39c12; font-size: 10px;">🔒 Protected</span>' : ''}
+                </td>
+                <td>
+                    <span class="role-badge" style="background: ${
+                        u.role === 'super admin' ? '#9b59b6' : 
+                        u.role === 'admin' ? '#3498db' : '#2ecc71'
+                    }">
+                        ${u.role}
+                    </span>
+                </td>
+                <td>${u.phone || ''}</td>
+                <td>
+                    <div style="font-size: 11px; color: #666;">
+                        ${u.email ? u.email.substring(0, 3) + '***@***' : '****'}
+                        <br>NRC: ${u.nrc ? u.nrc.substring(0, 3) + '******' : '****'}
+                    </div>
+                </td>
+                <td>
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        ${status}
+                        ${docThumbnail}
+                    </div>
+                </td>
+                <td>
+                    <div class="action-buttons" style="display: flex; flex-direction: column; gap: 5px;">
+                        ${canEdit ? 
+                            `<button class="btn-edit" onclick="openEditUserModal('${u.id}')">
+                                <span>✏️</span> Edit
+                            </button>` : ''
+                        }
+                        ${passwordViewBtn}
+                        ${canDelete ? 
+                            `<button class="btn-del" onclick="deleteUser('${u.id}')">
+                                <span>🗑️</span> Delete
+                            </button>` : ''
+                        }
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    tbody.innerHTML = html;
+}
+
+// Enhanced function to view account request details with documents
+async function viewAccountRequestDetails(requestId) {
+    try {
+        const doc = await db.collection('account_requests').doc(requestId).get();
+        if (!doc.exists) {
+            alert('Request not found');
+            return;
+        }
+        
+        const requestData = doc.data();
+        
+        // Create detailed view modal
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'accountRequestDetailsModal';
+        modal.style.display = 'flex';
+        modal.style.zIndex = '60000';
+        
+        modal.innerHTML = `
+            <div style="background: white; width: 800px; max-width: 95%; max-height: 90vh; overflow-y: auto; border-radius: 32px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 style="color: var(--primary-green); margin: 0;">📄 Account Request Details</h2>
+                    <button onclick="this.closest('.modal').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✕</button>
+                </div>
+                
+                <div style="background: #f8fafc; padding: 25px; border-radius: 20px; margin-bottom: 30px;">
+                    <h3 style="color: #2c3e50; margin-top: 0; margin-bottom: 20px;">👤 Applicant Information</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <div style="font-size: 12px; color: #666;">Full Name</div>
+                            <div style="font-weight: 600; font-size: 16px;">${requestData.fullName || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #666;">Username</div>
+                            <div style="font-weight: 600;">${requestData.username || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #666;">NRC</div>
+                            <div>${requestData.nrc || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #666;">Phone</div>
+                            <div>${requestData.phone || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #666;">Email</div>
+                            <div>${requestData.email || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #666;">Institution</div>
+                            <div>${requestData.institution || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #666;">Position</div>
+                            <div>${requestData.position || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #666;">Requested On</div>
+                            <div>${new Date(requestData.requestedAt).toLocaleString()}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="color: #2c3e50; margin-bottom: 20px;">📎 Uploaded Documents</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    ${renderRequestDocuments(requestData.documents, requestId)}
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                    ${requestData.status === 'pending' ? `
+                        <button class="btn btn-add" style="background: #27ae60;" onclick="approveAccountRequest('${requestId}')">
+                            ✓ APPROVE
+                        </button>
+                        <button class="btn" style="background: #e74c3c;" onclick="openRejectAccountReasonModal('${requestId}')">
+                            ✗ REJECT
+                        </button>
+                    ` : ''}
+                    <button class="btn" style="background: #95a5a6;" onclick="this.closest('.modal').remove()">
+                        Close
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+    } catch (error) {
+        console.error('Error viewing account request:', error);
+        alert('Failed to load request details: ' + error.message);
+    }
+}
+
+// Helper function to render request documents with view and delete options
+function renderRequestDocuments(documents, requestId) {
+    if (!documents || Object.keys(documents).length === 0) {
+        return '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">No documents uploaded</div>';
+    }
+    
+    const docTypes = {
+        nrc: { icon: '🪪', label: 'NRC' },
+        degree: { icon: '🎓', label: 'Degree/Diploma' },
+        zips: { icon: '📜', label: 'ZIPS Certificate' }
+    };
+    
+    let html = '';
+    for (const [type, doc] of Object.entries(documents)) {
+        const isImage = doc.type && (doc.type.startsWith('image/') || doc.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i));
+        
+        html += `
+            <div style="background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eef2f6;">
+                <div style="font-size: 36px; text-align: center; margin-bottom: 10px;">${docTypes[type]?.icon || '📄'}</div>
+                <div style="font-weight: 600; text-align: center; margin-bottom: 8px;">${docTypes[type]?.label || type.toUpperCase()}</div>
+                <div style="font-size: 11px; color: #666; text-align: center; margin-bottom: 15px;">${doc.name}</div>
+                <div style="font-size: 10px; color: #999; text-align: center; margin-bottom: 15px;">${(doc.size / 1024).toFixed(1)} KB</div>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="viewRequestDocument('${requestId}', '${type}')" style="flex: 1; background: var(--primary-green); color: white; border: none; padding: 8px; border-radius: 30px; font-size: 12px; cursor: pointer;">
+                        👁️ View
+                    </button>
+                    <button onclick="deleteRequestDocument('${requestId}', '${type}')" style="flex: 1; background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 30px; font-size: 12px; cursor: pointer;">
+                        🗑️ Delete
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    return html;
+}
+
+// Function to delete a document from a request
+async function deleteRequestDocument(requestId, docType) {
+    if (!confirm(`Are you sure you want to delete this ${docType} document?`)) {
+        return;
+    }
+    
+    try {
+        const docRef = db.collection('account_requests').doc(requestId);
+        const doc = await docRef.get();
+        
+        if (!doc.exists) {
+            alert('Request not found');
+            return;
+        }
+        
+        const requestData = doc.data();
+        if (!requestData.documents || !requestData.documents[docType]) {
+            alert('Document not found');
+            return;
+        }
+        
+        // Remove the document
+        const updatedDocuments = { ...requestData.documents };
+        delete updatedDocuments[docType];
+        
+        await docRef.update({
+            documents: updatedDocuments
+        });
+        
+        // Log the action
+        await logAudit('REQUEST_DOCUMENT_DELETED', {
+            requestId: requestId,
+            docType: docType,
+            deletedBy: getCurrentUser()
+        });
+        
+        showNotification(`${docType} document deleted successfully`, 'success');
+        
+        // Refresh the modal
+        document.getElementById('accountRequestDetailsModal')?.remove();
+        viewAccountRequestDetails(requestId);
+        
+    } catch (error) {
+        console.error('Error deleting document:', error);
+        alert('Failed to delete document: ' + error.message);
+    }
+}
 
     function backToLoginFromLock() {
         hideLockScreen();
@@ -8146,45 +8797,26 @@ function sendRejectionEmail(email, fullName, reason) {
 
     // ========== COMPLIANCE TRACKING ==========
     function updateComplianceUI() {
-    const tpinChecked = document.getElementById('complianceTpin')?.checked || false;
-    const napsaChecked = document.getElementById('complianceNapsa')?.checked || false;
-    const zraChecked = document.getElementById('complianceZra')?.checked || false;
-    const zppaChecked = document.getElementById('complianceZppa')?.checked || false;
-    const egpChecked = document.getElementById('complianceEgp')?.checked || false; // NEW
-    
-    const statusElements = {
-        tpin: document.getElementById('complianceTpinStatus'),
-        napsa: document.getElementById('complianceNapsaStatus'),
-        zra: document.getElementById('complianceZraStatus'),
-        zppa: document.getElementById('complianceZppaStatus'),
-        egp: document.getElementById('complianceEgpStatus') // NEW
+    const checks = {
+        tpin: document.getElementById('complianceTpin')?.checked || false,
+        napsa: document.getElementById('complianceNapsa')?.checked || false,
+        zra: document.getElementById('complianceZra')?.checked || false,
+        zppa: document.getElementById('complianceZppa')?.checked || false,
+        egp: document.getElementById('complianceEgp')?.checked || false
     };
     
-    if (statusElements.tpin) {
-        statusElements.tpin.textContent = tpinChecked ? 'Compliant' : 'Not Compliant';
-        statusElements.tpin.style.background = tpinChecked ? '#2ecc71' : '#e74c3c';
-    }
-    if (statusElements.napsa) {
-        statusElements.napsa.textContent = napsaChecked ? 'Compliant' : 'Not Compliant';
-        statusElements.napsa.style.background = napsaChecked ? '#2ecc71' : '#e74c3c';
-    }
-    if (statusElements.zra) {
-        statusElements.zra.textContent = zraChecked ? 'Compliant' : 'Not Compliant';
-        statusElements.zra.style.background = zraChecked ? '#2ecc71' : '#e74c3c';
-    }
-    if (statusElements.zppa) {
-        statusElements.zppa.textContent = zppaChecked ? 'Compliant' : 'Not Compliant';
-        statusElements.zppa.style.background = zppaChecked ? '#2ecc71' : '#e74c3c';
-    }
-    // NEW: Update E-Gp status
-    if (statusElements.egp) {
-        statusElements.egp.textContent = egpChecked ? 'Active' : 'Not Active';
-        statusElements.egp.style.background = egpChecked ? '#2ecc71' : '#e74c3c';
-    }
+    // Update status texts in one batch
+    ['tpin', 'napsa', 'zra', 'zppa', 'egp'].forEach(type => {
+        const el = document.getElementById(`compliance${type.charAt(0).toUpperCase() + type.slice(1)}Status`);
+        if (el) {
+            el.textContent = checks[type] ? (type === 'egp' ? 'Active' : 'Compliant') : (type === 'egp' ? 'Not Active' : 'Not Compliant');
+            el.style.background = checks[type] ? '#2ecc71' : '#e74c3c';
+        }
+    });
     
-    // Update overall compliance percentage (include E-Gp)
-    const totalChecked = [tpinChecked, napsaChecked, zraChecked, zppaChecked, egpChecked].filter(Boolean).length;
-    const percent = (totalChecked / 5) * 100;
+    // Update overall percentage
+    const total = Object.values(checks).filter(Boolean).length;
+    const percent = (total / 5) * 100;
     
     const percentEl = document.getElementById('overallCompliancePercent');
     const barEl = document.getElementById('overallComplianceBar');
@@ -8464,6 +9096,11 @@ function sendRejectionEmail(email, fullName, reason) {
             approvalsBtn.style.display = 'none';
         }
     }
+
+    const requestsNavBtn = document.getElementById('requestsManagementNavBtn');
+if (requestsNavBtn) {
+    requestsNavBtn.style.display = isSuper ? 'inline-block' : 'none';
+}
 
     // My Requests Button - All roles except super admin
     const historyBtn = document.getElementById('approvalHistoryNavBtn');
@@ -10801,6 +11438,8 @@ async function saveSupplierWithModifications() {
     }
 }
 
+
+
     // ========== MISC ==========
     function forgotPasswordSimple() { 
         alert('Please contact the super admin at zulujosephp@gmail.com'); 
@@ -11070,6 +11709,10 @@ async function saveSupplierWithModifications() {
     window.saveUserEdit = saveUserEdit;
     const originalCreateApprovalRequest = window.createApprovalRequest;
     window.createApprovalRequest = createApprovalRequest;
+    window.toggleUserPasswordVisibility = toggleUserPasswordVisibility;
+window.viewAccountRequestDetails = viewAccountRequestDetails;
+window.deleteRequestDocument = deleteRequestDocument;
+window.renderRequestDocuments = renderRequestDocuments;
 </script>
 
 <!-- FOOTER -->
@@ -11081,4 +11724,3 @@ async function saveSupplierWithModifications() {
 
 </body>
 </html>
-
