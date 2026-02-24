@@ -75,18 +75,18 @@
 
         
         #accountRequestModal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #1a1a1a, #333); /* Same as login overlay */
-    z-index: 50000;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(5px);
-}
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a1a, #333); /* Same as login overlay */
+            z-index: 50000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
 
         #accountRequestModal .modal-content {
             background: white;
@@ -429,10 +429,10 @@
         }
 
         @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
 
         .fullscreen-btn {
             padding: 12px 30px;
@@ -456,7 +456,6 @@
             transform: translateY(-2px);
         }
 
-        /* Change Password Modal */
         #changePasswordModal {
             display: none;
             position: fixed;
@@ -563,7 +562,6 @@
         .password-strength-bar.weak { background: #e74c3c; width: 33%; }
         .password-strength-bar.medium { background: #f39c12; width: 66%; }
         .password-strength-bar.strong { background: #2ecc71; width: 100%; }
-
         .password-match-indicator {
             font-size: 13px;
             margin-top: 5px;
@@ -616,7 +614,6 @@
             background: #dfe6e9;
         }
 
-        /* User Menu */
         .user-menu {
         position: relative;
         display: inline-block;
@@ -681,15 +678,15 @@
 
          .history-row {
         background: transparent !important;
-    }
-    .history-row:hover {
-        background: transparent !important;
-    }
-    .history-row td {
-        border: none !important;
-        padding: 0 !important;
-        background: transparent !important;
-    }
+        }
+        .history-row:hover {
+            background: transparent !important;
+        }
+        .history-row td {
+            border: none !important;
+            padding: 0 !important;
+            background: transparent !important;
+        }
     .btn-view {
         transition: all 0.2s;
     }
@@ -1898,7 +1895,6 @@
 </div>
 
 
-<!-- Add Change Password Modal after the existing modals -->
 <div id="changePasswordModal">
     <div class="password-modal-content">
         <div class="password-header">
@@ -1917,8 +1913,8 @@
         <div class="password-field">
             <label>New Password</label>
             <div class="password-input-wrapper">
-                <input type="password" id="newPassword" placeholder="Enter new password" onkeyup="checkPasswordStrength()">
-                <span class="password-toggle" onclick="togglePasswordField('newPassword')">👁️</span>
+                <input type="password" id="newPasswordChange" placeholder="Enter new password" onkeyup="checkPasswordStrength()">
+                <span class="password-toggle" onclick="togglePasswordField('newPasswordChange')">👁️</span>
             </div>
             <div class="password-strength">
                 <div class="password-strength-bar" id="passwordStrengthBar"></div>
@@ -2769,7 +2765,6 @@
                 </div>
             </div>
             
-            <!-- Current Documents Display -->
             <div id="editCurrentDocs" style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                 <h5 style="margin: 0 0 10px 0; color: #555;">Current Documents:</h5>
                 <div id="editCurrentDocsList"></div>
@@ -2790,12 +2785,11 @@
     </div>
 </div>
 
-<!-- ADD USER MODAL - Updated with Full Name and Document Uploads -->
+
 <div id="addUserModal" class="modal" style="display:none;">
     <div class="modal-content" style="border-radius: 24px; max-width: 600px;">
         <h3 id="addUserTitle">➕ Add New User</h3>
         
-        <!-- Full Name (NEW) -->
         <input type="text" id="newFullName" placeholder="Full Name *" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
         
         <input type="text" id="newUsername" placeholder="Username *" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
@@ -2811,12 +2805,12 @@
         <input type="text" id="newPosition" placeholder="Position" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
         <input type="password" id="newPassword" placeholder="Password *" style="width:100%; padding:12px; margin:6px 0; border:2px solid #e0e0e0; border-radius:10px;">
         
-        <!-- Document Upload Section (NEW) -->
         <div style="margin-top: 20px; border-top: 2px solid #e0e0e0; padding-top: 20px;">
             <h4 style="color: var(--primary-green); margin-bottom: 15px;">📄 Required Documents (Max 3MB each)</h4>
             
             <div style="display: grid; gap: 15px;">
-                <!-- Degree/Diploma -->
+
+
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Degree/Diploma Certificate *</label>
                     <div class="document-upload-area" onclick="document.getElementById('newDegreeDoc').click()" style="padding: 15px;">
@@ -2828,7 +2822,6 @@
                     <div id="newDegreeDocPreview" style="margin-top: 5px; font-size: 11px;"></div>
                 </div>
                 
-                <!-- ZIPS Membership -->
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">ZIPS Membership Certificate *</label>
                     <div class="document-upload-area" onclick="document.getElementById('newZipsDoc').click()" style="padding: 15px;">
@@ -2840,7 +2833,6 @@
                     <div id="newZipsDocPreview" style="margin-top: 5px; font-size: 11px;"></div>
                 </div>
                 
-                <!-- NRC -->
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">NRC (National Registration Card) *</label>
                     <div class="document-upload-area" onclick="document.getElementById('newNrcDoc').click()" style="padding: 15px;">
@@ -2861,7 +2853,6 @@
     </div>
 </div>
 
-<!-- LINK MODAL -->
 <div id="linkModal" class="modal">
     <div class="modal-content" style="border-radius: 24px;">
         <h3 style="color: var(--primary-green); text-align: center;">➕ Add New Link</h3>
@@ -2872,11 +2863,8 @@
         <button class="btn" style="background:#95a5a6; width:100%; margin-top:8px; padding:12px;" onclick="closeLinkModal()">Cancel</button>
     </div>
 </div>
-
-<!-- NOTIFICATION -->
 <div id="notification" class="notification"></div>
 
-<!-- FIREBASE SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
@@ -2885,7 +2873,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
 <script>
-    // ========== SINGLE TAB ENFORCEMENT ==========
     const TAB_LOCK_KEY = 'zamcom_tab_lock';
     const TAB_ID = Math.random().toString(36).substring(2) + Date.now();
     
@@ -2936,7 +2923,6 @@
         return true;
     }
 
-   // Simple document upload handler
 function handleRequestDocumentUpload(docType, input) {
     console.log('Uploading document:', docType);
     
@@ -2948,9 +2934,8 @@ function handleRequestDocumentUpload(docType, input) {
     
     console.log(`Uploading ${docType} document:`, file.name, 'Size:', file.size);
     
-    // Check file size (3MB limit)
     if (file.size > 3 * 1024 * 1024) {
-        alert(`File size exceeds 3MB limit for ${docType} document`);
+        alert(`File size exceeds 1MB limit for ${docType} document`);
         input.value = '';
         return;
     }
@@ -2960,7 +2945,6 @@ function handleRequestDocumentUpload(docType, input) {
     reader.onload = function(e) {
         console.log(`FileReader loaded ${docType} document successfully`);
         
-        // Store the document
         requestDocuments[docType] = {
             name: file.name,
             type: file.type || 'application/octet-stream',
@@ -2971,14 +2955,12 @@ function handleRequestDocumentUpload(docType, input) {
         
         console.log(`${docType} document stored successfully`);
         
-        // Update preview
         const previewId = `request${docType.charAt(0).toUpperCase() + docType.slice(1)}DocPreview`;
         const previewEl = document.getElementById(previewId);
         if (previewEl) {
             previewEl.innerHTML = `<span style="color: var(--primary-green); font-weight: bold;">✓ ${file.name.substring(0, 30)}${file.name.length > 30 ? '...' : ''}</span>`;
         }
         
-        // Show success notification if available
         if (typeof showNotification === 'function') {
             showNotification(`${docType.toUpperCase()} document uploaded successfully`, 'success');
         } else {
@@ -3004,12 +2986,9 @@ function clearSearch() {
     document.getElementById('defaultHomeContent').style.display = 'block';
 }
 
-
-// Enhanced submit account request function with proper duplicate checking
 async function submitAccountRequest() {
     console.log('Starting account request submission...');
     
-    // Get form values
     const fullName = document.getElementById('requestFullName')?.value?.trim() || '';
     const username = document.getElementById('requestUsername')?.value?.toUpperCase().trim() || '';
     const nrc = document.getElementById('requestNrc')?.value?.trim() || '';
@@ -3021,7 +3000,6 @@ async function submitAccountRequest() {
 
     console.log('Form values:', { fullName, username, nrc, phone, email });
 
-    // Validate required fields
     const missingFields = [];
     if (!fullName) missingFields.push('Full Name');
     if (!username) missingFields.push('Username');
@@ -3037,7 +3015,6 @@ async function submitAccountRequest() {
         return;
     }
 
-    // Validate documents
     console.log('Checking documents:', requestDocuments);
     
     const missingDocs = [];
@@ -3050,14 +3027,12 @@ async function submitAccountRequest() {
         return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         alert('Please enter a valid email address');
         return;
     }
 
-    // Show loading state
     const submitBtn = document.querySelector('#accountRequestModal .btn-add');
     if (submitBtn) {
         submitBtn.innerHTML = '⏳ Checking...';
@@ -3065,11 +3040,8 @@ async function submitAccountRequest() {
     }
 
     try {
-        // ========== IMPROVED DUPLICATE CHECK SECTION ==========
-        
         console.log('Checking for existing approved users...');
         
-        // Get ALL users that might match any of the criteria
         const usernameSnapshot = await db.collection(COLLECTIONS.USERS)
             .where('username', '==', username)
             .get();
@@ -3086,7 +3058,6 @@ async function submitAccountRequest() {
             .where('email', '==', email)
             .get();
         
-        // Collect all potential duplicate users
         const potentialDuplicates = [];
         
         usernameSnapshot.forEach(doc => potentialDuplicates.push({ id: doc.id, ...doc.data(), matchedBy: 'username' }));
@@ -3094,7 +3065,6 @@ async function submitAccountRequest() {
         phoneSnapshot.forEach(doc => potentialDuplicates.push({ id: doc.id, ...doc.data(), matchedBy: 'phone' }));
         emailSnapshot.forEach(doc => potentialDuplicates.push({ id: doc.id, ...doc.data(), matchedBy: 'email' }));
         
-        // Remove duplicates by ID (same user might match multiple criteria)
         const uniqueDuplicates = [];
         const seenIds = new Set();
         
@@ -3106,7 +3076,6 @@ async function submitAccountRequest() {
         });
         
         if (uniqueDuplicates.length > 0) {
-            // Build detailed message showing what matched
             let message = '❌ Account Already Exists!\n\n';
             message += 'The following information matches existing accounts:\n\n';
             
@@ -3131,10 +3100,8 @@ async function submitAccountRequest() {
             return;
         }
         
-        // 2. Check for pending approval requests with more specific matching
         console.log('Checking for pending approval requests...');
         
-        // Check by username (most specific)
         const usernameRequests = await db.collection('account_requests')
             .where('username', '==', username)
             .where('status', '==', 'pending')
@@ -3150,7 +3117,6 @@ async function submitAccountRequest() {
             return;
         }
         
-        // Check by NRC (very specific)
         const nrcRequests = await db.collection('account_requests')
             .where('nrc', '==', nrc)
             .where('status', '==', 'pending')
@@ -3166,7 +3132,6 @@ async function submitAccountRequest() {
             return;
         }
         
-        // Check by phone (very specific)
         const phoneRequests = await db.collection('account_requests')
             .where('phone', '==', phone)
             .where('status', '==', 'pending')
@@ -3182,7 +3147,6 @@ async function submitAccountRequest() {
             return;
         }
         
-        // Check by email (very specific)
         const emailRequests = await db.collection('account_requests')
             .where('email', '==', email)
             .where('status', '==', 'pending')
@@ -3198,21 +3162,17 @@ async function submitAccountRequest() {
             return;
         }
         
-        // ========== FIXED: Check for rejected requests WITHOUT index ==========
-        // Check for rejected requests (without ordering to avoid index requirement)
         const rejectedRequestsSnapshot = await db.collection('account_requests')
             .where('username', '==', username)
             .where('status', '==', 'rejected')
             .get();
 
         if (!rejectedRequestsSnapshot.empty) {
-            // Get the most recent one by sorting in JavaScript
             const rejectedRequests = rejectedRequestsSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
             
-            // Sort by requestedAt (newest first)
             rejectedRequests.sort((a, b) => {
                 const dateA = a.requestedAt ? new Date(a.requestedAt) : new Date(0);
                 const dateB = b.requestedAt ? new Date(b.requestedAt) : new Date(0);
@@ -3234,11 +3194,8 @@ async function submitAccountRequest() {
             }
         }
         
-        // ========== END IMPROVED DUPLICATE CHECK ==========
-        
         console.log('No duplicate found, proceeding with submission...');
         
-        // Create request data with documents
         const requestData = {
             fullName: fullName,
             username: username,
@@ -3264,10 +3221,8 @@ async function submitAccountRequest() {
             zipsDoc: requestDocuments.zips?.name || 'none'
         });
         
-        // Save to Firestore
         await db.collection('account_requests').add(requestData);
         
-        // Log the request
         if (typeof logAudit === 'function') {
             await logAudit('ACCOUNT_REQUEST', {
                 username: username,
@@ -3286,7 +3241,6 @@ async function submitAccountRequest() {
         console.error('Error submitting account request:', error);
         alert('Failed to submit account request. Error: ' + error.message);
     } finally {
-        // Reset button
         if (submitBtn) {
             submitBtn.innerHTML = 'Submit Request';
             submitBtn.disabled = false;
@@ -3294,15 +3248,12 @@ async function submitAccountRequest() {
     }
 }
 
-// Enhanced close function to properly reset
 function closeAccountRequestModal() {
     document.getElementById('accountRequestModal').style.display = 'none';
     document.getElementById('loginOverlay').style.display = 'flex';
     
-    // Reset documents
     requestDocuments = { nrc: null, degree: null, zips: null };
     
-    // Clear file inputs
     const nrcInput = document.getElementById('requestNrcDoc');
     const degreeInput = document.getElementById('requestDegreeDoc');
     const zipsInput = document.getElementById('requestZipsDoc');
@@ -3311,7 +3262,6 @@ function closeAccountRequestModal() {
     if (degreeInput) degreeInput.value = '';
     if (zipsInput) zipsInput.value = '';
     
-    // Clear previews
     const nrcPreview = document.getElementById('requestNrcDocPreview');
     const degreePreview = document.getElementById('requestDegreeDocPreview');
     const zipsPreview = document.getElementById('requestZipsDocPreview');
@@ -3320,8 +3270,6 @@ function closeAccountRequestModal() {
     if (degreePreview) degreePreview.innerHTML = '';
     if (zipsPreview) zipsPreview.innerHTML = '';
 }
-
-
 
     function forceTakeover() {
         localStorage.setItem(TAB_LOCK_KEY, JSON.stringify({
@@ -3332,7 +3280,6 @@ function closeAccountRequestModal() {
         showNotification('Tab takeover successful', 'success');
     }
 
-    // ========== FIREBASE CONFIG ==========
     const firebaseConfig = {
         apiKey: "AIzaSyCJrqk15bvd1746VkkDAcOM_U9w0PH7dP0",
         authDomain: "supplierdirectory-6e5c7.firebaseapp.com",
@@ -3342,13 +3289,11 @@ function closeAccountRequestModal() {
         appId: "1:434327330685:web:6ac7e874dc5952a89c3614"
     };
 
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
     const storage = firebase.storage();
 
-    // ========== PERFORMANCE CACHING ==========
     const CACHE_DURATION = 30000;
     const dataCache = {
         categories: { data: null, timestamp: 0 },
@@ -3358,14 +3303,12 @@ function closeAccountRequestModal() {
         approvalRequests: { data: null, timestamp: 0 }
     };
 
-    
-    // Add to your cache object
         const requestsCache = {
             approvalRequests: { data: null, timestamp: 0 },
             accountRequests: { data: null, timestamp: 0 }
         };
 
-const REQUESTS_CACHE_DURATION = 60000; // 1 minute cache
+const REQUESTS_CACHE_DURATION = 60000;
 
     async function getCachedData(collectionName, forceRefresh = false) {
         const cache = dataCache[collectionName];
@@ -3386,14 +3329,12 @@ const REQUESTS_CACHE_DURATION = 60000; // 1 minute cache
         }
         
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
         cache.data = data;
         cache.timestamp = now;
         
         return data;
     }
 
-    // ========== ZAMBIAN PROVINCES ==========
     const ZAMBIAN_PROVINCES = [
         "All Provinces",
         "Lusaka Province",
@@ -3408,11 +3349,9 @@ const REQUESTS_CACHE_DURATION = 60000; // 1 minute cache
         "Northern Province"
     ];
 
-    // ========== GLOBAL VARIABLES ==========
     let categories = [];
     let suppliers = [];
     let links = [];
-
     let userAccounts = [];
     let auditLogs = [];
     let approvalRequests = [];
@@ -3447,7 +3386,6 @@ const REQUESTS_CACHE_DURATION = 60000; // 1 minute cache
     let lockScreenInterval = null;
     let pendingAccountRequest = null;
 
-    // ========== REQUESTS MANAGEMENT & HISTORY ==========
     let requestsHistory = [];
 
     function handleUserDocumentUpload(docType, input) {
@@ -3462,9 +3400,7 @@ const REQUESTS_CACHE_DURATION = 60000; // 1 minute cache
         
         const reader = new FileReader();
         reader.onload = function(e) {
-            // Store in appropriate location based on prefix
             if (docType.startsWith('edit')) {
-                // For edit modal
                 const actualType = docType.replace('edit', '').toLowerCase();
                 if (!window.editUserDocuments) window.editUserDocuments = {};
                 window.editUserDocuments[actualType] = {
@@ -3480,7 +3416,6 @@ const REQUESTS_CACHE_DURATION = 60000; // 1 minute cache
                     previewEl.innerHTML = `<span style="color: var(--primary-green);">✓ ${file.name.substring(0, 20)}${file.name.length > 20 ? '...' : ''}</span>`;
                 }
             } else {
-                // For add modal
                 userUploadedDocuments[docType] = {
                     name: file.name,
                     type: file.type,
@@ -3498,10 +3433,8 @@ const REQUESTS_CACHE_DURATION = 60000; // 1 minute cache
         reader.readAsDataURL(file);
     }
 
-    // Global variable to track current document being viewed
     let currentViewingDocument = null;
 
-    // View user document in full screen
     function viewUserDocument(userId, docType, event) {
         if (event) {
             event.stopPropagation();
@@ -3523,7 +3456,6 @@ const REQUESTS_CACHE_DURATION = 60000; // 1 minute cache
         const doc = user.documents[docType];
         currentViewingDocument = { userId, docType, doc };
         
-        // Set title
         const titleMap = {
             degree: '🎓 Degree/Diploma Certificate',
             zips: '📜 ZIPS Membership Certificate',
@@ -3533,7 +3465,6 @@ const REQUESTS_CACHE_DURATION = 60000; // 1 minute cache
         document.getElementById('userDocumentViewerTitle').innerHTML = 
             `${titleMap[docType] || 'Document'} - ${user.fullName || user.username}`;
         
-        // Set content
         const contentDiv = document.getElementById('userDocumentViewerContent');
         const isImage = doc.type && (doc.type.startsWith('image/') || doc.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i));
         
@@ -3552,7 +3483,7 @@ const REQUESTS_CACHE_DURATION = 60000; // 1 minute cache
                 </div>
             `;
         } else {
-            // For PDFs and other documents
+
             contentHtml = `
                 <div style="width: 100%; height: 70vh; display: flex; flex-direction: column; align-items: center;">
                     <iframe src="${doc.data}" style="width: 100%; height: 100%; border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></iframe>
@@ -3568,7 +3499,6 @@ const REQUESTS_CACHE_DURATION = 60000; // 1 minute cache
         
         contentDiv.innerHTML = contentHtml;
         
-        // Show modal
         document.getElementById('userDocumentViewerModal').style.display = 'flex';
     }
 
@@ -3590,7 +3520,6 @@ const REQUESTS_CACHE_DURATION = 60000; // 1 minute cache
     `;
 }
 
-    // Debug function to test password vault
 function testJosephVault() {
     console.log('Current userAccounts:', userAccounts);
     console.log('Total users:', userAccounts.length);
@@ -3600,16 +3529,12 @@ function testJosephVault() {
         hasPassword: !!u.password 
     })));
     
-    // Force open vault
     openJosephPasswordVault();
 }
 
-
-    // ========== JOSEPH'S SUPER ADMIN PASSWORD VAULT ==========
 function openJosephPasswordVault() {
     const currentUser = getUser(getCurrentUser());
     
-    // ONLY JOSEPH can access this
     if (!currentUser || currentUser.username !== 'JOSEPH') {
         alert('⚠️ This feature is exclusively for Super Admin JOSEPH only.');
         return;
@@ -3617,7 +3542,6 @@ function openJosephPasswordVault() {
     
     console.log('Opening password vault. Current userAccounts:', userAccounts);
     
-    // Show loading state
     const grid = document.getElementById('josephPasswordVaultGrid');
     if (grid) {
         grid.innerHTML = `
@@ -3628,15 +3552,12 @@ function openJosephPasswordVault() {
         `;
     }
     
-    // Show modal immediately
     document.getElementById('josephPasswordVault').style.display = 'flex';
     document.getElementById('josephVaultTimestamp').textContent = new Date().toLocaleString();
     
-    // Force refresh user data from Firestore
     db.collection(COLLECTIONS.USERS).get().then((snapshot) => {
         console.log('Raw Firestore snapshot:', snapshot.size, 'documents');
         
-        // Manually rebuild userAccounts array
         const loadedUsers = snapshot.docs.map(doc => ({ 
             id: doc.id, 
             ...doc.data() 
@@ -3645,10 +3566,8 @@ function openJosephPasswordVault() {
         console.log('Loaded users from Firestore:', loadedUsers.length);
         console.log('User list:', loadedUsers.map(u => ({ username: u.username, role: u.role })));
         
-        // Update global variable
         userAccounts = loadedUsers;
         
-        // Force render
         renderJosephPasswordVault();
         
     }).catch(error => {
@@ -3673,10 +3592,8 @@ function renderJosephPasswordVault() {
     const grid = document.getElementById('josephPasswordVaultGrid');
     if (!grid) return;
     
-    // Debug: Log user accounts to console
     console.log('Rendering vault with users:', userAccounts);
     
-    // Calculate stats with safety checks
     const totalUsers = userAccounts.length;
     const staffCount = userAccounts.filter(u => u && u.role === 'staff').length;
     const adminCount = userAccounts.filter(u => u && u.role === 'admin').length;
@@ -3684,7 +3601,6 @@ function renderJosephPasswordVault() {
     
     console.log('Stats:', { totalUsers, staffCount, adminCount, superAdminCount });
     
-    // Update stats with explicit values
     const totalEl = document.getElementById('josephTotalUsers');
     const staffEl = document.getElementById('josephStaffCount');
     const adminEl = document.getElementById('josephAdminCount');
@@ -3708,7 +3624,6 @@ function renderJosephPasswordVault() {
         return;
     }
     
-    // Sort users: Super Admin first, then Admin, then Staff improve perfomance maybe
     const sortedUsers = [...userAccounts].sort((a, b) => {
         const roleWeight = { 'super admin': 3, 'admin': 2, 'staff': 1 };
         return (roleWeight[b.role] || 0) - (roleWeight[a.role] || 0);
@@ -3717,7 +3632,6 @@ function renderJosephPasswordVault() {
     let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">';
     
     sortedUsers.forEach(user => {
-        // Skip if user is undefined
         if (!user) return;
         
         let roleColor, roleIcon;
@@ -3896,12 +3810,9 @@ function exportJosephPasswordVault() {
     a.download = `joseph_password_vault_${new Date().toISOString().slice(0,10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    
     alert(`✅ Exported ${userAccounts.length} user records with passwords`);
 }
 
-// Add Joseph's special button to the user menu
-// Add Joseph's special button to the user menu
 function addJosephSpecialButton() {
     const currentUser = getUser(getCurrentUser());
     console.log('Checking for JOSEPH button. Current user:', currentUser);
@@ -3909,10 +3820,8 @@ function addJosephSpecialButton() {
     if (currentUser && currentUser.username === 'JOSEPH') {
         console.log('JOSEPH detected - adding vault button');
         
-        // Find the user dropdown
         const dropdown = document.querySelector('.user-dropdown');
         if (dropdown) {
-            // Check if already added
             if (!document.getElementById('josephVaultMenuItem')) {
                 console.log('Adding vault button to dropdown');
                 
@@ -3928,7 +3837,6 @@ function addJosephSpecialButton() {
                     openJosephPasswordVault();
                 };
                 
-                // Find logout item (last child)
                 const logoutItem = dropdown.lastElementChild;
                 if (logoutItem) {
                     dropdown.insertBefore(divider, logoutItem);
@@ -3944,14 +3852,12 @@ function addJosephSpecialButton() {
     }
 }
 
-// Override updateUserDisplay to add Joseph's button
 const originalUpdateUserDisplay = updateUserDisplay;
 updateUserDisplay = function() {
     originalUpdateUserDisplay();
     setTimeout(addJosephSpecialButton, 100);
 };
 
-    // ========== PROVINCE FILTER FUNCTION ==========
 let currentProvinceFilter = 'All';
 
 function filterByProvince() {
@@ -3975,7 +3881,6 @@ function renderFilteredCategories() {
         const categoryImagePath = './images/mainlogo3.png';
         
         categoryGrid.innerHTML = categories.map((cat, index) => {
-            // Filter suppliers by province if not "All"
             let categorySuppliers = suppliers.filter(s => s.category === cat.name);
             
             if (currentProvinceFilter !== 'All') {
@@ -4010,7 +3915,6 @@ function renderFilteredCategories() {
     updateTotalSuppliersCounter();
 }
 
-    // ========== JOSEPH PROTECTION FUNCTIONS ==========
 function isJoseph(username) {
     return username === 'JOSEPH';
 }
@@ -4025,20 +3929,16 @@ function canEditUser(targetUserId) {
     
     if (!currentUser) return false;
     
-    // If target is JOSEPH, only JOSEPH himself can edit
     if (targetUser && isJoseph(targetUser.username)) {
         return currentUser.username === 'JOSEPH';
     }
     
-    // Super admin can edit anyone
     if (currentUser.role === 'super admin') return true;
     
-    // Admin can edit staff and other admins (but not super admin)
     if (currentUser.role === 'admin') {
         return targetUser && targetUser.role !== 'super admin';
     }
     
-    // Staff can ONLY edit themselves
     if (currentUser.role === 'staff') {
         return targetUser && targetUser.id === currentUser.id;
     }
@@ -4052,20 +3952,16 @@ function canDeleteUser(targetUserId) {
     
     if (!currentUser) return false;
     
-    // NO ONE can delete JOSEPH (including JOSEPH himself for safety)
     if (targetUser && isJoseph(targetUser.username)) {
         return false;
     }
     
-    // Super admin can delete anyone (except JOSEPH, already handled)
     if (currentUser.role === 'super admin') return true;
     
-    // Admin can delete staff users only
     if (currentUser.role === 'admin') {
         return targetUser && targetUser.role === 'staff';
     }
     
-    // Staff can ONLY delete themselves
     if (currentUser.role === 'staff') {
         return targetUser && targetUser.id === currentUser.id;
     }
@@ -4073,9 +3969,6 @@ function canDeleteUser(targetUserId) {
     return false;
 }
 
-
-
-    // ========== FIX: Close edit user modal function ==========
 function closeEditUserModal() {
     document.getElementById('editUserModal').style.display = 'none';
     document.getElementById('editUserId').value = '';
@@ -4089,28 +3982,20 @@ function closeEditUserModal() {
     document.getElementById('editPosition').value = '';
     document.getElementById('editPassword').value = '';
     document.getElementById('editEnabled').checked = true;
-    
-    // Reset document previews
     ['editDegreeDocPreview', 'editZipsDocPreview', 'editNrcDocPreview'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = '';
     });
     
-    // Reset edit documents
     window.editUserDocuments = {};
 }
 
-
-    // Close document viewer
     function closeUserDocumentViewer() {
         document.getElementById('userDocumentViewerModal').style.display = 'none';
         document.getElementById('userDocumentViewerContent').innerHTML = '';
         currentViewingDocument = null;
     }
 
-    // ========== DOCUMENT THUMBNAIL FUNCTIONS ==========
-    
-    // Create document thumbnail for user management
     function createDocumentThumbnail(documents, entityType, entityId, entityName) {
         if (!documents || Object.keys(documents).length === 0) {
             return '<span style="color: #ccc; font-size: 11px;">No docs</span>';
@@ -4126,7 +4011,6 @@ function closeEditUserModal() {
         `;
     }
 
-    // View all documents for an entity (user or supplier)
     async function viewAllDocuments(entityType, entityId, entityName) {
         let documents = [];
         let title = '';
@@ -4210,7 +4094,6 @@ function closeEditUserModal() {
         document.getElementById('documentViewerModal').style.display = 'flex';
     }
 
-    // Open document in fullscreen
     function openFullscreenDocument(index) {
         if (!currentViewingDocuments || !currentViewingDocuments[index]) return;
 
@@ -4234,14 +4117,12 @@ function closeEditUserModal() {
         document.getElementById('fullscreenDocumentView').style.display = 'flex';
     }
 
-    // Close fullscreen document
     function closeFullscreenDocument() {
         document.getElementById('fullscreenDocumentView').style.display = 'none';
         document.getElementById('fullscreenDocContent').innerHTML = '';
         currentFullscreenDocument = null;
     }
 
-    // Download current document
     function downloadDocument(index) {
         if (!currentViewingDocuments || !currentViewingDocuments[index]) return;
 
@@ -4254,7 +4135,6 @@ function closeEditUserModal() {
         document.body.removeChild(link);
     }
 
-    // Download document from fullscreen
     function downloadCurrentFullscreenDoc() {
         if (!currentFullscreenDocument) return;
 
@@ -4266,11 +4146,9 @@ function closeEditUserModal() {
         document.body.removeChild(link);
     }
 
-    // ========== CHANGE PASSWORD FUNCTIONS ==========
-
     function openChangePasswordModal() {
         document.getElementById('currentPassword').value = '';
-        document.getElementById('newPassword').value = '';
+        document.getElementById('newPasswordChange').value = '';
         document.getElementById('confirmPassword').value = '';
         document.getElementById('passwordStrengthBar').className = 'password-strength-bar';
         document.getElementById('passwordMatchIndicator').innerHTML = '';
@@ -4287,7 +4165,7 @@ function closeEditUserModal() {
     }
 
     function checkPasswordStrength() {
-        const password = document.getElementById('newPassword').value;
+        const password = document.getElementById('newPasswordChange').value;
         const strengthBar = document.getElementById('passwordStrengthBar');
         
         if (!password) {
@@ -4295,7 +4173,6 @@ function closeEditUserModal() {
             return;
         }
 
-        // Check password strength
         let strength = 0;
         
         // Length check
@@ -4318,7 +4195,7 @@ function closeEditUserModal() {
     }
 
     function checkPasswordMatch() {
-        const newPass = document.getElementById('newPassword').value;
+        const newPass = document.getElementById('newPasswordChange').value;
         const confirmPass = document.getElementById('confirmPassword').value;
         const indicator = document.getElementById('passwordMatchIndicator');
 
@@ -4347,47 +4224,40 @@ function closeEditUserModal() {
         if (!user) return;
 
         const currentPass = document.getElementById('currentPassword').value;
-        const newPass = document.getElementById('newPassword').value;
+        const newPass = document.getElementById('newPasswordChange').value;
         const confirmPass = document.getElementById('confirmPassword').value;
 
-        // Validate inputs
         if (!currentPass || !newPass || !confirmPass) {
             alert('Please fill in all password fields');
             return;
         }
 
-        // Verify current password
         if (currentPass !== user.password) {
             alert('Current password is incorrect');
             return;
         }
 
-        // Check new password match
         if (newPass !== confirmPass) {
             alert('New passwords do not match');
             return;
         }
 
-        // Password strength validation
         if (newPass.length < 6) {
             alert('New password must be at least 6 characters long');
             return;
         }
 
         try {
-            // Update password in Firestore
             await db.collection(COLLECTIONS.USERS).doc(user.id).update({
                 password: newPass,
                 lastPasswordChange: new Date().toISOString()
             });
 
-            // Log the action
             await logAudit('PASSWORD_CHANGE', {
                 username: user.username,
                 changedBy: user.username
             });
 
-            // Update local user data
             user.password = newPass;
             
             showNotification('Password changed successfully!', 'success');
@@ -4399,7 +4269,6 @@ function closeEditUserModal() {
         }
     }
 
-    // Download current document
     function downloadCurrentUserDocument() {
         if (!currentViewingDocument) {
             alert('No document selected');
@@ -4408,7 +4277,6 @@ function closeEditUserModal() {
         
         const { doc } = currentViewingDocument;
         
-        // Create a temporary link and trigger download
         const link = document.createElement('a');
         link.href = doc.data;
         link.download = doc.name || 'document';
@@ -4417,7 +4285,6 @@ function closeEditUserModal() {
         document.body.removeChild(link);
     }
 
-    // Also add this to close modal when clicking outside
     window.onclick = function(event) {
         const modal = document.getElementById('userDocumentViewerModal');
         if (event.target === modal) {
@@ -4425,14 +4292,63 @@ function closeEditUserModal() {
         }
     }
 
-    // ========== FIX: Update saveNewUser function with better validation ==========
 async function saveNewUser() {
     if (!canAddUser()) {
         alert("You don't have permission to add users");
         return;
     }
 
-    // Get values and trim them properly
+    // ===== COMPREHENSIVE DEBUGGING =====
+    console.log('=== ADD USER DEBUG ===');
+    
+    // Check all form elements in the add user modal
+    const modal = document.getElementById('addUserModal');
+    console.log('Add User Modal exists:', !!modal);
+    
+    if (modal) {
+        const allInputs = modal.querySelectorAll('input');
+        console.log('All inputs in modal:', allInputs.length);
+        allInputs.forEach(input => {
+            console.log(`Input - id: ${input.id}, type: ${input.type}, value: "${input.value}", name: ${input.name || 'none'}`);
+        });
+    }
+    
+    // Specifically check password field
+    const passwordField = document.getElementById('newPassword');
+    console.log('Password field by ID:', passwordField);
+    
+    if (passwordField) {
+        console.log('Password field details:', {
+            id: passwordField.id,
+            type: passwordField.type,
+            value: `"${passwordField.value}"`,
+            valueLength: passwordField.value.length,
+            placeholder: passwordField.placeholder,
+            className: passwordField.className,
+            disabled: passwordField.disabled,
+            readOnly: passwordField.readOnly
+        });
+    } else {
+        // Try alternative selectors
+        const passwordFields = document.querySelectorAll('input[type="password"]');
+        console.log('All password fields on page:', passwordFields.length);
+        passwordFields.forEach((field, index) => {
+            console.log(`Password field ${index}:`, {
+                id: field.id,
+                value: `"${field.value}"`,
+                inModal: modal?.contains(field)
+            });
+        });
+    }
+    
+    // Try to get value by different methods
+    const passwordByQuery = document.querySelector('#newPassword')?.value;
+    const passwordByName = document.querySelector('input[name="password"]')?.value;
+    console.log('Password by querySelector:', passwordByQuery ? '***' : 'empty');
+    console.log('Password by name attribute:', passwordByName ? '***' : 'empty');
+    // ===== END DEBUGGING =====
+
+    // Rest of your function continues here...
     const fullName = document.getElementById('newFullName')?.value?.trim() || '';
     const username = document.getElementById('newUsername')?.value?.toUpperCase().trim() || '';
     const role = document.getElementById('newRole')?.value || 'staff';
@@ -4443,11 +4359,18 @@ async function saveNewUser() {
     const position = document.getElementById('newPosition')?.value?.trim() || '';
     const password = document.getElementById('newPassword')?.value?.trim() || '';
 
-    // Debug logging
-    console.log('Form values:', { fullName, username, password, role, nrc, email, phone, institution, position });
-    console.log('Uploaded documents:', userUploadedDocuments);
+    console.log('Form values after capture:', { 
+        fullName, 
+        username, 
+        password: password ? '***' : 'empty', 
+        role, 
+        nrc, 
+        email, 
+        phone, 
+        institution, 
+        position 
+    });
 
-    // Validate required fields
     const missingFields = [];
     if (!fullName) missingFields.push('Full Name');
     if (!username) missingFields.push('Username');
@@ -4472,7 +4395,7 @@ async function saveNewUser() {
         return;
     }
 
-    // Check role permissions
+    // Role permission checks
     if (role === 'super admin' && currentUser.role !== 'super admin') {
         alert("Only super admin can create super admin users");
         return;
@@ -4483,7 +4406,6 @@ async function saveNewUser() {
         return;
     }
 
-    // Create user data object
     const newUser = {
         fullName,
         username,
@@ -4511,7 +4433,7 @@ async function saveNewUser() {
         newUser.documents.nrc = userUploadedDocuments.nrc;
     }
 
-    // For staff users creating other staff users, check if documents are uploaded
+    // For staff creating staff users, require documents
     if (currentUser.role === 'staff' && role === 'staff') {
         if (!userUploadedDocuments.degree || !userUploadedDocuments.zips || !userUploadedDocuments.nrc) {
             alert("Please upload all required documents: Degree/Diploma, ZIPS Certificate, and NRC");
@@ -4520,8 +4442,8 @@ async function saveNewUser() {
     }
 
     try {
+        // Super admin can create directly
         if (currentUser.role === 'super admin') {
-            // Super Admin - Add directly
             await db.collection(COLLECTIONS.USERS).add(newUser);
             
             await logAudit('CREATE_USER', {
@@ -4539,7 +4461,7 @@ async function saveNewUser() {
             // Reset uploaded documents
             userUploadedDocuments = { degree: null, zips: null, nrc: null };
         } else {
-            // Admin or Staff - Create approval request
+            // Non-super admin need approval
             await createApprovalRequest('user', newUser, 'add', null);
             closeAddUserModal();
             manageUsersModal();
@@ -4554,8 +4476,6 @@ async function saveNewUser() {
     }
 }
 
-
-
     function openEditUserModal(userId) {
     const user = userAccounts.find(u => u.id === userId);
     if (!user) {
@@ -4565,7 +4485,6 @@ async function saveNewUser() {
 
     const currentUser = getUser(getCurrentUser());
     
-    // Use the canEditUser function for permission check
     if (!canEditUser(userId)) {
         if (currentUser.role === 'staff') {
             alert('⚠️ Staff users can only edit their own account details.');
@@ -4575,7 +4494,6 @@ async function saveNewUser() {
         return;
     }
     
-    // JOSEPH protection - only JOSEPH can edit his own account
     if (isJoseph(user.username) && currentUser.username !== 'JOSEPH') {
         alert('⚠️ You CANNOT edit this super admin.');
         return;
@@ -4593,26 +4511,22 @@ async function saveNewUser() {
     document.getElementById('editPassword').value = '';
     document.getElementById('editEnabled').checked = user.enabled !== false;
 
-    // If this is JOSEPH, disable the enabled checkbox (always enabled)
     if (isJoseph(user.username)) {
         document.getElementById('editEnabled').disabled = true;
     } else {
         document.getElementById('editEnabled').disabled = false;
     }
 
-    // If current user is staff editing themselves, disable role dropdown
     if (currentUser.role === 'staff') {
         document.getElementById('editRole').disabled = true;
     }
 
-    // Reset edit documents
     window.editUserDocuments = {};
     ['editDegreeDocPreview', 'editZipsDocPreview', 'editNrcDocPreview'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = '';
     });
 
-    // Display current documents
     const currentDocsDiv = document.getElementById('editCurrentDocsList');
     if (currentDocsDiv) {
         let docsHtml = '';
@@ -4634,7 +4548,6 @@ async function saveNewUser() {
     } else {
         document.getElementById('editRole').disabled = false;
     }
-
     document.getElementById('editUserModal').style.display = 'flex';
 }
 
@@ -4653,21 +4566,18 @@ async function saveNewUser() {
 
     const currentUser = getUser(getCurrentUser());
     
-    // Staff can only edit themselves
     if (currentUser.role === 'staff' && currentUser.id !== userId) {
         alert('⚠️ You can only edit your own account.');
         closeEditUserModal();
         return;
     }
     
-    // JOSEPH protection - only JOSEPH can edit his own account
     if (isJoseph(user.username) && currentUser.username !== 'JOSEPH') {
         alert('⚠️ Only JOSEPH can edit his own account details.');
         closeEditUserModal();
         return;
     }
     
-    // Staff can only edit staff users (and themselves, already checked above)
     if (currentUser.role === 'staff' && user.role !== 'staff') {
         alert('You can only edit staff users');
         return;
@@ -4696,18 +4606,15 @@ async function saveNewUser() {
         enabled: document.getElementById('editEnabled').checked
     };
 
-    // Staff cannot change their role or enable/disable status
     if (currentUser.role === 'staff') {
-        updatedData.role = user.role; // Keep original role
-        updatedData.enabled = user.enabled; // Keep original enabled status
+        updatedData.role = user.role;
+        updatedData.enabled = user.enabled; 
     }
 
-    // JOSEPH's account must ALWAYS be enabled - override if someone tries to disable him
     if (isJoseph(user.username)) {
         updatedData.enabled = true;
     }
 
-    // Track changes for audit log
     const changes = {};
     if (user.fullName !== fullName) {
         changes.fullName = { old: user.fullName || 'not set', new: fullName };
@@ -4737,7 +4644,6 @@ async function saveNewUser() {
         };
     }
 
-    // Handle document updates
     if (window.editUserDocuments && Object.keys(window.editUserDocuments).length > 0) {
         updatedData.documents = { ...user.documents };
         
@@ -4796,8 +4702,6 @@ async function saveNewUser() {
     }
 }
 
-// ========== CLEAN PULSE MANAGEMENT SYSTEM ==========
-
 function addPulse(buttonId) {
     const button = document.getElementById(buttonId);
     if (!button) {
@@ -4805,7 +4709,6 @@ function addPulse(buttonId) {
         return false;
     }
     
-    // Ensure button has position relative
     button.style.position = 'relative';
     button.classList.add('status-pulse');
     console.log(`Pulse added to ${buttonId}`);
@@ -4827,17 +4730,14 @@ function refreshPulses() {
     const currentUser = getUser(getCurrentUser());
     if (!currentUser) return;
     
-    // Remove all pulses first
     removePulse('requestsManagementBtn');
     removePulse('approvalHistoryNavBtn');
     removePulse('approvalRequestsNavBtn');
     
-    // 1. Requests Management Pulse (Super Admin only)
     if (currentUser.role === 'super admin' && approvalRequests.length > 0) {
         addPulse('requestsManagementBtn');
     }
     
-    // 2. My Requests Pulse (Admin and Staff)
     if (currentUser.role !== 'super admin') {
         const userPendingRequests = approvalRequests.filter(req => 
             req.requestedBy === currentUser.username && req.status === 'pending'
@@ -4848,7 +4748,6 @@ function refreshPulses() {
         }
     }
     
-    // 3. Approvals Button Pulse (Admin and Super Admin)
     if (canApproveRequests()) {
         let visibleRequests = approvalRequests;
         if (currentUser.role === 'admin') {
@@ -4863,14 +4762,12 @@ function refreshPulses() {
     }
 }
 
-// Override loadApprovalRequests to refresh pulses
 const originalLoadApprovalRequests = loadApprovalRequests;
 loadApprovalRequests = async function() {
     await originalLoadApprovalRequests.apply(this, arguments);
     refreshPulses();
 };
 
-// Also refresh pulses after approvals/rejections
 const originalConfirmApproval = confirmApproval;
 confirmApproval = async function(approved) {
     await originalConfirmApproval.apply(this, arguments);
@@ -4883,10 +4780,8 @@ submitRejectionReason = async function() {
     setTimeout(refreshPulses, 500);
 };
 
-    // ========== FIX: Close add user modal function ==========
 function closeAddUserModal() {
     document.getElementById('addUserModal').style.display = 'none';
-    // Reset form fields
     document.getElementById('newFullName').value = '';
     document.getElementById('newUsername').value = '';
     document.getElementById('newRole').value = 'staff';
@@ -4897,24 +4792,18 @@ function closeAddUserModal() {
     document.getElementById('newPosition').value = '';
     document.getElementById('newPassword').value = '';
     
-    // Reset document previews
     ['newDegreeDocPreview', 'newZipsDocPreview', 'newNrcDocPreview'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = '';
     });
     
-    // Reset uploaded documents
     userUploadedDocuments = { degree: null, zips: null, nrc: null };
 }
-
 
     async function ensureDefaultUsers() {
     try {
         const usersSnapshot = await db.collection(COLLECTIONS.USERS).get();
-        
-        // Check if we have any users at all
         if (usersSnapshot.empty) {
-            // No users at all - add all default users
             const defaultUsers = [
                 { 
                     fullName: "Joseph Zulu",
@@ -4954,7 +4843,6 @@ function closeAddUserModal() {
             await logAudit('SYSTEM_INIT', { action: 'Default users created' });
             console.log("Default users created with full names");
         } else {
-            // Check for specific users by username to avoid duplicates
             const existingUsers = usersSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -4962,13 +4850,11 @@ function closeAddUserModal() {
             
             const usernames = existingUsers.map(u => u.username);
             
-            // Check if JOSEPH exists
             const josephExists = usernames.includes('JOSEPH');
             const chishalaExists = usernames.includes('CHISHALA');
             
             console.log('Existing users:', usernames);
             
-            // Add JOSEPH if missing
             if (!josephExists) {
                 console.log('JOSEPH not found - adding default JOSEPH account');
                 await db.collection(COLLECTIONS.USERS).add({
@@ -4988,7 +4874,6 @@ function closeAddUserModal() {
                 });
             }
             
-            // Add CHISHALA if missing
             if (!chishalaExists) {
                 console.log('CHISHALA not found - adding default CHISHALA account');
                 await db.collection(COLLECTIONS.USERS).add({
@@ -5008,7 +4893,6 @@ function closeAddUserModal() {
                 });
             }
             
-            // Ensure JOSEPH is always enabled (but don't duplicate)
             const josephUser = existingUsers.find(u => u.username === 'JOSEPH');
             if (josephUser && josephUser.enabled === false) {
                 await db.collection(COLLECTIONS.USERS).doc(josephUser.id).update({
@@ -5022,13 +4906,9 @@ function closeAddUserModal() {
     }
 }
 
-// ========== REQUESTS MANAGEMENT AS PAGE VIEW ==========
-
-// Show Requests Management page
 async function showRequestsManagementView() {
     const currentUser = getUser(getCurrentUser());
     
-    // Only super admin can access
     if (!currentUser || currentUser.role !== 'super admin') {
         alert('Only Super Admin can access Requests Management');
         return;
@@ -5038,7 +4918,6 @@ async function showRequestsManagementView() {
     await loadRequestsManagementData();
 }
 
-// Optimized Requests Management data loading
 async function loadRequestsManagementData() {
     try {
         console.log("Loading requests management data efficiently...");
@@ -5051,7 +4930,6 @@ async function loadRequestsManagementData() {
         document.getElementById('rejectedAccountsList').innerHTML = renderSkeletonLoader();
         document.getElementById('rejectedApprovalsList').innerHTML = renderSkeletonLoader(); 
         
-        // Add the renderSkeletonLoader function near the top of your script with other helper functions
 function renderSkeletonLoader() {
     return `
         <div style="padding: 20px;">
@@ -5069,32 +4947,21 @@ function renderSkeletonLoader() {
         </div>
     `;
 }
-
-// Add this CSS animation to your styles (in the <style> section)
-// @keyframes pulse {
-//   0% { opacity: 1; }
-//   50% { opacity: 0.5; }
-//   100% { opacity: 1; }
-// }
-        
-        // Load only what we need with limited data
         const [approvalSnapshot, accountSnapshot] = await Promise.all([
             db.collection(COLLECTIONS.APPROVALS)
                 .orderBy('createdAt', 'desc')
-                .limit(50) // Limit to most recent 50
+                .limit(50) 
                 .get(),
             db.collection('account_requests')
                 .orderBy('requestedAt', 'desc')
-                .limit(50) // Limit to most recent 50
+                .limit(50) 
                 .get()
         ]);
         
         console.log(`Loaded ${approvalSnapshot.size} approvals and ${accountSnapshot.size} accounts`);
         
-        // Process data efficiently
         const startTime = performance.now();
         
-        // Use for...of instead of map for better performance with large datasets
         const allApprovalRequests = [];
         for (const doc of approvalSnapshot.docs) {
             allApprovalRequests.push({ 
@@ -5113,7 +4980,6 @@ function renderSkeletonLoader() {
             });
         }
         
-        // Separate by status - use filter once
         const pendingAccountRequests = [];
         const approvedAccountRequests = [];
         const rejectedAccountRequests = [];
@@ -5135,8 +5001,6 @@ function renderSkeletonLoader() {
         }
         
         console.log(`Processing took ${performance.now() - startTime}ms`);
-        
-        // Update stats cards
         updateRequestsStatsOptimized({
             pendingAccounts: pendingAccountRequests.length,
             pendingApprovals: pendingApprovalRequests.length,
@@ -5148,11 +5012,9 @@ function renderSkeletonLoader() {
             totalApprovals: allApprovalRequests.length
         });
         
-        // Update count badges on tabs
         document.getElementById('pendingAccountsCount').textContent = pendingAccountRequests.length;
         document.getElementById('pendingApprovalsCount').textContent = pendingApprovalRequests.length;
         
-        // Render sections in chunks to avoid UI freeze
         setTimeout(() => {
             document.getElementById('pendingAccountsList').innerHTML = renderPendingAccountRequestsOptimized(pendingAccountRequests);
         }, 10);
@@ -5184,7 +5046,6 @@ function renderSkeletonLoader() {
 }
 
 
-// Optimized stats update
 function updateRequestsStatsOptimized(stats) {
     const statsCards = document.getElementById('requestsStatsCards');
     if (!statsCards) return;
@@ -5228,7 +5089,6 @@ function updateRequestsStatsOptimized(stats) {
     `;
 }
 
-// Optimized pending account requests renderer
 function renderPendingAccountRequestsOptimized(requests) {
     if (requests.length === 0) {
         return `
@@ -5239,7 +5099,6 @@ function renderPendingAccountRequestsOptimized(requests) {
         `;
     }
     
-    // Build HTML using array join for better performance
     const items = [];
     for (const req of requests) {
         const requestedAt = req.requestedAt ? new Date(req.requestedAt).toLocaleString() : 'Unknown';
@@ -5274,7 +5133,6 @@ function renderPendingAccountRequestsOptimized(requests) {
     return items.join('');
 }
 
-// Optimized pending approval requests renderer
 function renderPendingApprovalRequestsOptimized(requests) {
     if (requests.length === 0) {
         return `
@@ -5316,7 +5174,6 @@ function renderPendingApprovalRequestsOptimized(requests) {
     return items.join('');
 }
 
-// Update stats cards
 function updateRequestsStats(stats) {
     const statsHtml = `
         <div style="background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); border-left: 4px solid #3498db;">
@@ -5359,14 +5216,12 @@ function updateRequestsStats(stats) {
     document.getElementById('requestsStatsCards').innerHTML = statsHtml;
 }
 
-// Tab switching function for Requests Management page
 function showRequestsManagementTab(tabName) {
     // Hide all sections
     document.querySelectorAll('.requests-section').forEach(section => {
         section.style.display = 'none';
     });
     
-    // Reset all tab buttons to default color
     const tabs = [
         'pendingAccountsTabBtn',
         'pendingApprovalsTabBtn',
@@ -5388,7 +5243,6 @@ function showRequestsManagementTab(tabName) {
         }
     });
     
-    // Show selected section and highlight button
     switch(tabName) {
         case 'pendingAccounts':
             document.getElementById('pendingAccountsSection').style.display = 'block';
@@ -5417,21 +5271,16 @@ function showRequestsManagementTab(tabName) {
     }
 }
 
-// Update the showView function to include requestsManagement
-// Update the showView function to include requestsManagement and clear search
 const originalShowView = showView;
 showView = function(viewName) {
-    // Call the original function first
     originalShowView(viewName);
     
-    // Hide requests management view when other views are shown
     document.getElementById('requestsManagementView').style.display = 'none';
     
     if (viewName === 'requestsManagement') {
         document.getElementById('requestsManagementView').style.display = 'block';
     }
     
-    // Clear search when returning to home
     if (viewName === 'home') {
         const searchInput = document.getElementById('globalSearch');
         if (searchInput) {
@@ -5440,19 +5289,16 @@ showView = function(viewName) {
     }
 };
 
-// Add this function to remove ALL duplicate accounts
 async function removeAllDuplicateAccounts() {
     try {
         console.log("Checking for ALL duplicate accounts...");
         
-        // Get all users
         const snapshot = await db.collection(COLLECTIONS.USERS).get();
         const allUsers = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
         
-        // Group users by username
         const userGroups = {};
         allUsers.forEach(user => {
             if (!userGroups[user.username]) {
@@ -5461,7 +5307,6 @@ async function removeAllDuplicateAccounts() {
             userGroups[user.username].push(user);
         });
         
-        // Find usernames with duplicates
         const duplicates = {};
         let totalDuplicateCount = 0;
         let usersToDelete = [];
@@ -5470,14 +5315,12 @@ async function removeAllDuplicateAccounts() {
             if (users.length > 1) {
                 duplicates[username] = users;
                 
-                // Sort by createdAt (most recent last)
                 users.sort((a, b) => {
                     const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
                     const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
                     return dateA - dateB;
                 });
                 
-                // Keep the most recent one, mark others for deletion
                 const keepUser = users[users.length - 1];
                 
                 for (let i = 0; i < users.length - 1; i++) {
@@ -5490,13 +5333,11 @@ async function removeAllDuplicateAccounts() {
             }
         }
         
-        // Show summary of duplicates found
         if (totalDuplicateCount === 0) {
             alert("✅ No duplicate accounts found! Your user list is clean.");
             return;
         }
         
-        // Build summary message
         let summaryMessage = `⚠️ FOUND ${totalDuplicateCount} DUPLICATE ACCOUNT(S)\n\n`;
         
         for (const [username, users] of Object.entries(duplicates)) {
@@ -5515,7 +5356,6 @@ async function removeAllDuplicateAccounts() {
             return;
         }
         
-        // Perform deletion in batches
         const batch = db.batch();
         let batchCount = 0;
         let deletedCount = 0;
@@ -5525,7 +5365,6 @@ async function removeAllDuplicateAccounts() {
             deletedCount++;
             batchCount++;
             
-            // Firestore batches can have at most 500 operations
             if (batchCount >= 400) {
                 await batch.commit();
                 console.log(`Committed batch of ${batchCount} deletions`);
@@ -5533,13 +5372,11 @@ async function removeAllDuplicateAccounts() {
             }
         }
         
-        // Commit any remaining deletions
         if (batchCount > 0) {
             await batch.commit();
             console.log(`Committed final batch of ${batchCount} deletions`);
         }
         
-        // Log the cleanup action
         await logAudit('DUPLICATE_CLEANUP', {
             action: 'Removed all duplicate accounts',
             duplicatesFound: duplicates,
@@ -5547,10 +5384,8 @@ async function removeAllDuplicateAccounts() {
             deletedBy: getCurrentUser()
         });
         
-        // Refresh the user list
         await getAllUsers(true);
         
-        // Show success message with details
         let successMessage = `✅ Successfully removed ${deletedCount} duplicate account(s)\n\n`;
         successMessage += `Cleaned up usernames:\n`;
         
@@ -5560,7 +5395,6 @@ async function removeAllDuplicateAccounts() {
         
         alert(successMessage);
         
-        // Refresh the user management modal if it's open
         if (document.getElementById('userManagementModal').style.display === 'flex') {
             manageUsersModal();
         }
@@ -5571,7 +5405,6 @@ async function removeAllDuplicateAccounts() {
     }
 }
 
-// Add this function to check for ALL duplicates without deleting
 async function checkAllDuplicates() {
     try {
         const snapshot = await db.collection(COLLECTIONS.USERS).get();
@@ -5580,7 +5413,6 @@ async function checkAllDuplicates() {
             ...doc.data()
         }));
         
-        // Group users by username
         const userGroups = {};
         allUsers.forEach(user => {
             if (!userGroups[user.username]) {
@@ -5589,14 +5421,13 @@ async function checkAllDuplicates() {
             userGroups[user.username].push(user);
         });
         
-        // Find usernames with duplicates
         const duplicates = {};
         let totalDuplicates = 0;
         
         for (const [username, users] of Object.entries(userGroups)) {
             if (users.length > 1) {
                 duplicates[username] = users;
-                totalDuplicates += users.length - 1; // Count extra copies
+                totalDuplicates += users.length - 1;
             }
         }
         
@@ -5607,7 +5438,6 @@ async function checkAllDuplicates() {
             return;
         }
         
-        // Build detailed message
         let message = `📊 DUPLICATE ACCOUNT REPORT\n\n`;
         message += `Total users: ${allUsers.length}\n`;
         message += `Unique usernames: ${Object.keys(userGroups).length}\n`;
@@ -5618,11 +5448,10 @@ async function checkAllDuplicates() {
         for (const [username, users] of Object.entries(duplicates)) {
             message += `\n👤 ${username} (${users.length} accounts):\n`;
             
-            // Sort by date for better display
             users.sort((a, b) => {
                 const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
                 const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
-                return dateB - dateA; // Most recent first
+                return dateB - dateA; 
             });
             
             users.forEach((user, index) => {
@@ -5636,7 +5465,6 @@ async function checkAllDuplicates() {
         
         message += `\n⚠️ To remove duplicates, use the "Remove All Duplicates" button.`;
         
-        // Display in a scrollable alert (using a modal would be better, but this works)
         const modalDiv = document.createElement('div');
         modalDiv.style.cssText = `
             position: fixed;
@@ -5673,7 +5501,6 @@ async function checkAllDuplicates() {
     }
 }
 
-
     function hideLoadingSpinner() {
         const spinner = document.getElementById('loadingSpinner');
         if (spinner) {
@@ -5699,7 +5526,6 @@ async function checkAllDuplicates() {
         }
     }
 
-    // ========== ENHANCED REQUESTS MANAGEMENT WITH COMPLETE HISTORY ==========
 async function openRequestsManagement() {
     try {
         // Get all approval requests (both pending and history)
@@ -5707,7 +5533,6 @@ async function openRequestsManagement() {
             .orderBy('createdAt', 'desc')
             .get();
         
-        // Get all account requests (both pending and history)
         const accountSnapshot = await db.collection('account_requests')
             .orderBy('requestedAt', 'desc')
             .get();
@@ -5724,12 +5549,10 @@ async function openRequestsManagement() {
             ...doc.data() 
         }));
         
-        // Separate pending and history for account requests
         const pendingAccountRequests = allAccountRequests.filter(req => req.status === 'pending');
         const approvedAccountRequests = allAccountRequests.filter(req => req.status === 'approved');
         const rejectedAccountRequests = allAccountRequests.filter(req => req.status === 'rejected');
         
-        // Separate pending and history for approval requests
         const pendingApprovalRequests = allApprovalRequests.filter(req => req.status === 'pending');
         const approvedApprovalRequests = allApprovalRequests.filter(req => req.status === 'approved');
         const rejectedApprovalRequests = allApprovalRequests.filter(req => req.status === 'rejected');
@@ -5888,7 +5711,6 @@ async function openRequestsManagement() {
     }
 }
 
-// Helper function to render pending account requests
 function renderPendingAccountRequests(requests) {
     if (requests.length === 0) {
         return `
@@ -5961,7 +5783,6 @@ function renderPendingAccountRequests(requests) {
     }).join('');
 }
 
-// Helper function to render pending approval requests
 function renderPendingApprovalRequests(requests) {
     if (requests.length === 0) {
         return `
@@ -6008,7 +5829,6 @@ function renderPendingApprovalRequests(requests) {
     }).join('');
 }
 
-// Helper function to render history account requests
 function renderHistoryAccountRequests(requests, status) {
     if (requests.length === 0) {
         return `
@@ -6098,7 +5918,6 @@ function renderHistoryAccountRequests(requests, status) {
     }).join('');
 }
 
-// Helper function to render history approval requests
 function renderHistoryApprovalRequests(requests, status) {
     if (requests.length === 0) {
         return `
@@ -6110,7 +5929,6 @@ function renderHistoryApprovalRequests(requests, status) {
     }
     
     const statusColor = status === 'approved' ? '#2ecc71' : '#e74c3c';
-    
     return requests.map(req => {
         const created = req.createdDate ? new Date(req.createdDate).toLocaleString() : 'Unknown';
         const reviewedAt = req.reviewedAt ? new Date(req.reviewedAt).toLocaleString() : 'Unknown';
@@ -6179,9 +5997,7 @@ function renderHistoryApprovalRequests(requests, status) {
     }).join('');
 }
 
-// Tab switching function
 function showRequestsTab(tabName) {
-    // Hide all sections
     document.getElementById('pendingAccountsSection').style.display = 'none';
     document.getElementById('pendingApprovalsSection').style.display = 'none';
     document.getElementById('approvedAccountsSection').style.display = 'none';
@@ -6189,7 +6005,6 @@ function showRequestsTab(tabName) {
     document.getElementById('rejectedAccountsSection').style.display = 'none';
     document.getElementById('rejectedApprovalsSection').style.display = 'none';
     
-    // Reset all tab buttons to default color
     document.getElementById('pendingAccountsTabBtn').style.background = '#34495e';
     document.getElementById('pendingApprovalsTabBtn').style.background = '#34495e';
     document.getElementById('approvedAccountsTabBtn').style.background = '#34495e';
@@ -6197,7 +6012,6 @@ function showRequestsTab(tabName) {
     document.getElementById('rejectedAccountsTabBtn').style.background = '#34495e';
     document.getElementById('rejectedApprovalsTabBtn').style.background = '#34495e';
     
-    // Show selected section and highlight button
     switch(tabName) {
         case 'pendingAccounts':
             document.getElementById('pendingAccountsSection').style.display = 'block';
@@ -6226,7 +6040,6 @@ function showRequestsTab(tabName) {
     }
 }
 
-// ========== FIX: Document viewer for account requests ==========
 async function viewRequestDocument(requestId, docType) {
     try {
         const doc = await db.collection('account_requests').doc(requestId).get();
@@ -6244,7 +6057,6 @@ async function viewRequestDocument(requestId, docType) {
         
         const documentData = requestData.documents[docType];
         
-        // Create modal
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.id = 'requestDocumentViewerModal';
@@ -6301,12 +6113,10 @@ async function viewRequestDocument(requestId, docType) {
     }
 }
 
-/// ========== FIXED: Approve account request (SINGLE VERSION) ==========
 async function approveAccountRequest(requestId) {
     try {
         console.log('Approving account with ID:', requestId);
         
-        // Get the request data
         const doc = await db.collection('account_requests').doc(requestId).get();
         if (!doc.exists) {
             alert('Request not found');
@@ -6316,13 +6126,11 @@ async function approveAccountRequest(requestId) {
         const requestData = doc.data();
         console.log('Request data:', requestData);
         
-        // Check if requestData exists
         if (!requestData) {
             alert('Request data is missing');
             return;
         }
 
-        // Create new user with safe defaults
         const newUser = {
             fullName: requestData.fullName || 'Unknown User',
             username: requestData.username || 'unknown',
@@ -6340,18 +6148,13 @@ async function approveAccountRequest(requestId) {
         };
 
         console.log('Creating new user:', newUser);
-
-        // Add user to users collection
         await db.collection(COLLECTIONS.USERS).add(newUser);
-
-        // Update request status
         await db.collection('account_requests').doc(requestId).update({
             status: 'approved',
             approvedAt: new Date().toISOString(),
             approvedBy: getCurrentUser()
         });
 
-        // Log the approval
         await logAudit('ACCOUNT_APPROVED', {
             username: requestData.username,
             fullName: requestData.fullName,
@@ -6360,12 +6163,8 @@ async function approveAccountRequest(requestId) {
         });
 
         showNotification(`Account for ${requestData.fullName || requestData.username} approved successfully`, 'success');
-
-        // Close and reopen the modal to refresh
         const modal = document.getElementById('requestsManagementModal');
         if (modal) modal.remove();
-        
-        // Reopen if the function exists
         if (typeof openRequestsManagement === 'function') {
             openRequestsManagement();
         }
@@ -6376,15 +6175,12 @@ async function approveAccountRequest(requestId) {
     }
 }
 
-// ========== FIX: Reject account request functions ==========
 let pendingAccountRejectId = null;
 
 function openRejectAccountReasonModal(requestId) {
     pendingAccountRejectId = requestId;
-    
     const existingModal = document.getElementById('rejectAccountReasonModal');
     if (existingModal) existingModal.remove();
-    
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.id = 'rejectAccountReasonModal';
@@ -6454,22 +6250,17 @@ async function submitAccountRejection(requestId) {
     }
 }
 
-// ========== FORGOT PASSWORD FUNCTIONALITY WITH EMAILJS ==========
-// Initialize with your actual EmailJS credentials
 (function() {
-    // Your actual EmailJS credentials
     const EMAILJS_PUBLIC_KEY = '9r7UMO_eQNrADd-xN';
     const EMAILJS_SERVICE_ID = 'service_smyrjjn';
     const EMAILJS_TEMPLATE_ID = 'template_s04e0xg';
     
-    // Store for later use
     window.emailJSConfig = {
         publicKey: EMAILJS_PUBLIC_KEY,
         serviceId: EMAILJS_SERVICE_ID,
         templateId: EMAILJS_TEMPLATE_ID
     };
     
-    // Initialize EmailJS
     try {
         emailjs.init(EMAILJS_PUBLIC_KEY);
         console.log('EmailJS initialized with credentials');
@@ -6478,7 +6269,6 @@ async function submitAccountRejection(requestId) {
     }
 })();
 
-// Also check localStorage for saved config (optional - for super admin configuration)
 (function() {
     try {
         const savedConfig = localStorage.getItem('emailjs_config');
@@ -6493,7 +6283,6 @@ async function submitAccountRejection(requestId) {
     }
 })();
 
-// Configuration helper (optional - keep if you want super admin to configure)
 function configureEmailJS() {
     const publicKey = prompt('Enter your EmailJS Public Key:');
     if (!publicKey) return;
@@ -6518,7 +6307,6 @@ function configureEmailJS() {
     showNotification('EmailJS configured and saved', 'success');
 }
 
-// Also check localStorage for saved config (overrides defaults if exists)
 (function() {
     try {
         const savedConfig = localStorage.getItem('emailjs_config');
@@ -6533,11 +6321,7 @@ function configureEmailJS() {
     }
 })();
 
-
-
-// Forgot Password Modal HTML - Add this after the login card in your HTML
 function addForgotPasswordModal() {
-    // Check if modal already exists
     if (document.getElementById('forgotPasswordModal')) return;
     
     const modalHTML = `
@@ -6605,49 +6389,38 @@ function addForgotPasswordModal() {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
-// Call this function after page load
 addForgotPasswordModal();
 
-// Open forgot password modal
 function openForgotPasswordModal() {
-    // Reset form
     document.getElementById('fpNrc').value = '';
     document.getElementById('fpPhone').value = '';
     document.getElementById('fpEmail').value = '';
     document.getElementById('forgotPasswordStep1').style.display = 'block';
     document.getElementById('forgotPasswordStep2').style.display = 'none';
     document.getElementById('forgotPasswordError').style.display = 'none';
-    
-    // Show modal
     document.getElementById('forgotPasswordModal').style.display = 'flex';
 }
 
-// Close forgot password modal
 function closeForgotPasswordModal() {
     document.getElementById('forgotPasswordModal').style.display = 'none';
 }
 
-// Verify user details and send email
-// Enhanced verifyForgotPassword with better error handling
 async function verifyForgotPassword() {
     const nrc = document.getElementById('fpNrc').value.trim();
     const phone = document.getElementById('fpPhone').value.trim();
     const email = document.getElementById('fpEmail').value.trim();
     
-    // Validate inputs
     if (!nrc || !phone || !email) {
         showForgotPasswordError('All fields are required');
         return;
     }
     
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         showForgotPasswordError('Please enter a valid email address');
         return;
     }
 
-    // Check EmailJS configuration
     const config = window.emailJSConfig;
     console.log('EmailJS Config:', config);
     
@@ -6657,14 +6430,12 @@ async function verifyForgotPassword() {
         return;
     }
 
-    // Show loading state
     const sendBtn = document.querySelector('#forgotPasswordStep1 .btn-add');
     const originalText = sendBtn.innerHTML;
     sendBtn.innerHTML = '<span>⏳</span> Sending...';
     sendBtn.disabled = true;
     
     try {
-        // Search for user with matching credentials
         const users = userAccounts.filter(u => 
             u.nrc && u.nrc.toLowerCase() === nrc.toLowerCase() &&
             u.phone && u.phone.replace(/\D/g, '') === phone.replace(/\D/g, '') &&
@@ -6683,10 +6454,8 @@ async function verifyForgotPassword() {
         const user = users[0];
         console.log('User found:', user.username);
         
-        // Initialize EmailJS with public key
         emailjs.init(config.publicKey);
         
-        // Prepare template parameters
         const templateParams = {
             to_email: email,
             to_name: user.fullName || user.username,
@@ -6701,7 +6470,6 @@ async function verifyForgotPassword() {
         
         console.log('Sending email with params:', templateParams);
         
-        // Send email via EmailJS
         const response = await emailjs.send(
             config.serviceId,
             config.templateId,
@@ -6710,14 +6478,12 @@ async function verifyForgotPassword() {
         
         console.log('Email sent successfully:', response);
         
-        // Log the action
         await logAudit('PASSWORD_RETRIEVAL', {
             username: user.username,
             email: email,
             method: 'forgot_password'
         });
         
-        // Show success
         document.getElementById('forgotPasswordStep1').style.display = 'none';
         document.getElementById('sentEmailDisplay').textContent = email;
         document.getElementById('forgotPasswordStep2').style.display = 'block';
@@ -6726,7 +6492,6 @@ async function verifyForgotPassword() {
     } catch (error) {
         console.error('Error sending email:', error);
         
-        // Show specific error message
         let errorMessage = 'Failed to send email. ';
         
         if (error.text) {
@@ -6738,8 +6503,6 @@ async function verifyForgotPassword() {
         }
         
         showForgotPasswordError(errorMessage);
-        
-        // Log the full error for debugging
         console.error('EmailJS Error Details:', {
             error: error,
             config: config,
@@ -6747,7 +6510,6 @@ async function verifyForgotPassword() {
         });
         
     } finally {
-        // Reset button
         const sendBtn = document.querySelector('#forgotPasswordStep1 .btn-add');
         if (sendBtn) {
             sendBtn.innerHTML = '<span>🔍</span> Verify & Send';
@@ -6756,7 +6518,6 @@ async function verifyForgotPassword() {
     }
 }
 
-// Add this to test your EmailJS configuration
 function testEmailJSConfig() {
     const config = window.emailJSConfig;
     console.log('EmailJS Config:', config);
@@ -6766,12 +6527,10 @@ function testEmailJSConfig() {
         return;
     }
     
-    // Check if we can initialize
     try {
         emailjs.init(config.publicKey);
         console.log('EmailJS initialized successfully');
         
-        // Test if we can send (without actually sending)
         alert(`EmailJS configured with:\nPublic Key: ${config.publicKey}\nService ID: ${config.serviceId}\nTemplate ID: ${config.templateId}`);
         
     } catch (error) {
@@ -6780,11 +6539,6 @@ function testEmailJSConfig() {
     }
 }
 
-// Call this from browser console to test: testEmailJSConfig()
-
-
-
-// Show error message
 function showForgotPasswordError(message) {
     const errorDiv = document.getElementById('forgotPasswordError');
     const errorMsg = document.getElementById('fpErrorMessage');
@@ -6792,7 +6546,6 @@ function showForgotPasswordError(message) {
     errorDiv.style.display = 'block';
 }
 
-// Update the forgotPasswordSimple function
 function forgotPasswordSimple() {
     openForgotPasswordModal();
 }
@@ -6803,7 +6556,6 @@ function closeRejectAccountModal() {
     pendingAccountRejectId = null;
 }
 
-// ========== FIX: Approve account request ==========
 async function approveAccountRequest(requestId) {
     try {
         // Get the request data
@@ -6814,11 +6566,8 @@ async function approveAccountRequest(requestId) {
         }
         
         const requestData = doc.data();
-        
-        // Log the data to see what we're getting
         console.log('Approving account:', requestData);
         
-        // Create new user with safe defaults - use different variable names
         const newUserAccount = {
             fullName: requestData.fullName || 'Unknown User',
             username: requestData.username || 'unknown',
@@ -6837,17 +6586,14 @@ async function approveAccountRequest(requestId) {
 
         console.log('Creating user:', newUserAccount);
 
-        // Add user to users collection
         await db.collection(COLLECTIONS.USERS).add(newUserAccount);
 
-        // Update request status
         await db.collection('account_requests').doc(requestId).update({
             status: 'approved',
             approvedAt: new Date().toISOString(),
             approvedBy: getCurrentUser()
         });
 
-        // Log the approval
         await logAudit('ACCOUNT_APPROVED', {
             username: requestData.username,
             fullName: requestData.fullName,
@@ -6857,11 +6603,9 @@ async function approveAccountRequest(requestId) {
 
         showNotification(`Account for ${requestData.fullName || requestData.username} approved successfully`, 'success');
 
-        // Close and reopen the modal to refresh
         const modal = document.getElementById('requestsManagementModal');
         if (modal) modal.remove();
         
-        // Reopen if the function exists
         if (typeof openRequestsManagement === 'function') {
             openRequestsManagement();
         }
@@ -6872,7 +6616,6 @@ async function approveAccountRequest(requestId) {
     }
 }
 
-// ========== NEW: Reject account request ==========
 async function submitAccountRejection(requestId) {
     const reason = document.getElementById('accountRejectReason')?.value.trim();
     
@@ -6882,7 +6625,6 @@ async function submitAccountRejection(requestId) {
     }
     
     try {
-        // Get the request data
         const doc = await db.collection('account_requests').doc(requestId).get();
         if (!doc.exists) {
             alert('Request not found');
@@ -6891,7 +6633,6 @@ async function submitAccountRejection(requestId) {
         
         const requestData = doc.data();
 
-        // Update request status
         await db.collection('account_requests').doc(requestId).update({
             status: 'rejected',
             rejectedAt: new Date().toISOString(),
@@ -6899,7 +6640,6 @@ async function submitAccountRejection(requestId) {
             rejectionReason: reason
         });
 
-        // Log the rejection
         await logAudit('ACCOUNT_REJECTED', {
             username: requestData.username,
             fullName: requestData.fullName,
@@ -6908,10 +6648,8 @@ async function submitAccountRejection(requestId) {
             reason: reason
         });
 
-        // Send rejection email
         sendRejectionEmail(requestData.email, requestData.fullName, reason);
 
-        // Close modals
         closeRejectAccountModal();
         
         const modal = document.getElementById('requestsManagementModal');
@@ -6927,11 +6665,9 @@ async function submitAccountRejection(requestId) {
     }
 }
 
-// ========== NEW: Enhanced email functions ==========
 function sendApprovalEmail(email, fullName, username) {
     console.log(`[EMAIL] Account approved for ${fullName} (${username}) at ${email}`);
     
-    // Create email content
     const subject = "Your Zed Supplier Directory Account Has Been Approved";
     const body = `Dear ${fullName},
 
@@ -6947,14 +6683,10 @@ Thank you for joining Zed Supplier Directory.
 
 Best regards,
 ZAMCOM Procurement Team`;
-
-    
 }
 
 function sendRejectionEmail(email, fullName, reason) {
     console.log(`[EMAIL] Account rejected for ${fullName} at ${email}. Reason: ${reason}`);
-    
-    // Create email content
     const subject = "Your Zed Supplier Directory Account Request";
     const body = `Dear ${fullName},
 
@@ -6967,8 +6699,6 @@ If you believe this is an error, please contact the system administrator.
 
 Best regards,
 ZAMCOM Procurement Team`;
-
-    
 }
 
     window.showPendingTab = function() {
@@ -7000,7 +6730,6 @@ ZAMCOM Procurement Team`;
     };
 
     function openAccountRequestModal() {
-    // Reset form
     document.getElementById('requestFullName').value = '';
     document.getElementById('requestUsername').value = '';
     document.getElementById('requestNrc').value = '';
@@ -7010,23 +6739,15 @@ ZAMCOM Procurement Team`;
     document.getElementById('requestEmail').value = '';
     document.getElementById('requestPassword').value = '';
     
-    // Reset document previews
     ['requestNrcDocPreview', 'requestDegreeDocPreview', 'requestZipsDocPreview'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = '';
     });
     
-    // Reset documents
     requestDocuments = { nrc: null, degree: null, zips: null };
     
-    // Show modal with dark overlay
     const modal = document.getElementById('accountRequestModal');
     modal.style.display = 'flex';
-    
-    // Make the modal overlay darker by setting the parent background
-    // The modal uses the .modal class which has background-color: rgba(0,0,0,0.7)
-    
-    // Hide login overlay but keep it as background reference
     document.getElementById('loginOverlay').style.display = 'none';
 }
 
@@ -7035,13 +6756,10 @@ function closeAccountRequestModal() {
     document.getElementById('loginOverlay').style.display = 'flex';
 }
 
-// Simple pulse management
 let activePulses = {};
 
 function showPulse(buttonId) {
     console.log(`Showing pulse for: ${buttonId}`);
-    
-    // Hide any existing pulse for this button
     hidePulse(buttonId);
     
     const button = document.getElementById(buttonId);
@@ -7050,10 +6768,7 @@ function showPulse(buttonId) {
         return;
     }
     
-    // Get button position
     const rect = button.getBoundingClientRect();
-    
-    // Create pulse dot
     const pulse = document.createElement('div');
     pulse.id = `pulse-${buttonId}`;
     pulse.className = 'pulse-dot';
@@ -7081,10 +6796,6 @@ function hideAllPulses() {
     });
 }
 
-
-
-
-// Update pulses based on actual data
 function updatePulses() {
     console.log("Updating pulses...");
     
@@ -7093,12 +6804,10 @@ function updatePulses() {
     
     hideAllPulses();
     
-    // Show pulse for Requests Management (super admin only)
     if (currentUser.role === 'super admin' && approvalRequests.length > 0) {
         showPulse('requestsManagementBtn');
     }
     
-    // Show pulse for My Requests (admin and staff)
     if (currentUser.role !== 'super admin') {
         const userPendingRequests = approvalRequests.filter(req => 
             req.requestedBy === currentUser.username
@@ -7109,7 +6818,6 @@ function updatePulses() {
         }
     }
     
-    // Show pulse for Approvals button (admin and super admin)
     if (canApproveRequests()) {
         let visibleRequests = approvalRequests;
         if (currentUser.role === 'admin') {
@@ -7130,7 +6838,6 @@ function updatePulses() {
     }
 
     function openRejectReasonModalForRequest(requestId) {
-    // Store the request ID in both places
     document.getElementById('pendingRejectRequestId').value = requestId;
     localStorage.setItem('currentApprovalRequestId', requestId);
     document.getElementById('rejectReasonText').value = '';
@@ -7138,7 +6845,6 @@ function updatePulses() {
 }
 
     function openRejectReasonModal() {
-    // The request ID should already be set in pendingRejectRequestId from openApprovalActionModal
     document.getElementById('rejectReasonText').value = '';
     document.getElementById('rejectReasonModal').style.display = 'flex';
 }
@@ -7159,7 +6865,6 @@ function updatePulses() {
     }
 
     try {
-        // Get the request data first
         const requestDoc = await db.collection(COLLECTIONS.APPROVALS).doc(requestId).get();
         if (!requestDoc.exists) {
             alert('Request not found');
@@ -7167,9 +6872,7 @@ function updatePulses() {
         }
         
         const requestData = requestDoc.data();
-        
         const docRef = db.collection(COLLECTIONS.APPROVALS).doc(requestId);
-        
         await docRef.update({
             status: 'rejected',
             reviewedBy: getCurrentUser(),
@@ -7178,7 +6881,6 @@ function updatePulses() {
             rejectionDate: new Date().toISOString()
         });
 
-        // Log with complete data
 await logAudit('APPROVAL_REJECTED', {
     requestId: requestId,
     action: requestData.action || 'unknown',
@@ -7194,7 +6896,6 @@ await logAudit('APPROVAL_REJECTED', {
 });
 
         showNotification('Request rejected successfully', 'success');
-        
         closeRejectReasonModal();
         document.getElementById('approvalActionModal').style.display = 'none';
         
@@ -7224,7 +6925,6 @@ await logAudit('APPROVAL_REJECTED', {
     }
 }
 
-    // ========== UPDATE USER MANAGEMENT TABLE ==========
     function renderUserManagementTable() {
     const tbody = document.getElementById('userMgmtTableBody');
     const currentUser = getUser(getCurrentUser());
@@ -7234,7 +6934,6 @@ await logAudit('APPROVAL_REJECTED', {
     let html = '';
 
     for (let u of userAccounts) {
-        // Filter users based on role
         if (currentUser.role === 'staff' && u.role !== 'staff') continue;
         if (currentUser.role === 'admin' && u.role === 'super admin') continue;
 
@@ -7242,25 +6941,15 @@ await logAudit('APPROVAL_REJECTED', {
             '<span style="color:green; font-weight:bold;">Enabled</span>' : 
             '<span style="color:red; font-weight:bold;">Disabled</span>';
 
-        // EDIT PERMISSIONS
-        // Super admin can edit anyone
-        // Admin can edit staff and other admins (but not super admin)
-        // Staff can ONLY edit themselves
         const canEdit = (currentUser.role === 'super admin') ? true : 
                        (currentUser.role === 'admin' && u.role !== 'super admin') ? true :
                        (currentUser.role === 'staff' && currentUser.id === u.id) ? true : false;
 
-        // DELETE PERMISSIONS
-        // NO ONE can delete JOSEPH
-        // Super admin can delete anyone except JOSEPH
-        // Admin can delete staff users only
-        // Staff can ONLY delete themselves
-        const canDelete = (isJoseph(u.username)) ? false : // NO ONE can delete JOSEPH
-                         (currentUser.role === 'super admin') ? true : // Super admin can delete anyone except JOSEPH (already handled)
-                         (currentUser.role === 'admin' && u.role === 'staff') ? true : // Admin can delete staff
-                         (currentUser.role === 'staff' && currentUser.id === u.id) ? true : false; // Staff can delete themselves
+        const canDelete = (isJoseph(u.username)) ? false : 
+                         (currentUser.role === 'super admin') ? true : 
+                         (currentUser.role === 'admin' && u.role === 'staff') ? true : 
+                         (currentUser.role === 'staff' && currentUser.id === u.id) ? true : false;
 
-        // Mask sensitive data for non-super admin
         let displayPhone = u.phone || '';
         let displayInfo = '';
 
@@ -7279,7 +6968,6 @@ await logAudit('APPROVAL_REJECTED', {
             `;
         }
 
-        // Create document thumbnail
         const docThumbnail = createDocumentThumbnail(u.documents, 'user', u.id, u.fullName || u.username);
 
         html += `
@@ -7328,8 +7016,6 @@ await logAudit('APPROVAL_REJECTED', {
     tbody.innerHTML = html;
 }
 
-
-    // Enhanced renderUserApprovalHistory to show rejection reasons properly
     function renderUserApprovalHistory(requests, filter) {
         const container = document.getElementById('userApprovalHistoryContainer');
         
@@ -7351,24 +7037,20 @@ await logAudit('APPROVAL_REJECTED', {
                 (req.createdAt.toDate ? req.createdAt.toDate().toLocaleString() : new Date(req.createdAt).toLocaleString()) 
                 : 'Unknown';
             
-            // Determine the status and its color
             const status = req.status || 'pending';
             const statusColor = status === 'approved' ? '#2ecc71' : 
                               status === 'rejected' ? '#e74c3c' : '#f39c12';
             const statusBg = status === 'approved' ? '#e8f8f5' : 
                             status === 'rejected' ? '#fee9e7' : '#fef5e7';
             
-            // Action color based on action type
             const actionColor = req.action === 'delete' ? '#e74c3c' : 
                               req.action === 'edit' ? '#f39c12' : '#3498db';
             
-            // Get the appropriate reason (submission reason or rejection reason)
             const submissionReason = req.reason || '';
             const rejectionReason = req.rejectionReason || '';
             const reviewedBy = req.reviewedBy || 'System';
             const reviewedAt = req.reviewedAt ? new Date(req.reviewedAt).toLocaleString() : '';
             
-            // Build change summary if available
             let changeSummaryHtml = '';
             if (req.changeSummary && req.changeSummary.length > 0 && status !== 'pending') {
                 changeSummaryHtml = `
@@ -7474,7 +7156,6 @@ await logAudit('APPROVAL_REJECTED', {
         container.innerHTML = html;
     }
 
-    // Enhanced renderRequestsManagement to show rejection reasons in history tab
     function renderRequestsManagementHistory(requests) {
         let historyHtml = '';
         if (requests.length === 0) {
@@ -7492,7 +7173,6 @@ await logAudit('APPROVAL_REJECTED', {
                 const statusColor = req.status === 'approved' ? '#2ecc71' : '#e74c3c';
                 const statusBg = req.status === 'approved' ? '#e8f8f0' : '#fee9e7';
                 
-                // Get the appropriate reason based on status
                 const displayReason = req.status === 'rejected' ? 
                     (req.rejectionReason || req.reason || 'No reason provided') : 
                     (req.reason || 'No reason provided');
@@ -7565,10 +7245,8 @@ await logAudit('APPROVAL_REJECTED', {
         return historyHtml;
     }
 
-    // ========== FIXED: USER APPROVAL HISTORY - NO INDEX REQUIRED ==========
     async function openUserApprovalHistory() {
         const currentUser = getUser(getCurrentUser());
-        // Super admin should NOT see the My Requests tab - they use Requests Management
         if (currentUser && currentUser.role === 'super admin') {
             showNotification('Super admin: Please use Requests Management to view all requests', 'info');
             openRequestsManagement();
@@ -7582,14 +7260,11 @@ await logAudit('APPROVAL_REJECTED', {
     async function loadUserApprovalHistory(filter = 'pending') {
         const currentUser = getCurrentUser();
         if (!currentUser) return;
-        
         const container = document.getElementById('userApprovalHistoryContainer');
         if (!container) return;
         
         try {
             console.log(`Loading ${filter} requests for user: ${currentUser}`);
-            
-            // First, get all requests for this user (no composite index required)
             const snapshot = await db.collection(COLLECTIONS.APPROVALS)
                 .where('requestedBy', '==', currentUser)
                 .get();
@@ -7601,7 +7276,6 @@ await logAudit('APPROVAL_REJECTED', {
                 ...doc.data() 
             }));
             
-            // Filter by status in JavaScript (client-side)
             if (filter === 'pending') {
                 userRequests = userRequests.filter(req => req.status === 'pending');
             } else {
@@ -7610,7 +7284,6 @@ await logAudit('APPROVAL_REJECTED', {
                 );
             }
             
-            // Sort by createdAt (newest first) in JavaScript
             userRequests.sort((a, b) => {
                 const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
                 const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
@@ -7659,7 +7332,6 @@ await logAudit('APPROVAL_REJECTED', {
                               req.action === 'edit' ? '#f39c12' : '#3498db';
             const statusColor = req.status === 'approved' ? '#2ecc71' : 
                               req.status === 'rejected' ? '#e74c3c' : '#f39c12';
-            
             const rejectionReason = req.rejectionReason || '';
             
             html += `
@@ -7719,7 +7391,6 @@ await logAudit('APPROVAL_REJECTED', {
         loadUserApprovalHistory(tab);
     }
 
-    // Audit pagination variables
     let currentAuditPage = 1;
     let auditLogsPerPage = 20;
     let totalAuditPages = 1;
@@ -7730,7 +7401,7 @@ await logAudit('APPROVAL_REJECTED', {
         './images/bgx1.jpg'
     ];
 
-    const LOCK_TIME = { hr: 23, min: 50 };
+    const LOCK_TIME = { hr: 16, min: 50 };
     const OPEN_TIME = { hr: 7, min: 30 };
     const COLLECTIONS = {
         USERS: 'users',
@@ -7742,7 +7413,6 @@ await logAudit('APPROVAL_REJECTED', {
         APPROVALS: 'approval_requests'
     };
 
-    // ========== ROLE HELPERS ==========
     function getCurrentUser() { 
         return localStorage.getItem('logged_user') || null; 
     }
@@ -7771,9 +7441,6 @@ await logAudit('APPROVAL_REJECTED', {
         return user && (user.role === 'super admin' || user.role === 'admin'); 
     }
 
-    // ========== PERMISSION CHECKS ==========
-    
-    // USER MANAGEMENT PERMISSIONS
     function canAddUser() {
         const user = getUser(getCurrentUser());
         if (!user) return false;
@@ -7799,7 +7466,6 @@ await logAudit('APPROVAL_REJECTED', {
         return username === 'JOSEPH';
     }
 
-    // CATEGORY PERMISSIONS
     function canCreateCategory() {
         const user = getUser(getCurrentUser());
         return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
@@ -7830,7 +7496,6 @@ await logAudit('APPROVAL_REJECTED', {
         return user && user.role === 'super admin';
     }
 
-    // SUPPLIER PERMISSIONS
     function canCreateSupplier() {
         const user = getUser(getCurrentUser());
         return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
@@ -7861,7 +7526,6 @@ await logAudit('APPROVAL_REJECTED', {
         return user && user.role === 'super admin';
     }
 
-    // LINK PERMISSIONS
     function canCreateLink() {
         const user = getUser(getCurrentUser());
         return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
@@ -7892,7 +7556,6 @@ await logAudit('APPROVAL_REJECTED', {
         return user && user.role === 'super admin';
     }
 
-    // AUDIT LOG PERMISSIONS
     function canViewAuditLogs() {
         const user = getUser(getCurrentUser());
         return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
@@ -7903,13 +7566,11 @@ await logAudit('APPROVAL_REJECTED', {
         return user && user.role === 'super admin';
     }
 
-    // SESSIONS PERMISSIONS
     function canViewSessions() {
         const user = getUser(getCurrentUser());
         return user && (user.role === 'super admin' || user.role === 'admin' || user.role === 'staff');
     }
 
-    // APPROVAL PERMISSIONS
     function canApproveRequests() {
         const user = getUser(getCurrentUser());
         return user && (user.role === 'super admin' || user.role === 'admin');
@@ -7920,13 +7581,11 @@ await logAudit('APPROVAL_REJECTED', {
         return user && user.role === 'super admin';
     }
 
-    // SYSTEM LOCK PERMISSIONS
     function canAccessLockedSystem() {
         const user = getUser(getCurrentUser());
         return user && (user.role === 'super admin' || user.role === 'admin');
     }
 
-    // ========== SYSTEM LOCK ==========
     function isSystemLocked() {
         const now = new Date();
         const currentTotal = (now.getHours() * 60) + now.getMinutes();
@@ -7935,7 +7594,6 @@ await logAudit('APPROVAL_REJECTED', {
         return (currentTotal >= lockTotal || currentTotal < openTotal);
     }
 
-    // ========== LOCK SCREEN FUNCTIONS ==========
     function showLockScreen() {
         const lockScreen = document.getElementById('systemLockScreen');
         if (lockScreen) {
@@ -7969,7 +7627,6 @@ await logAudit('APPROVAL_REJECTED', {
         const openTime = new Date(now);
         openTime.setHours(OPEN_TIME.hr, OPEN_TIME.min, 0, 0);
         
-        // If current time is after lock time, set unlock to tomorrow
         if (now.getHours() >= LOCK_TIME.hr) {
             openTime.setDate(openTime.getDate() + 1);
         }
@@ -7977,12 +7634,10 @@ await logAudit('APPROVAL_REJECTED', {
         const timeUntilUnlock = openTime - now;
         
         if (timeUntilUnlock <= 0) {
-            // Time to unlock - hide lock screen
             hideLockScreen();
             return;
         }
         
-        // Format countdown
         const hours = Math.floor(timeUntilUnlock / (1000 * 60 * 60));
         const minutes = Math.floor((timeUntilUnlock % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((timeUntilUnlock % (1000 * 60)) / 1000);
@@ -7992,7 +7647,6 @@ await logAudit('APPROVAL_REJECTED', {
             countdownEl.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
         
-        // Calculate progress percentage (24 hour cycle)
         const totalLockHours = 24 - (LOCK_TIME.hr - OPEN_TIME.hr);
         const totalLockMs = totalLockHours * 60 * 60 * 1000;
         const progress = ((totalLockMs - timeUntilUnlock) / totalLockMs) * 100;
@@ -8017,22 +7671,16 @@ await logAudit('APPROVAL_REJECTED', {
         localStorage.removeItem('last_login');
     }
 
-    // ========== ENHANCED AUDIT LOGGING WITH DETAILED FIELD-LEVEL CHANGES ==========
 async function logAudit(action, details = {}) {
     try {
         const currentUser = getCurrentUser() || 'SYSTEM';
         const user = getUser(currentUser);
         const userFullName = user?.fullName || currentUser;
-        
-        // Only admin and super admin can view audit logs (but we still log everything)
-        // The visibility is controlled in showAuditLogs function
-        
-        // Create detailed, readable message based on action type with ALL specific changes
+    
         let readableMessage = '';
         let changeDetails = [];
         
         switch(action) {
-            // USER MANAGEMENT
             case 'CREATE_USER':
                 readableMessage = `${userFullName} added a new user`;
                 if (details.fullName) readableMessage += `: ${details.fullName}`;
@@ -8052,7 +7700,6 @@ async function logAudit(action, details = {}) {
                 if (details.fullName) readableMessage += ` ${details.fullName}`;
                 if (details.username) readableMessage += ` ${details.username}`;
                 
-                // Add ALL specific changes
                 if (details.changes) {
                     const changes = [];
                     if (details.changes.fullName) {
@@ -8105,7 +7752,6 @@ async function logAudit(action, details = {}) {
                 if (details.role) changeDetails.push(`Role: ${details.role}`);
                 break;
             
-            // SUPPLIER MANAGEMENT - DETAILED FIELD LEVEL TRACKING
             case 'CREATE_SUPPLIER':
                 readableMessage = `${userFullName} added a new supplier: "${details.name}"`;
                 if (details.category) readableMessage += ` in ${details.category}`;
@@ -8120,7 +7766,6 @@ async function logAudit(action, details = {}) {
                 changeDetails.push(`Address: ${details.address || 'Not specified'}`);
                 changeDetails.push(`Rating: ${details.rating || 0}★`);
                 
-                // Compliance details
                 if (details.compliance) {
                     changeDetails.push(`Compliance - TPIN: ${details.compliance.tpin === 'yes' ? '✓ Compliant' : '✗ Not Compliant'}`);
                     changeDetails.push(`Compliance - NAPSA: ${details.compliance.napsa === 'yes' ? '✓ Compliant' : '✗ Not Compliant'}`);
@@ -8137,7 +7782,6 @@ async function logAudit(action, details = {}) {
             case 'UPDATE_SUPPLIER':
                 readableMessage = `${userFullName} updated supplier: "${details.name}"`;
                 
-                // Track EVERY field change with old and new values
                 if (details.changes && details.changes.length > 0) {
                     const changeStrings = [];
                     
@@ -8225,7 +7869,6 @@ async function logAudit(action, details = {}) {
                 if (details.tpin) changeDetails.push(`TPIN: ${details.tpin}`);
                 break;
             
-            // CATEGORY MANAGEMENT
             case 'CREATE_CATEGORY':
                 readableMessage = `${userFullName} created a new category: "${details.name}"`;
                 changeDetails.push(`Created by: ${userFullName}`);
@@ -8247,7 +7890,6 @@ async function logAudit(action, details = {}) {
                 changeDetails.push(`Category: ${details.name}`);
                 break;
             
-            // LINK MANAGEMENT
             case 'CREATE_LINK':
                 readableMessage = `${userFullName} added a new link for ${details.institution || 'Unknown'}`;
                 changeDetails.push(`Created by: ${userFullName}`);
@@ -8263,7 +7905,6 @@ async function logAudit(action, details = {}) {
                 changeDetails.push(`Website: ${details.website}`);
                 break;
             
-            // ACCOUNT REQUESTS
             case 'ACCOUNT_REQUEST':
                 readableMessage = `${details.fullName || details.username} requested to create a staff account`;
                 changeDetails.push(`Requested by: ${details.fullName || details.username}`);
@@ -8290,7 +7931,6 @@ async function logAudit(action, details = {}) {
                 changeDetails.push(`Reason: "${details.reason}"`);
                 break;
             
-            // APPROVAL REQUESTS
             case 'APPROVAL_REQUEST_CREATED':
                 if (details.action === 'add') {
                     readableMessage = `${details.requestedBy || 'Someone'} requested to add a new ${details.type}`;
@@ -8322,23 +7962,22 @@ async function logAudit(action, details = {}) {
                 break;
                 
             case 'APPROVAL_REJECTED':
-    const rejector = getUser(details.reviewedBy)?.fullName || details.reviewedBy || 'Someone';
-    const actionType = details.action || 'unknown';
-    const requestType = details.type || 'unknown';
-    const itemDisplay = details.itemName || 'Unknown';
-    
-    readableMessage = `${rejector} rejected a request to ${actionType} a ${requestType}`;
-    if (itemDisplay && itemDisplay !== 'Unknown') readableMessage += `: "${itemDisplay}"`;
-    if (details.reason) readableMessage += ` — Reason: "${details.reason}"`;
-    
-    changeDetails.push(`Rejected by: ${rejector}`);
-    changeDetails.push(`Request from: ${details.requestedByFullName || details.requestedBy || 'Unknown'}`);
-    changeDetails.push(`Action: ${actionType} ${requestType}`);
-    changeDetails.push(`Item: ${itemDisplay}`);
-    changeDetails.push(`Reason: ${details.reason || 'No reason provided'}`);
-    break;
-            
-            // LOGIN/LOGOUT
+                const rejector = getUser(details.reviewedBy)?.fullName || details.reviewedBy || 'Someone';
+                const actionType = details.action || 'unknown';
+                const requestType = details.type || 'unknown';
+                const itemDisplay = details.itemName || 'Unknown';
+                
+                readableMessage = `${rejector} rejected a request to ${actionType} a ${requestType}`;
+                if (itemDisplay && itemDisplay !== 'Unknown') readableMessage += `: "${itemDisplay}"`;
+                if (details.reason) readableMessage += ` — Reason: "${details.reason}"`;
+                
+                changeDetails.push(`Rejected by: ${rejector}`);
+                changeDetails.push(`Request from: ${details.requestedByFullName || details.requestedBy || 'Unknown'}`);
+                changeDetails.push(`Action: ${actionType} ${requestType}`);
+                changeDetails.push(`Item: ${itemDisplay}`);
+                changeDetails.push(`Reason: ${details.reason || 'No reason provided'}`);
+                break;
+
             case 'USER_LOGIN':
                 readableMessage = `${userFullName} logged into the system`;
                 changeDetails.push(`User: ${userFullName}`);
@@ -8355,7 +7994,6 @@ async function logAudit(action, details = {}) {
                 changeDetails.push(`Time: ${new Date().toLocaleString()}`);
                 break;
             
-            // PASSWORD
             case 'PASSWORD_CHANGE':
                 readableMessage = `${userFullName} changed their password`;
                 changeDetails.push(`User: ${userFullName}`);
@@ -8369,7 +8007,6 @@ async function logAudit(action, details = {}) {
                 changeDetails.push(`Retrieval method: Forgot Password`);
                 break;
             
-            // SYSTEM
             case 'SYSTEM_INIT':
                 readableMessage = `System was initialized with default data`;
                 changeDetails.push(`Initialization: ${details.action || 'Default data created'}`);
@@ -8410,7 +8047,7 @@ async function logAudit(action, details = {}) {
             action: action,
             readableMessage: readableMessage,
             details: details,
-            changeDetails: changeDetails // Store all detailed changes
+            changeDetails: changeDetails
         };
         
         await db.collection(COLLECTIONS.AUDIT_LOGS).add(logEntry);
@@ -8420,7 +8057,6 @@ async function logAudit(action, details = {}) {
     }
 }
 
-// Replace the saveSupplierWithCleanLogs function with this improved version
 async function saveSupplierWithCleanLogs() {
     if (!canCreateSupplier() && !canEditSupplier()) {
         alert('You do not have permission to save suppliers');
@@ -8454,7 +8090,6 @@ async function saveSupplierWithCleanLogs() {
     const renewalYear = document.getElementById('supplierRenewalYear').value;
     const renewalMonth = document.getElementById('supplierRenewalMonth').value;
     const renewalDate = new Date(renewalYear, parseInt(renewalMonth), 31).toISOString();
-
     const compliance = {
         tpin: document.getElementById('complianceTpin').checked ? 'yes' : 'no',
         napsa: document.getElementById('complianceNapsa').checked ? 'yes' : 'no',
@@ -8479,7 +8114,7 @@ async function saveSupplierWithCleanLogs() {
     const supplierData = {
         name: name,
         specialization: document.getElementById('supplierSpecialization').value.trim(),
-        province: province,  // ← THIS LINE MUST BE HERE
+        province: province,
         phone: phone,
         tpin: document.getElementById('supplierTpin').value.trim(),
         email: document.getElementById('supplierEmail').value.trim(),
@@ -8501,18 +8136,14 @@ async function saveSupplierWithCleanLogs() {
 
     try {
         if (actionType === 'edit' && editingId) {
-            // Get old data for change tracking
             const oldSupplier = suppliers.find(s => s.id === editingId);
             
             if (currentUser.role === 'super admin' || currentUser.role === 'admin') {
-                // Get existing modifications or initialize array
                 const existingModifications = oldSupplier?.modifications || [];
                 
-                // Track ALL field changes with old and new values
                 const fieldChanges = [];
                 const changeSummary = [];
                 
-                // Check each field for changes
                 if (oldSupplier.name !== name) {
                     fieldChanges.push(`name from "${oldSupplier.name}" to "${name}"`);
                     changeSummary.push({ field: 'name', oldValue: oldSupplier.name, newValue: name });
@@ -8548,7 +8179,6 @@ async function saveSupplierWithCleanLogs() {
                     changeSummary.push({ field: 'rating', oldValue: oldSupplier.rating || 0, newValue: rating });
                 }
                 
-                // Check compliance changes
                 if (oldSupplier.compliance) {
                     if (oldSupplier.compliance.tpin !== compliance.tpin) {
                         fieldChanges.push(`TPIN compliance from "${oldSupplier.compliance.tpin}" to "${compliance.tpin}"`);
@@ -8572,7 +8202,6 @@ async function saveSupplierWithCleanLogs() {
                     }
                 }
                 
-                // Check renewal date changes
                 if (oldSupplier.renewalDate !== renewalDate) {
                     const oldDate = oldSupplier.renewalDate ? new Date(oldSupplier.renewalDate).toLocaleDateString() : 'not set';
                     const newDate = new Date(renewalDate).toLocaleDateString();
@@ -8580,29 +8209,23 @@ async function saveSupplierWithCleanLogs() {
                     changeSummary.push({ field: 'renewalDate', oldValue: oldDate, newValue: newDate });
                 }
                 
-                // Create detailed modification description
                 let modificationDescription;
                 if (fieldChanges.length > 0) {
                     modificationDescription = `${getCurrentUser()} updated supplier: ${fieldChanges.join('; ')}`;
                 } else {
-                    // If no fields changed (maybe just documents), still show a meaningful message
                     modificationDescription = `${getCurrentUser()} updated supplier documents or settings`;
                 }
                 
-                // Create new modification record
                 const newModification = {
                     action: 'update',
                     field: 'supplier',
                     modifiedBy: getCurrentUser(),
                     modifiedAt: new Date().toISOString(),
                     description: modificationDescription,
-                    changes: changeSummary // Store the detailed changes
+                    changes: changeSummary
                 };
                 
-                // Add to modifications array (keep last 50)
                 const updatedModifications = [newModification, ...existingModifications].slice(0, 50);
-                
-                // Update supplier with modifications
                 await db.collection(COLLECTIONS.SUPPLIERS).doc(editingId).update({
                     ...supplierData,
                     modifications: updatedModifications
@@ -8616,7 +8239,6 @@ async function saveSupplierWithCleanLogs() {
 
                 showNotification('Supplier updated successfully', 'success');
             } else {
-                // Staff - Create approval request
                 await createApprovalRequest('supplier', supplierData, 'edit', editingId);
                 closeSupplierModal();
                 showNotification('Supplier edit request submitted for approval', 'info');
@@ -8624,7 +8246,6 @@ async function saveSupplierWithCleanLogs() {
             }
         } else {
             if (currentUser.role === 'super admin' || currentUser.role === 'admin') {
-                // Admin or Super Admin - Add directly with creation modification
                 const newSupplierData = {
                     ...supplierData,
                     createdAt: new Date().toISOString(),
@@ -8640,7 +8261,6 @@ async function saveSupplierWithCleanLogs() {
                 };
 
                 await db.collection(COLLECTIONS.SUPPLIERS).add(newSupplierData);
-
                 await logAudit('CREATE_SUPPLIER', {
                     name: name,
                     category: category
@@ -8648,7 +8268,6 @@ async function saveSupplierWithCleanLogs() {
 
                 showNotification('Supplier added successfully', 'success');
             } else {
-                // Staff - Create approval request for addition
                 await createApprovalRequest('supplier', supplierData, 'add', null);
                 closeSupplierModal();
                 showNotification('Supplier addition request submitted for approval', 'info');
@@ -8669,11 +8288,9 @@ async function saveSupplierWithCleanLogs() {
     }
 }
 
-    // Enhanced showAuditLogs function - ONLY ADMIN AND SUPER ADMIN CAN VIEW
 async function showAuditLogs() {
     const currentUser = getUser(getCurrentUser());
     
-    // Check if user is admin or super admin
     if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'super admin')) {
         alert('You do not have permission to view audit logs. This feature is only available to Admin and Super Admin users.');
         return;
@@ -8684,8 +8301,6 @@ async function showAuditLogs() {
     renderAuditLogs();
 }
 
-
-// Also fix the saveSupplierModification function
 async function saveSupplierModification(supplierId, action, field, oldValue, newValue, modifiedBy) {
     try {
         const supplierRef = db.collection(COLLECTIONS.SUPPLIERS).doc(supplierId);
@@ -8693,7 +8308,6 @@ async function saveSupplierModification(supplierId, action, field, oldValue, new
         
         if (!supplier) return;
         
-        // Create modification record
         const modification = {
             action: action,
             field: field,
@@ -8704,14 +8318,10 @@ async function saveSupplierModification(supplierId, action, field, oldValue, new
             description: generateModificationDescription(action, field, oldValue, newValue, modifiedBy)
         };
         
-        // Get existing modifications or initialize array
         const modifications = supplier.modifications || [];
-        modifications.unshift(modification); // Add to beginning
-        
-        // Keep only last 50 modifications to prevent document size issues
+        modifications.unshift(modification);
         const recentModifications = modifications.slice(0, 50);
         
-        // Update supplier with new modification
         await supplierRef.update({
             modifications: recentModifications,
             lastModifiedBy: modifiedBy,
@@ -8724,7 +8334,6 @@ async function saveSupplierModification(supplierId, action, field, oldValue, new
     }
 }
 
-// Add this function to ensure existing suppliers get modifications array
 async function initializeSupplierModifications() {
     try {
         const snapshot = await db.collection(COLLECTIONS.SUPPLIERS).get();
@@ -8734,7 +8343,6 @@ async function initializeSupplierModifications() {
         snapshot.docs.forEach(doc => {
             const data = doc.data();
             if (!data.modifications && data.createdBy) {
-                // Initialize with creation modification
                 batch.update(doc.ref, {
                     modifications: [{
                         action: 'create',
@@ -8757,7 +8365,6 @@ async function initializeSupplierModifications() {
     }
 }
 
-// Call this after login
 const originalHandleLogin = handleLogin;
 handleLogin = async function() {
     await originalHandleLogin.apply(this, arguments);
@@ -8766,7 +8373,6 @@ handleLogin = async function() {
     }
 };
 
-// Make sure the history toggle function works
 function toggleHistory(historyId) {
     const historyRow = document.getElementById(historyId);
     if (historyRow) {
@@ -8805,11 +8411,6 @@ function generateModificationDescription(action, field, oldValue, newValue, modi
     return `${userDisplay} modified supplier`;
 }
 
-
-
-    
-
-    // Enhanced renderAuditLogs to show ALL detailed changes
 function renderAuditLogs() {
     const container = document.getElementById('auditLogsContainer');
     const paginationDiv = document.getElementById('auditPagination');
@@ -8839,11 +8440,9 @@ function renderAuditLogs() {
             second: '2-digit'
         });
         
-        // Use the detailed readable message
         let message = log.readableMessage || 
                      `${log.userFullName || log.user || 'SYSTEM'} performed ${log.action}`;
 
-        // Determine icon based on action
         let icon = '📝';
         if (log.action.includes('CREATE')) icon = '➕';
         else if (log.action.includes('UPDATE') || log.action.includes('EDIT')) icon = '✏️';
@@ -8853,7 +8452,6 @@ function renderAuditLogs() {
         else if (log.action.includes('LOGIN')) icon = '🔓';
         else if (log.action.includes('LOGOUT')) icon = '🔒';
         
-        // Build detailed changes section
         let detailsHtml = '';
         if (log.changeDetails && log.changeDetails.length > 0) {
             detailsHtml = `
@@ -8908,7 +8506,6 @@ function renderAuditLogs() {
     
     container.innerHTML = html;
 
-    // Pagination
     let paginationHtml = '';
     if (totalAuditPages > 1) {
         paginationHtml += '<div class="pagination-controls" style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">';
@@ -8929,7 +8526,6 @@ function renderAuditLogs() {
     if (paginationDiv) paginationDiv.innerHTML = paginationHtml;
 }
 
-// Helper function to get action color
 function getActionColor(action) {
     if (action.includes('CREATE') || action.includes('ADD')) return '#27ae60';
     if (action.includes('UPDATE') || action.includes('EDIT')) return '#f39c12';
@@ -8941,14 +8537,10 @@ function getActionColor(action) {
     return '#7f8c8d';
 }
 
-// Pagination function
 function changeAuditPage(newPage) {
     currentAuditPage = newPage;
     renderAuditLogs();
 }
-
-
-    // ========== DELETE AUDIT LOGS (SUPER ADMIN ONLY) ==========
     async function deleteAllAuditLogs() {
         if (!canDeleteAuditLogs()) {
             alert('Only super admin can delete audit logs');
@@ -9017,7 +8609,6 @@ function changeAuditPage(newPage) {
         }
     }
 
-    // ========== REASON MODAL FUNCTIONS ==========
     function openReasonModal(type, id, name, callback) {
         document.getElementById('reasonModalTitle').innerHTML = `State Reason for ${type} Deletion`;
         document.getElementById('pendingDeletionType').value = type;
@@ -9048,7 +8639,6 @@ function changeAuditPage(newPage) {
         if (pendingDeletionCallback) {
             await pendingDeletionCallback(type, id, name, reason);
         }
-
         closeReasonModal();
     }
 
@@ -9066,7 +8656,6 @@ function changeAuditPage(newPage) {
         }));
         
         console.log(`Found ${approvalRequests.length} pending requests`);
-        
         updateApprovalsButton();
         updateRequestCounts();
  
@@ -9079,7 +8668,6 @@ function changeAuditPage(newPage) {
     }
 }
 
-
     function updateRequestCounts() {
     const navBtn = document.getElementById('approvalRequestsNavBtn');
     const countSpan = document.getElementById('approvalRequestCount');
@@ -9087,7 +8675,6 @@ function changeAuditPage(newPage) {
     const currentUser = getUser(getCurrentUser());
     if (!currentUser) return;
     
-    // Filter requests based on user role
     let visibleRequests = approvalRequests;
     if (currentUser.role === 'admin') {
         visibleRequests = approvalRequests.filter(req => 
@@ -9099,13 +8686,11 @@ function changeAuditPage(newPage) {
     
     const count = visibleRequests.length;
     
-    // Update approval button count
     if (countSpan) {
         countSpan.textContent = count;
         countSpan.className = `request-count-badge ${count === 0 ? 'request-count-zero' : ''}`;
     }
     
-    // Show/hide approval button
     if (navBtn) {
         if (canApproveRequests() && count > 0) {
             navBtn.style.display = 'inline-block';
@@ -9114,21 +8699,16 @@ function changeAuditPage(newPage) {
         }
     }
     
-    // Show/hide requests management button for super admin
     const requestsBtn = document.getElementById('requestsManagementBtn');
     if (requestsBtn) {
         requestsBtn.style.display = currentUser.role === 'super admin' ? 'inline-block' : 'none';
     }
     
-    // Show/hide my requests button for non-super admin
     const historyBtn = document.getElementById('approvalHistoryNavBtn');
     if (historyBtn) {
         historyBtn.style.display = currentUser.role !== 'super admin' ? 'inline-block' : 'none';
     }
-    
-   
 }
-
 
     function generateChangeDescription(userName, type, oldData, newData, changes) {
     if (!changes || changes.length === 0) return '';
@@ -9184,7 +8764,6 @@ function changeAuditPage(newPage) {
     return description;
 }
 
-    // ========== ENHANCED APPROVAL REQUEST WITH CLEAR CHANGE DESCRIPTIONS ==========
 async function createApprovalRequest(type, newData, action, itemId, reason = null, oldData = null) {
     try {
         const currentUser = getUser(getCurrentUser());
@@ -9195,7 +8774,6 @@ async function createApprovalRequest(type, newData, action, itemId, reason = nul
 
         console.log(`Creating ${action} request for ${type}:`, newData);
         
-        // Create human-readable description of changes
         let changeDescription = '';
         let changeSummary = [];
         
@@ -9236,7 +8814,6 @@ async function createApprovalRequest(type, newData, action, itemId, reason = nul
         const docRef = await db.collection(COLLECTIONS.APPROVALS).add(request);
         console.log(`Request created with ID: ${docRef.id}`);
         
-        // Log the request creation
         await logAudit('APPROVAL_REQUEST_CREATED', {
             action: action,
             type: type,
@@ -9260,13 +8837,12 @@ async function createApprovalRequest(type, newData, action, itemId, reason = nul
     function updateApprovalsButton() {
     const navBtn = document.getElementById('approvalRequestsNavBtn');
     if (navBtn) {
-        navBtn.style.display = 'none'; // Always hide the approvals button
+        navBtn.style.display = 'none';
     }
 
     const historyBtn = document.getElementById('approvalHistoryNavBtn');
     if (historyBtn && getCurrentUser()) {
         const currentUser = getUser(getCurrentUser());
-        // Super admin should NOT see My Requests button - they use Requests Management
         if (currentUser && currentUser.role === 'super admin') {
             historyBtn.style.display = 'none';
         } else {
@@ -9277,8 +8853,6 @@ async function createApprovalRequest(type, newData, action, itemId, reason = nul
     updateRequestCounts();
 }
 
-    
-    // ========== ENHANCED APPROVAL ACTION MODAL ==========
 async function openApprovalActionModal(requestId) {
     const request = approvalRequests.find(r => r.id === requestId);
     if (!request) return;
@@ -9314,7 +8888,6 @@ async function openApprovalActionModal(requestId) {
         </div>
     `;
     
-    // Show what's being requested
     if (request.changeDescription) {
         detailsHtml += `
             <div style="background: ${actionColor}10; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 6px solid ${actionColor};">
@@ -9324,7 +8897,6 @@ async function openApprovalActionModal(requestId) {
         `;
     }
     
-    // Show specific changes for edit requests
     if (request.changeSummary && request.changeSummary.length > 0) {
         detailsHtml += `
             <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e0e0e0;">
@@ -9375,8 +8947,6 @@ async function openApprovalActionModal(requestId) {
     document.getElementById('approvalActionModal').style.display = 'flex';
 }
 
-
-    // ========== NEW: Function to load account requests for super admin ==========
 async function loadAccountRequests() {
     try {
         const snapshot = await db.collection('account_requests')
@@ -9395,11 +8965,8 @@ async function loadAccountRequests() {
 }
 
 
-
-// ========== NEW: Function to reject account request ==========
 async function rejectAccountRequest(requestId, requestData, reason) {
     try {
-        // Update request status
         await db.collection('account_requests').doc(requestId).update({
             status: 'rejected',
             rejectedAt: new Date().toISOString(),
@@ -9407,7 +8974,6 @@ async function rejectAccountRequest(requestId, requestData, reason) {
             rejectionReason: reason
         });
 
-        // Log the rejection
         await logAudit('ACCOUNT_REJECTED', {
             username: requestData.username,
             fullName: requestData.fullName,
@@ -9415,7 +8981,6 @@ async function rejectAccountRequest(requestId, requestData, reason) {
             reason: reason
         });
 
-        // Send rejection email (you'll need to implement this separately)
         sendRejectionEmail(requestData.email, requestData.fullName, reason);
 
         showNotification(`Account request for ${requestData.fullName} rejected`, 'info');
@@ -9426,7 +8991,6 @@ async function rejectAccountRequest(requestId, requestData, reason) {
     }
 }
 
-// ========== NEW: Placeholder email functions ==========
 function sendApprovalEmail(email, fullName) {
     console.log(`[EMAIL] Account approved for ${fullName} at ${email}`);
     
@@ -9437,7 +9001,6 @@ function sendRejectionEmail(email, fullName, reason) {
     
 }
 
-    // Enhanced confirmApproval to show what's being approved
     async function confirmApprovalWithSummary(approved) {
         const requestId = localStorage.getItem('currentApprovalRequestId');
         
@@ -9458,7 +9021,6 @@ function sendRejectionEmail(email, fullName, reason) {
 
             const request = { id: doc.id, ...doc.data() };
             
-            // Show summary of what's being approved
             let approvalMessage = '';
             if (request.changeSummary && request.changeSummary.length > 0) {
                 approvalMessage = 'Changes to be applied:\n' + 
@@ -9568,9 +9130,7 @@ function sendRejectionEmail(email, fullName, reason) {
         }
     }
 
-    // Override the original confirmApproval
     window.confirmApproval = confirmApprovalWithSummary;
-
     async function confirmApproval(approved) {
         const requestId = localStorage.getItem('currentApprovalRequestId');
         
@@ -9637,7 +9197,7 @@ function sendRejectionEmail(email, fullName, reason) {
             }
 
             await docRef.update({
-                status: approved ? 'approved' : 'pending', // Will be updated by reject function
+                status: approved ? 'approved' : 'pending',
                 reviewedBy: getCurrentUser(),
                 reviewedAt: new Date().toISOString()
             });
@@ -9676,7 +9236,6 @@ function sendRejectionEmail(email, fullName, reason) {
                 renderSuppliersTable(categorySuppliers);
             }
 
-            // After successful action, refresh pulses
         setTimeout(() => {
             loadApprovalRequests();
             updateRequestCounts();
@@ -9737,21 +9296,19 @@ function sendRejectionEmail(email, fullName, reason) {
         }
     }
 
-    
-    // ========== COMPLIANCE TRACKING ==========
     function updateComplianceUI() {
     const tpinChecked = document.getElementById('complianceTpin')?.checked || false;
     const napsaChecked = document.getElementById('complianceNapsa')?.checked || false;
     const zraChecked = document.getElementById('complianceZra')?.checked || false;
     const zppaChecked = document.getElementById('complianceZppa')?.checked || false;
-    const egpChecked = document.getElementById('complianceEgp')?.checked || false; // NEW
+    const egpChecked = document.getElementById('complianceEgp')?.checked || false;
     
     const statusElements = {
         tpin: document.getElementById('complianceTpinStatus'),
         napsa: document.getElementById('complianceNapsaStatus'),
         zra: document.getElementById('complianceZraStatus'),
         zppa: document.getElementById('complianceZppaStatus'),
-        egp: document.getElementById('complianceEgpStatus') // NEW
+        egp: document.getElementById('complianceEgpStatus')
     };
     
     if (statusElements.tpin) {
@@ -9770,13 +9327,11 @@ function sendRejectionEmail(email, fullName, reason) {
         statusElements.zppa.textContent = zppaChecked ? 'Compliant' : 'Not Compliant';
         statusElements.zppa.style.background = zppaChecked ? '#2ecc71' : '#e74c3c';
     }
-    // NEW: Update E-Gp status
     if (statusElements.egp) {
         statusElements.egp.textContent = egpChecked ? 'Active' : 'Not Active';
         statusElements.egp.style.background = egpChecked ? '#2ecc71' : '#e74c3c';
     }
     
-    // Update overall compliance percentage (include E-Gp)
     const totalChecked = [tpinChecked, napsaChecked, zraChecked, zppaChecked, egpChecked].filter(Boolean).length;
     const percent = (totalChecked / 5) * 100;
     
@@ -9790,7 +9345,6 @@ function sendRejectionEmail(email, fullName, reason) {
     }
 }
 
-    // ========== DOCUMENT UPLOAD ==========
     function handleDocumentUpload(docType, input) {
         const file = input.files[0];
         if (!file) return;
@@ -9826,7 +9380,6 @@ function sendRejectionEmail(email, fullName, reason) {
         reader.readAsDataURL(file);
     }
 
-    // ========== FIREBASE DATA FUNCTIONS ==========
     async function getAllUsers(forceRefresh = false) {
         try {
             userAccounts = await getCachedData('users', forceRefresh);
@@ -9906,7 +9459,6 @@ function sendRejectionEmail(email, fullName, reason) {
         }
     }
 
-    // ========== LOGIN / AUTH FUNCTIONS ==========
     function togglePassword() {
         const pField = document.getElementById('passIn');
         if (pField) pField.type = pField.type === "password" ? "text" : "password";
@@ -9926,8 +9478,6 @@ function sendRejectionEmail(email, fullName, reason) {
             const user = userAccounts.find(u => u.username === username);
             
             if (user && user.password === password && user.enabled) {
-                
-                // Check system lock for staff users
                 if (isSystemLocked() && user.role === 'staff') {
                     showLockScreen();
                     return;
@@ -9965,8 +9515,6 @@ function sendRejectionEmail(email, fullName, reason) {
 
                 document.getElementById('loginOverlay').style.display = 'none';
                 hideLoadingSpinner();
-
-
                 updateGreeting();
                 updateUserDisplay();
                 applyRoleBasedUI();
@@ -9988,10 +9536,8 @@ function sendRejectionEmail(email, fullName, reason) {
         }
     }
 
-    // ========== FIX SUPPLIER COUNT WITH DEBUGGING ==========
 async function debugSupplierCount() {
     try {
-        // Get all suppliers directly from Firestore
         const snapshot = await db.collection(COLLECTIONS.SUPPLIERS).get();
         const allSuppliers = snapshot.docs.map(doc => ({
             id: doc.id,
@@ -10001,7 +9547,6 @@ async function debugSupplierCount() {
         console.log('=== SUPPLIER DEBUG INFO ===');
         console.log(`Total documents in suppliers collection: ${allSuppliers.length}`);
         
-        // Group by name to find duplicates
         const nameGroups = {};
         allSuppliers.forEach(supplier => {
             const name = supplier.name || 'Unnamed';
@@ -10011,7 +9556,6 @@ async function debugSupplierCount() {
             nameGroups[name].push(supplier);
         });
         
-        // Count unique names vs total documents
         const uniqueNames = Object.keys(nameGroups).length;
         let duplicateCount = 0;
         let duplicateDetails = [];
@@ -10036,7 +9580,6 @@ async function debugSupplierCount() {
         console.log(`\nTotal duplicates found: ${duplicateCount}`);
         console.log('Duplicate details:', duplicateDetails);
         
-        // Create a detailed message
         let message = `📊 SUPPLIER COUNT ANALYSIS\n\n`;
         message += `Total in database: ${allSuppliers.length}\n`;
         message += `Unique suppliers: ${uniqueNames}\n`;
@@ -10054,7 +9597,6 @@ async function debugSupplierCount() {
         
         alert(message);
         
-        // Update the display with unique count
         const totalSuppliersEl = document.getElementById('totalSuppliersCount');
         if (totalSuppliersEl) {
             totalSuppliersEl.textContent = uniqueNames;
@@ -10070,7 +9612,6 @@ async function debugSupplierCount() {
     }
 }
 
-// ========== FIXED UPDATE TOTAL SUPPLIERS COUNTER ==========
 function updateTotalSuppliersCounter() {
     const totalSuppliersEl = document.getElementById('totalSuppliersCount');
     const totalCategoriesEl = document.getElementById('totalCategoriesCount');
@@ -10079,13 +9620,11 @@ function updateTotalSuppliersCounter() {
     
     if (!totalSuppliersEl) return;
     
-    // Apply province filter
     let filteredSuppliers = suppliers;
     if (currentProvinceFilter !== 'All') {
         filteredSuppliers = suppliers.filter(s => s.province === currentProvinceFilter);
     }
     
-    // Get unique suppliers by ID to avoid counting duplicates
     const uniqueSuppliers = [];
     const seenIds = new Set();
     
@@ -10096,7 +9635,6 @@ function updateTotalSuppliersCounter() {
         }
     });
     
-    // Also check for duplicates by name as a secondary deduplication
     const finalUniqueSuppliers = [];
     const seenNames = new Set();
     
@@ -10113,18 +9651,14 @@ function updateTotalSuppliersCounter() {
     const totalSuppliers = finalUniqueSuppliers.length;
     const rawTotal = filteredSuppliers.length;
     
-    // Show the correct count
     totalSuppliersEl.textContent = totalSuppliers;
     
-    // Add a small indicator if there were duplicates
     if (rawTotal > totalSuppliers) {
         totalSuppliersEl.innerHTML = `${totalSuppliers} <span style="font-size: 14px; color: #ff9800;">(${rawTotal - totalSuppliers} duplicates hidden)</span>`;
     }
     
-    // Total categories
     totalCategoriesEl.textContent = categories.length;
     
-    // Average rating (using unique suppliers)
     if (totalSuppliers > 0) {
         const totalRating = finalUniqueSuppliers.reduce((sum, s) => sum + (s.rating || 0), 0);
         const avgRating = (totalRating / totalSuppliers).toFixed(1);
@@ -10133,7 +9667,6 @@ function updateTotalSuppliersCounter() {
         avgRatingEl.textContent = '0.0';
     }
     
-    // Compliant suppliers (with at least 4 compliance items including E-Gp)
     const compliantSuppliers = finalUniqueSuppliers.filter(s => {
         if (!s.compliance) return false;
         const complianceItems = [
@@ -10151,7 +9684,6 @@ function updateTotalSuppliersCounter() {
     console.log(`Displaying ${totalSuppliers} unique suppliers out of ${rawTotal} in memory`);
 }
 
-// ========== REMOVE DUPLICATE SUPPLIERS ==========
 async function removeDuplicateSuppliers() {
     if (!isCurrentUserSuperAdmin()) {
         alert('Only super admin can remove duplicates');
@@ -10159,14 +9691,12 @@ async function removeDuplicateSuppliers() {
     }
     
     try {
-        // Get all suppliers
         const snapshot = await db.collection(COLLECTIONS.SUPPLIERS).get();
         const allSuppliers = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
         
-        // Group by name
         const nameGroups = {};
         allSuppliers.forEach(supplier => {
             const name = supplier.name?.toLowerCase().trim() || 'unnamed';
@@ -10176,20 +9706,17 @@ async function removeDuplicateSuppliers() {
             nameGroups[name].push(supplier);
         });
         
-        // Find duplicates
         const toDelete = [];
         const toKeep = [];
         
         Object.entries(nameGroups).forEach(([name, suppliers]) => {
             if (suppliers.length > 1) {
-                // Sort by creation date if available, keep the newest
                 suppliers.sort((a, b) => {
                     const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
                     const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
                     return dateB - dateA;
                 });
                 
-                // Keep the first one, delete the rest
                 toKeep.push(suppliers[0]);
                 for (let i = 1; i < suppliers.length; i++) {
                     toDelete.push(suppliers[i]);
@@ -10204,7 +9731,6 @@ async function removeDuplicateSuppliers() {
             return;
         }
         
-        // Confirm with user
         let confirmMessage = `Found ${toDelete.length} duplicate supplier(s):\n\n`;
         toDelete.forEach(d => {
             confirmMessage += `• "${d.name}" (ID: ${d.id.substring(0,8)}...)\n`;
@@ -10213,7 +9739,6 @@ async function removeDuplicateSuppliers() {
         
         if (!confirm(confirmMessage)) return;
         
-        // Delete duplicates in batches
         const batch = db.batch();
         let batchCount = 0;
         
@@ -10222,7 +9747,6 @@ async function removeDuplicateSuppliers() {
             batchCount++;
             
             if (batchCount >= 400) {
-                // Commit and start new batch
                 batch.commit();
                 batchCount = 0;
             }
@@ -10249,8 +9773,6 @@ async function removeDuplicateSuppliers() {
     }
 }
 
-
-    // ========== LOGOUT WITH CLEANUP ==========
     function logout() {
         const username = getCurrentUser();
         logAudit('USER_LOGOUT', { username: username });
@@ -10287,25 +9809,20 @@ async function removeDuplicateSuppliers() {
         el.style.display = isSuper ? 'inline-block' : 'none';
     });
 
-    // Audit Logs Button - Only admin and super admin
     const auditLogsBtn = document.getElementById('auditLogsNavBtn');
     if (auditLogsBtn) {
         auditLogsBtn.style.display = (isSuper || isAdmin) ? 'inline-block' : 'none';
     }
 
-    // User Management Button - All roles can access now
     document.getElementById('userMgmtBtn').style.display = 'inline-block';
     
-    // Sessions Button - All roles can view
     document.getElementById('sessionsBtn').style.display = canViewSessions() ? 'inline-block' : 'none';
     
-    // Approvals Button - HIDDEN (now using Requests Management)
 const approvalsBtn = document.getElementById('approvalRequestsNavBtn');
 if (approvalsBtn) {
     approvalsBtn.style.display = 'none'; // Always hidden
 }
 
-    // My Requests Button - All roles except super admin
     const historyBtn = document.getElementById('approvalHistoryNavBtn');
     if (historyBtn) {
         if (getCurrentUser() && !isSuper) {
@@ -10315,19 +9832,16 @@ if (approvalsBtn) {
         }
     }
 
-    // Requests Management - Super Admin only
     const requestsBtn = document.getElementById('requestsManagementBtn');
     if (requestsBtn) {
         requestsBtn.style.display = isSuper ? 'inline-block' : 'none';
     }
 
-    // Category Controls
     const newCategoryBtn = document.getElementById('newCategoryBtn');
     if (newCategoryBtn) {
         newCategoryBtn.style.display = canCreateCategory() ? 'inline-block' : 'none';
     }
 
-    // Category Page Buttons
     const categoryNewCategoryBtn = document.getElementById('categoryNewCategoryBtn');
     if (categoryNewCategoryBtn) {
         categoryNewCategoryBtn.style.display = canCreateCategory() ? 'inline-block' : 'none';
@@ -10343,13 +9857,11 @@ if (approvalsBtn) {
         editCategoryBtn.style.display = canEditCategory() ? 'inline-block' : 'none';
     }
 
-    // Supplier Controls
     const newSupplierBtn = document.getElementById('newSupplierBtn');
     if (newSupplierBtn) {
         newSupplierBtn.style.display = canCreateSupplier() ? 'inline-block' : 'none';
     }
 
-    // Link Controls
     const addLinkBtn = document.getElementById('addLinkBtn');
     if (addLinkBtn) {
         addLinkBtn.style.display = canCreateLink() ? 'inline-block' : 'none';
@@ -10361,7 +9873,6 @@ if (approvalsBtn) {
     setTimeout(refreshPulses, 500);
 }
 
-    // ========== SESSION HEARTBEAT ==========
     function startSessionHeartbeat() {
         if (sessionHeartbeat) clearInterval(sessionHeartbeat);
         sessionHeartbeat = setInterval(async () => {
@@ -10382,7 +9893,6 @@ if (approvalsBtn) {
         }, 30000);
     }
 
-    // ========== CATEGORY MANAGEMENT ==========
     function openCategoryModal() {
         if (!canCreateCategory() && !canEditCategory()) {
             alert('You do not have permission to create/edit categories');
@@ -10431,11 +9941,9 @@ if (approvalsBtn) {
 
         try {
             if (editingId) {
-                // Edit mode
                 const oldCategory = categories.find(c => c.id === editingId);
                 
                 if (canEditCategoryWithoutApproval()) {
-                    // Super Admin - Edit directly
                     await db.collection(COLLECTIONS.CATEGORIES).doc(editingId).update({
                         name: name,
                         lastModifiedBy: getCurrentUser(),
@@ -10459,15 +9967,12 @@ if (approvalsBtn) {
                         document.getElementById('categoryTitle').textContent = name;
                     }
                 } else {
-                    // Admin or Staff - Create approval request
                     await createApprovalRequest('category', { name: name }, 'edit', editingId);
                     closeCategoryModal();
                     showNotification('Category edit request submitted for approval', 'info');
                 }
             } else {
-                // Add mode
                 if (canCreateCategoryWithoutApproval()) {
-                    // Admin or Super Admin - Save directly
                     await db.collection(COLLECTIONS.CATEGORIES).add({
                         name: name,
                         createdAt: new Date().toISOString(),
@@ -10485,7 +9990,6 @@ if (approvalsBtn) {
                     showNotification(`Category "${name}" created successfully`, 'success');
                     populateCategoryDropdown();
                 } else {
-                    // Staff - Create approval request
                     await createApprovalRequest('category', { name: name }, 'add', null);
                     closeCategoryModal();
                     showNotification('Category creation request submitted for approval', 'info');
@@ -10509,7 +10013,6 @@ if (approvalsBtn) {
         const currentUser = getUser(getCurrentUser());
 
         if (currentUser.role === 'super admin') {
-            // Super Admin - Delete directly
             if (confirm(`Delete category "${category.name}"?`)) {
                 try {
                     await db.collection(COLLECTIONS.CATEGORIES).doc(categoryId).delete();
@@ -10527,7 +10030,6 @@ if (approvalsBtn) {
                 }
             }
         } else {
-            // Admin or Staff - Require reason and create approval request
             openReasonModal('category', categoryId, category.name, async (type, id, name, reason) => {
                 await createApprovalRequest('category', { name: name }, 'delete', id, reason);
                 showNotification('Delete request submitted for approval', 'info');
@@ -10539,10 +10041,8 @@ if (approvalsBtn) {
     renderFilteredCategories();
 }
 
-// Add this function to fix the supplier count
 async function fixSupplierCount() {
     try {
-        // Get all suppliers from Firestore directly
         const snapshot = await db.collection(COLLECTIONS.SUPPLIERS).get();
         const allSuppliers = snapshot.docs.map(doc => ({
             id: doc.id,
@@ -10551,7 +10051,6 @@ async function fixSupplierCount() {
         
         console.log(`Total suppliers in database: ${allSuppliers.length}`);
         
-        // Check for duplicates by name
         const supplierMap = new Map();
         const duplicates = [];
         
@@ -10570,7 +10069,6 @@ async function fixSupplierCount() {
         if (duplicates.length > 0) {
             console.log(`Found ${duplicates.length} duplicate suppliers`);
             
-            // Ask user what to do
             if (confirm(`Found ${duplicates.length} duplicate suppliers. Do you want to remove duplicates?`)) {
                 const batch = db.batch();
                 let removedCount = 0;
@@ -10583,7 +10081,6 @@ async function fixSupplierCount() {
                 await batch.commit();
                 console.log(`Removed ${removedCount} duplicate suppliers`);
                 
-                // Reload data
                 await loadAllData(true);
                 showNotification(`Removed ${removedCount} duplicate suppliers`, 'success');
             }
@@ -10591,7 +10088,6 @@ async function fixSupplierCount() {
             showNotification('No duplicate suppliers found', 'success');
         }
         
-        // Update the counter
         updateTotalSuppliersCounter();
         
     } catch (error) {
@@ -10600,7 +10096,6 @@ async function fixSupplierCount() {
     }
 }
 
-// Also fix the updateTotalSuppliersCounter function to ensure it shows correct count
 function updateTotalSuppliersCounter() {
     const totalSuppliersEl = document.getElementById('totalSuppliersCount');
     const totalCategoriesEl = document.getElementById('totalCategoriesCount');
@@ -10615,7 +10110,6 @@ function updateTotalSuppliersCounter() {
         filteredSuppliers = suppliers.filter(s => s.province === currentProvinceFilter);
     }
     
-    // Get unique suppliers by ID to avoid counting duplicates
     const uniqueSuppliers = [];
     const seenIds = new Set();
     
@@ -10626,14 +10120,12 @@ function updateTotalSuppliersCounter() {
         }
     });
     
-    // Total suppliers (unique count)
     const totalSuppliers = uniqueSuppliers.length;
     totalSuppliersEl.textContent = totalSuppliers;
     
     // Total categories
     totalCategoriesEl.textContent = categories.length;
     
-    // Average rating
     if (totalSuppliers > 0) {
         const totalRating = uniqueSuppliers.reduce((sum, s) => sum + (s.rating || 0), 0);
         const avgRating = (totalRating / totalSuppliers).toFixed(1);
@@ -10642,7 +10134,6 @@ function updateTotalSuppliersCounter() {
         avgRatingEl.textContent = '0.0';
     }
     
-    // Compliant suppliers (with at least 4 compliance items including E-Gp)
     const compliantSuppliers = uniqueSuppliers.filter(s => {
         if (!s.compliance) return false;
         const complianceItems = [
@@ -10660,7 +10151,6 @@ function updateTotalSuppliersCounter() {
     console.log(`Displaying ${totalSuppliers} unique suppliers out of ${filteredSuppliers.length} in memory`);
 }
 
-    // ========== SUPPLIER MANAGEMENT ==========
     function openSupplierModal() {
         if (!canCreateSupplier()) {
             alert('You do not have permission to add suppliers');
@@ -10695,9 +10185,7 @@ function updateTotalSuppliersCounter() {
         });
         
         updateComplianceUI();
-        
         populateCategoryDropdown();
-        
         document.getElementById('supplierModal').style.display = 'flex';
         document.getElementById('supplierProvince').value = '';
     }
@@ -10788,14 +10276,11 @@ function updateTotalSuppliersCounter() {
 
         try {
             if (actionType === 'edit' && editingId) {
-                // Get old data for audit log
                 const oldSupplier = suppliers.find(s => s.id === editingId);
                 
                 if (currentUser.role === 'super admin' || currentUser.role === 'admin') {
-                    // Admin or Super Admin - Update directly
                     await db.collection(COLLECTIONS.SUPPLIERS).doc(editingId).update(supplierData);
                     
-                    // Track changes
                     const changes = {};
                     if (oldSupplier) {
                         for (let key in supplierData) {
@@ -10814,7 +10299,6 @@ function updateTotalSuppliersCounter() {
 
                     showNotification('Supplier updated successfully', 'success');
                 } else {
-                    // Staff - Create approval request
                     await createApprovalRequest('supplier', supplierData, 'edit', editingId);
                     closeSupplierModal();
                     showNotification('Supplier edit request submitted for approval', 'info');
@@ -10822,7 +10306,6 @@ function updateTotalSuppliersCounter() {
                 }
             } else {
                 if (currentUser.role === 'super admin' || currentUser.role === 'admin') {
-                    // Admin or Super Admin - Add directly
                     await db.collection(COLLECTIONS.SUPPLIERS).add({
                         ...supplierData,
                         createdAt: new Date().toISOString(),
@@ -10837,7 +10320,6 @@ function updateTotalSuppliersCounter() {
 
                     showNotification('Supplier added successfully', 'success');
                 } else {
-                    // Staff - Create approval request
                     await createApprovalRequest('supplier', supplierData, 'add', null);
                     closeSupplierModal();
                     showNotification('Supplier addition request submitted for approval', 'info');
@@ -10924,7 +10406,6 @@ function updateTotalSuppliersCounter() {
         const currentUser = getUser(getCurrentUser());
 
         if (currentUser.role === 'super admin') {
-            // Super Admin - Delete directly
             if (confirm(`Delete supplier "${supplier.name}"?`)) {
                 try {
                     await db.collection(COLLECTIONS.SUPPLIERS).doc(supplierId).delete();
@@ -10946,7 +10427,6 @@ function updateTotalSuppliersCounter() {
                 }
             }
         } else {
-            // Admin or Staff - Require reason and create approval request
             openReasonModal('supplier', supplierId, supplier.name, async (type, id, name, reason) => {
                 await createApprovalRequest('supplier', { name: name }, 'delete', id, reason);
                 showNotification('Delete request submitted for approval', 'info');
@@ -10954,17 +10434,14 @@ function updateTotalSuppliersCounter() {
         }
     }
 
-    // ========== SUPPLIER TABLE ==========
     function openCategoryPage(categoryId) {
     const category = categories.find(cat => cat.id === categoryId);
     if (!category) return;
     currentCategory = category.name;
     currentCategoryId = categoryId;
     document.getElementById('categoryTitle').textContent = category.name;
-    
-    // Filter suppliers by category and current province filter
+
     let categorySuppliers = suppliers.filter(s => s.category === category.name);
-    
     if (currentProvinceFilter !== 'All') {
         categorySuppliers = categorySuppliers.filter(s => s.province === currentProvinceFilter);
     }
@@ -10973,7 +10450,6 @@ function updateTotalSuppliersCounter() {
     showView('category');
 }
 
-    // ========== CATEGORY PAGE VIEW WITH COLLAPSIBLE HISTORY ==========
 function renderSuppliersTable(suppliersList) {
     const tbody = document.getElementById('supplierTableBody');
     if (!tbody) return;
@@ -10988,13 +10464,10 @@ function renderSuppliersTable(suppliersList) {
     tbody.innerHTML = suppliersList.map((s, index) => {
         const daysRemaining = getDaysRemaining(s);
         const renewalClass = daysRemaining < 0 ? 'expired' : daysRemaining < 30 ? 'expiring' : '';
-        
         const canEdit = canEditSupplier();
         const canDelete = canDeleteSupplier();
         const isSuperAdmin = user && user.role === 'super admin';
         const historyId = `history-${s.id}`;
-        
-        // Create document thumbnail
         const docThumbnail = createDocumentThumbnail(
             s.documents ? { docs: s.documents } : null, 
             'supplier', 
@@ -11058,7 +10531,6 @@ function renderSuppliersTable(suppliersList) {
     }).join('');
 }
 
-// Toggle history visibility
 function toggleHistory(historyId) {
     const historyRow = document.getElementById(historyId);
     if (historyRow) {
@@ -11070,7 +10542,6 @@ function toggleHistory(historyId) {
     }
 }
 
-// Separate function to render supplier history (unchanged)
 function renderSupplierHistory(supplier) {
     const modifications = supplier.modifications || [];
     
@@ -11083,7 +10554,6 @@ function renderSupplierHistory(supplier) {
         `;
     }
 
-    // Get last 10 activities
     const recentMods = modifications.slice(0, 10);
     
     return recentMods.map((mod, index) => {
@@ -11122,7 +10592,6 @@ function renderSupplierHistory(supplier) {
     }).join('');
 }
 
-    // ========== LINKS MANAGEMENT ==========
     function renderLinks() {
         const tbody = document.getElementById('linksBody');
         if (!tbody) return;
@@ -11172,7 +10641,6 @@ function renderSupplierHistory(supplier) {
 
         try {
             if (currentUser.role === 'super admin' || currentUser.role === 'admin') {
-                // Admin or Super Admin - Add directly
                 const newLink = {
                     institution,
                     website,
@@ -11188,7 +10656,6 @@ function renderSupplierHistory(supplier) {
                 closeLinkModal();
                 showNotification('Link added successfully');
             } else {
-                // Staff - Create approval request
                 await createApprovalRequest('link', { institution, website, email }, 'add', null);
                 closeLinkModal();
                 showNotification('Link addition request submitted for approval', 'info');
@@ -11211,7 +10678,6 @@ function renderSupplierHistory(supplier) {
         const currentUser = getUser(getCurrentUser());
 
         if (currentUser.role === 'super admin') {
-            // Super Admin - Delete directly
             if (confirm('Are you sure you want to delete this link?')) {
                 try {
                     await db.collection(COLLECTIONS.LINKS).doc(id).delete();
@@ -11229,7 +10695,6 @@ function renderSupplierHistory(supplier) {
                 }
             }
         } else {
-            // Admin or Staff - Require reason and create approval request
             openReasonModal('link', id, link.institution, async (type, id, name, reason) => {
                 await createApprovalRequest('link', { name: name }, 'delete', id, reason);
                 showNotification('Delete request submitted for approval', 'info');
@@ -11237,7 +10702,6 @@ function renderSupplierHistory(supplier) {
         }
     }
 
-    // Add this helper function to track changes between old and new data
     function getChangeSummary(oldData, newData, excludeFields = ['id', 'createdAt', 'updatedAt', 'lastModifiedAt', 'lastModifiedBy', 'createdBy']) {
         const changes = [];
         const allKeys = new Set([...Object.keys(oldData || {}), ...Object.keys(newData || {})]);
@@ -11248,10 +10712,8 @@ function renderSupplierHistory(supplier) {
             const oldValue = oldData?.[key];
             const newValue = newData?.[key];
             
-            // Skip if both are undefined/null/empty
             if (!oldValue && !newValue) continue;
             
-            // Handle objects (like compliance, documents)
             if (typeof oldValue === 'object' && typeof newValue === 'object' && oldValue !== null && newValue !== null) {
                 const nestedChanges = getChangeSummary(oldValue, newValue, []);
                 if (nestedChanges.length > 0) {
@@ -11264,7 +10726,7 @@ function renderSupplierHistory(supplier) {
                     });
                 }
             }
-            // Handle primitive values
+
             else if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
                 changes.push({
                     field: key,
@@ -11278,7 +10740,6 @@ function renderSupplierHistory(supplier) {
         return changes;
     }
 
-    // Enhanced createApprovalRequest function that includes change summary
     async function createApprovalRequestWithChanges(type, newData, action, itemId, reason = null, oldData = null) {
         try {
             const currentUser = getUser(getCurrentUser());
@@ -11289,7 +10750,6 @@ function renderSupplierHistory(supplier) {
 
             console.log(`Creating ${action} request for ${type}:`, newData);
             
-            // Calculate changes if this is an edit
             let changeSummary = null;
             let changeDescription = '';
             
@@ -11297,7 +10757,6 @@ function renderSupplierHistory(supplier) {
                 const changes = getChangeSummary(oldData, newData);
                 changeSummary = changes;
                 
-                // Create a human-readable description
                 if (changes.length > 0) {
                     changeDescription = changes.map(change => {
                         if (change.type === 'object' && change.nestedChanges) {
@@ -11319,7 +10778,7 @@ function renderSupplierHistory(supplier) {
                 requestedBy: getCurrentUser(),
                 requestedByRole: currentUser.role,
                 requestedData: newData,
-                oldData: oldData, // Store old data for comparison
+                oldData: oldData,
                 changeSummary: changeSummary,
                 changeDescription: changeDescription,
                 status: 'pending',
@@ -11345,7 +10804,6 @@ function renderSupplierHistory(supplier) {
         }
     }
 
-    // Enhanced saveSupplier function with change tracking
     async function saveSupplierWithChangeTracking() {
         if (!canCreateSupplier() && !canEditSupplier()) {
             alert('You do not have permission to save suppliers');
@@ -11419,14 +10877,10 @@ function renderSupplierHistory(supplier) {
 
         try {
             if (actionType === 'edit' && editingId) {
-                // Get old data for change tracking
                 const oldSupplier = suppliers.find(s => s.id === editingId);
                 
                 if (currentUser.role === 'super admin' || currentUser.role === 'admin') {
-                    // Admin or Super Admin - Update directly
                     await db.collection(COLLECTIONS.SUPPLIERS).doc(editingId).update(supplierData);
-                    
-                    // Track changes for audit log
                     const changes = getChangeSummary(oldSupplier, supplierData);
                     
                     await logAudit('UPDATE_SUPPLIER', {
@@ -11439,14 +10893,13 @@ function renderSupplierHistory(supplier) {
 
                     showNotification('Supplier updated successfully', 'success');
                 } else {
-                    // Staff - Create approval request with change summary
                     await createApprovalRequestWithChanges(
                         'supplier', 
                         supplierData, 
                         'edit', 
                         editingId,
                         null,
-                        oldSupplier  // Pass old data for comparison
+                        oldSupplier
                     );
                     closeSupplierModal();
                     showNotification('Supplier edit request submitted for approval. Changes: ' + 
@@ -11457,7 +10910,6 @@ function renderSupplierHistory(supplier) {
                 }
             } else {
                 if (currentUser.role === 'super admin' || currentUser.role === 'admin') {
-                    // Admin or Super Admin - Add directly
                     await db.collection(COLLECTIONS.SUPPLIERS).add({
                         ...supplierData,
                         createdAt: new Date().toISOString(),
@@ -11472,7 +10924,6 @@ function renderSupplierHistory(supplier) {
 
                     showNotification('Supplier added successfully', 'success');
                 } else {
-                    // Staff - Create approval request for addition
                     await createApprovalRequestWithChanges('supplier', supplierData, 'add', null);
                     closeSupplierModal();
                     showNotification('Supplier addition request submitted for approval', 'info');
@@ -11493,7 +10944,6 @@ function renderSupplierHistory(supplier) {
         }
     }
 
-    // Enhanced category save function with change tracking
     async function saveCategoryWithChangeTracking() {
         if (!canCreateCategory() && !canEditCategory()) {
             alert('You do not have permission to create/edit categories');
@@ -11510,11 +10960,9 @@ function renderSupplierHistory(supplier) {
 
         try {
             if (editingId) {
-                // Edit mode
                 const oldCategory = categories.find(c => c.id === editingId);
                 
                 if (canEditCategoryWithoutApproval()) {
-                    // Super Admin - Edit directly
                     await db.collection(COLLECTIONS.CATEGORIES).doc(editingId).update({
                         name: name,
                         lastModifiedBy: getCurrentUser(),
@@ -11539,22 +10987,19 @@ function renderSupplierHistory(supplier) {
                         document.getElementById('categoryTitle').textContent = name;
                     }
                 } else {
-                    // Admin or Staff - Create approval request with change summary
                     await createApprovalRequestWithChanges(
                         'category', 
                         { name: name }, 
                         'edit', 
                         editingId,
                         null,
-                        oldCategory  // Pass old data for comparison
+                        oldCategory
                     );
                     closeCategoryModal();
                     showNotification(`Category edit request submitted for approval: "${oldCategory?.name}" → "${name}"`, 'info');
                 }
             } else {
-                // Add mode
                 if (canCreateCategoryWithoutApproval()) {
-                    // Admin or Super Admin - Save directly
                     await db.collection(COLLECTIONS.CATEGORIES).add({
                         name: name,
                         createdAt: new Date().toISOString(),
@@ -11572,7 +11017,6 @@ function renderSupplierHistory(supplier) {
                     showNotification(`Category "${name}" created successfully`, 'success');
                     populateCategoryDropdown();
                 } else {
-                    // Staff - Create approval request
                     await createApprovalRequestWithChanges('category', { name: name }, 'add', null);
                     closeCategoryModal();
                     showNotification('Category creation request submitted for approval', 'info');
@@ -11584,7 +11028,6 @@ function renderSupplierHistory(supplier) {
         }
     }
 
-    // Enhanced delete function with reason
     async function deleteSupplierWithReason(supplierId) {
         if (!canDeleteSupplier()) {
             alert('You do not have permission to delete suppliers');
@@ -11597,7 +11040,6 @@ function renderSupplierHistory(supplier) {
         const currentUser = getUser(getCurrentUser());
 
         if (currentUser.role === 'super admin') {
-            // Super Admin - Delete directly (no approval needed)
             if (confirm(`Delete supplier "${supplier.name}"?`)) {
                 try {
                     await db.collection(COLLECTIONS.SUPPLIERS).doc(supplierId).delete();
@@ -11619,7 +11061,6 @@ function renderSupplierHistory(supplier) {
                 }
             }
         } else {
-            // Admin or Staff - Require reason and create approval request
             openReasonModal('supplier', supplierId, supplier.name, async (type, id, name, reason) => {
                 await createApprovalRequestWithChanges(
                     'supplier', 
@@ -11627,16 +11068,13 @@ function renderSupplierHistory(supplier) {
                     'delete', 
                     id, 
                     reason,
-                    supplier  // Pass the full supplier data for context
+                    supplier
                 );
                 showNotification(`Delete request submitted for approval for supplier "${name}". Reason: ${reason}`, 'info');
             });
         }
     }
 
-    
-
-    // Enhanced approval action modal to show changes
     async function openEnhancedApprovalActionModal(requestId) {
         const request = approvalRequests.find(r => r.id === requestId);
         if (!request) return;
@@ -11719,17 +11157,10 @@ function renderSupplierHistory(supplier) {
         document.getElementById('approvalActionModal').style.display = 'flex';
     }
 
-    // Override the original functions with enhanced versions
     const originalOpenApprovalActionModal = window.openApprovalActionModal;
     window.openApprovalActionModal = openEnhancedApprovalActionModal;
-
-    // Replace the supplier save function
     window.saveSupplier = saveSupplierWithChangeTracking;
-
-    // Replace the category save function
     window.saveNewCategory = saveCategoryWithChangeTracking;
-
-    // Replace delete supplier function
     window.deleteSupplier = deleteSupplierWithReason;
 
     function openLinkModal() { 
@@ -11752,7 +11183,7 @@ function renderSupplierHistory(supplier) {
     if (!request) return;
     
     localStorage.setItem('currentApprovalRequestId', requestId);
-    document.getElementById('pendingRejectRequestId').value = requestId; // Add this line
+    document.getElementById('pendingRejectRequestId').value = requestId;
     
     const detailsDiv = document.getElementById('approvalActionDetails');
     const actionColor = request.action === 'delete' ? '#e74c3c' : 
@@ -11783,7 +11214,6 @@ function renderSupplierHistory(supplier) {
         </div>
     `;
     
-    // ... rest of the function remains the same ...
     
     detailsDiv.innerHTML = detailsHtml;
     document.getElementById('approvalActionTitle').innerHTML = `Review ${request.action || 'Unknown'} Request`;
@@ -11798,23 +11228,18 @@ async function deleteUser(userId) {
 
     const user = userAccounts.find(u => u.id === userId);
     if (!user) return;
-
-    // Special protection for JOSEPH - cannot be deleted by anyone
     if (isJoseph(user.username)) {
         alert('⚠️ JOSEPH is a protected system account and cannot be deleted.');
         return;
     }
 
     const currentUser = getUser(getCurrentUser());
-    
-    // Staff can only delete themselves (already checked in canDeleteUser, but double-check)
     if (currentUser.role === 'staff' && currentUser.id !== userId) {
         alert('You can only delete your own account.');
         return;
     }
 
     if (currentUser.role === 'super admin') {
-        // Super Admin - Delete directly
         if (confirm(`Are you sure you want to permanently delete user ${user.fullName || user.username}?`)) {
             try {
                 await db.collection(COLLECTIONS.USERS).doc(userId).delete();
@@ -11835,7 +11260,6 @@ async function deleteUser(userId) {
             }
         }
     } else {
-        // Admin or Staff - Require approval
         openReasonModal('user', userId, user.fullName || user.username, async (type, id, name, reason) => {
             await createApprovalRequest('user', { name: name, role: user.role, fullName: user.fullName }, 'delete', id, reason);
             showNotification('User deletion request submitted for approval', 'info');
@@ -11844,7 +11268,6 @@ async function deleteUser(userId) {
     }
 }
 
-    // ========== USER MANAGEMENT WITH APPROVAL FOR STAFF ==========
     async function manageUsersModal() {
         const currentUser = getCurrentUser();
         const curUser = getUser(currentUser);
@@ -11855,12 +11278,10 @@ async function deleteUser(userId) {
         }
 
         await getAllUsers(true);
-        
         const tbody = document.getElementById('userMgmtTableBody');
         let html = '';
 
         for (let u of userAccounts) {
-            // Staff can only see staff users with masked data
             const canSeeFullData = (curUser.role === 'super admin' || curUser.role === 'admin');
             
             let displayEmail = '';
@@ -11871,14 +11292,12 @@ async function deleteUser(userId) {
                 displayEmail = u.email || '';
                 displayNrc = u.nrc || '';
             } else if (curUser.role === 'admin') {
-                // Admin sees all but with masked data for non-super admin users
                 if (u.role === 'super admin') {
-                    continue; // Admin shouldn't see super admin users
+                    continue;
                 }
                 displayEmail = u.email || '****@****';
                 displayNrc = '******';
             } else if (curUser.role === 'staff') {
-                // Staff only sees staff users with masked data
                 if (u.role !== 'staff') {
                     continue;
                 }
@@ -11890,7 +11309,6 @@ async function deleteUser(userId) {
                 '<span style="color:green; font-weight:bold;">Enabled</span>' : 
                 '<span style="color:red; font-weight:bold;">Disabled</span>';
             
-            // Check if current user can edit/delete this user
             const canEdit = (curUser.role === 'super admin') || 
                            (curUser.role === 'admin' && u.role !== 'super admin' && u.role !== 'admin') ||
                            (curUser.role === 'staff' && u.role === 'staff');
@@ -11909,7 +11327,6 @@ async function deleteUser(userId) {
             if (!actions) actions = '—';
 
             const roleClass = u.role.replace(' ', '');
-            
             html += `<tr>
     <td>
         ${u.username}
@@ -11968,20 +11385,16 @@ async function deleteUser(userId) {
             if (el) el.value = '';
         });
         
-        // Reset document previews
         ['newDegreeDocPreview', 'newZipsDocPreview', 'newNrcDocPreview'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.innerHTML = '';
         });
         
         userUploadedDocuments = { degree: null, zips: null, nrc: null };
-        
         document.getElementById('newRole').value = 'staff';
-
         const currentUser = getUser(getCurrentUser());
         
         if (currentUser.role === 'staff') {
-            // Staff can only add staff users - disable other options
             const roleSelect = document.getElementById('newRole');
             for (let i = 0; i < roleSelect.options.length; i++) {
                 if (roleSelect.options[i].value !== 'staff') {
@@ -11989,7 +11402,6 @@ async function deleteUser(userId) {
                 }
             }
         } else if (currentUser.role === 'admin') {
-            // Admin can add staff and admin users
             const roleSelect = document.getElementById('newRole');
             for (let i = 0; i < roleSelect.options.length; i++) {
                 if (roleSelect.options[i].value === 'super admin') {
@@ -11999,14 +11411,12 @@ async function deleteUser(userId) {
                 }
             }
         } else if (currentUser.role === 'super admin') {
-            // Super admin can add any role
             document.querySelectorAll('#newRole option').forEach(opt => opt.disabled = false);
         }
 
         document.getElementById('addUserModal').style.display = 'flex';
     }
 
-    // ========== SESSIONS PANEL ==========
     async function toggleSessionsPanel() {
         if (!canViewSessions()) {
             alert('You do not have permission to view sessions');
@@ -12057,7 +11467,6 @@ async function deleteUser(userId) {
         panel.style.display = 'block';
     }
 
-    // Add this function to properly load audit logs
 async function loadAuditLogs(forceRefresh = false) {
     try {
         const snapshot = await db.collection(COLLECTIONS.AUDIT_LOGS)
@@ -12077,7 +11486,6 @@ async function loadAuditLogs(forceRefresh = false) {
         return auditLogs;
     } catch (error) {
         console.error('Error loading audit logs:', error);
-        // If index error, try without orderBy
         try {
             const snapshot = await db.collection(COLLECTIONS.AUDIT_LOGS)
                 .limit(100)
@@ -12102,8 +11510,6 @@ async function loadAuditLogs(forceRefresh = false) {
     }
 }
 
-
-    // ========== EXPORT BACKUP (SUPER ADMIN ONLY) ==========
     async function exportData() {
         if (!isCurrentUserSuperAdmin()) {
             alert("Only super admin can export backup");
@@ -12163,7 +11569,6 @@ async function loadAuditLogs(forceRefresh = false) {
         event.target.value = '';
     }
 
-    // ========== UI HELPER FUNCTIONS ==========
     function showView(viewName) {
     document.getElementById('homeView').style.display = 'none';
     document.getElementById('categoryPageView').style.display = 'none';
@@ -12178,7 +11583,6 @@ async function loadAuditLogs(forceRefresh = false) {
         document.getElementById('homeView').style.display = 'block';
         renderCategories();
         
-        // Clear search when returning to home
         const searchInput = document.getElementById('globalSearch');
         if (searchInput) {
             searchInput.value = '';
@@ -12291,7 +11695,6 @@ async function loadAuditLogs(forceRefresh = false) {
         bgIndex = (bgIndex + 1) % bgImages.length;
     }
 
-    // ========== SUPPLIER HELPER FUNCTIONS ==========
     function renderStars(rating) {
         let stars = '';
         for (let i = 1; i <= 5; i++) {
@@ -12338,7 +11741,6 @@ async function loadAuditLogs(forceRefresh = false) {
         return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
     }
 
-    // ========== DOCUMENT VIEWER WITH FIXED IMAGE DISPLAY ==========
     function viewDocuments(supplierId) {
         const supplier = suppliers.find(s => s.id === supplierId);
         if (!supplier || !supplier.documents || supplier.documents.length === 0) {
@@ -12366,7 +11768,6 @@ async function loadAuditLogs(forceRefresh = false) {
                     </div>
                 `;
             } else {
-                // For PDFs and other documents
                 docElement.innerHTML = `
                     <div style="background: #e74c3c; width: 100%; height: 150px; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-bottom: 10px;">
                         <span style="font-size: 48px; color: white;">📄</span>
@@ -12390,7 +11791,6 @@ async function loadAuditLogs(forceRefresh = false) {
         document.getElementById('documentViewerModal').style.display = 'none'; 
     }
 
-    /// ========== SEARCH FUNCTION ==========
 let searchTimeout;
 function filterEverything() {
     clearTimeout(searchTimeout);
@@ -12402,18 +11802,12 @@ function filterEverything() {
             return;
         }
         
-        // Search suppliers
         const supplierResults = suppliers.filter(s => s.name && s.name.toLowerCase().includes(term));
-        
-        // Search categories
         const categoryResults = categories.filter(c => c.name && c.name.toLowerCase().includes(term));
         
         const tbody = document.getElementById('globalSearchResultsBody');
         
-        // Show both supplier and category results
         let resultsHtml = '';
-        
-        // Show category results first (if any)
         if (categoryResults.length > 0) {
             resultsHtml += categoryResults.map(c => {
                 const suppliersInCategory = suppliers.filter(s => s.category === c.name).length;
@@ -12435,7 +11829,6 @@ function filterEverything() {
             `}).join('');
         }
         
-        // Show supplier results
         if (supplierResults.length > 0) {
             resultsHtml += supplierResults.map(s => {
                 const daysRemaining = getDaysRemaining(s);
@@ -12465,7 +11858,6 @@ function filterEverything() {
         }
         
         tbody.innerHTML = resultsHtml;
-        
         document.getElementById('defaultHomeContent').style.display = 'none';
         document.getElementById('searchResultSection').style.display = 'block';
     }, 300);
@@ -12506,7 +11898,6 @@ function filterEverything() {
     }
 }
 
-    // ========== NOTIFICATION ==========
     function showNotification(message, type = 'success') {
         const notification = document.getElementById('notification');
         notification.textContent = message;
@@ -12518,7 +11909,6 @@ function filterEverything() {
         }, 4000);
     }
 
-    // Enhanced saveSupplier function to track modifications
 async function saveSupplierWithModifications() {
     if (!canCreateSupplier() && !canEditSupplier()) {
         alert('You do not have permission to save suppliers');
@@ -12593,14 +11983,11 @@ async function saveSupplierWithModifications() {
 
     try {
         if (actionType === 'edit' && editingId) {
-            // Get old data for change tracking
             const oldSupplier = suppliers.find(s => s.id === editingId);
             
             if (currentUser.role === 'super admin' || currentUser.role === 'admin') {
-                // Admin or Super Admin - Update directly
                 await db.collection(COLLECTIONS.SUPPLIERS).doc(editingId).update(supplierData);
                 
-                // Track individual changes
                 if (oldSupplier) {
                     if (oldSupplier.name !== name) {
                         await saveSupplierModification(editingId, 'update', 'name', oldSupplier.name, name, username);
@@ -12619,9 +12006,7 @@ async function saveSupplierWithModifications() {
                     }
                 }
                 
-                // Track changes for audit log
                 const changes = getChangeSummary(oldSupplier, supplierData);
-                
                 await logAudit('UPDATE_SUPPLIER', {
                     supplierId: editingId,
                     name: name,
@@ -12632,7 +12017,6 @@ async function saveSupplierWithModifications() {
 
                 showNotification('Supplier updated successfully', 'success');
             } else {
-                // Staff - Create approval request
                 await createApprovalRequest('supplier', supplierData, 'edit', editingId);
                 closeSupplierModal();
                 showNotification('Supplier edit request submitted for approval', 'info');
@@ -12640,7 +12024,6 @@ async function saveSupplierWithModifications() {
             }
         } else {
             if (currentUser.role === 'super admin' || currentUser.role === 'admin') {
-                // Admin or Super Admin - Add directly
                 const newSupplierData = {
                     ...supplierData,
                     createdAt: new Date().toISOString(),
@@ -12667,7 +12050,6 @@ async function saveSupplierWithModifications() {
 
                 showNotification('Supplier added successfully', 'success');
             } else {
-                // Staff - Create approval request for addition
                 await createApprovalRequest('supplier', supplierData, 'add', null);
                 closeSupplierModal();
                 showNotification('Supplier addition request submitted for approval', 'info');
@@ -12688,12 +12070,10 @@ async function saveSupplierWithModifications() {
     }
 }
 
-    // ========== MISC ==========
     function forgotPasswordSimple() { 
         alert('Please contact the super admin at zulujosephp@gmail.com'); 
     }
 
-    // ========== REALTIME APPROVAL LISTENER ==========
     let unsubscribeApprovals = null;
 
     function startRealtimeApprovalListener() {
@@ -12716,11 +12096,9 @@ async function saveSupplierWithModifications() {
                 .where('status', '==', 'pending')
                 .orderBy('createdAt', 'desc');
         } else {
-            // Admin sees requests from staff and admin
             query = db.collection(COLLECTIONS.APPROVALS)
                 .where('status', '==', 'pending')
                 .orderBy('createdAt', 'desc');
-            // We'll filter client-side for admin
         }
         
         unsubscribeApprovals = query.onSnapshot((snapshot) => {
@@ -12758,8 +12136,6 @@ async function saveSupplierWithModifications() {
     }
 
 
-    // Update the initializeApp function (replace the existing one)
-    // ========== INITIALIZATION WITH LOADING SPINNER ==========
     async function initializeApp() {
         console.log("Initializing Zed Supplier Directory with loading spinner...");
         
@@ -12767,7 +12143,6 @@ async function saveSupplierWithModifications() {
             return;
         }
         
-        // Keep spinner visible, hide login overlay initially
         document.getElementById('loadingSpinner').style.display = 'flex';
         document.getElementById('loginOverlay').style.display = 'none';
         const userDocModal = document.getElementById('userDocumentViewerModal');
@@ -12788,7 +12163,6 @@ async function saveSupplierWithModifications() {
                 }
             });
             
-            // Login fields are EMPTY
             const originalShowAuditLogs = window.showAuditLogs;
         window.showAuditLogs = async function() {
         if (!canViewAuditLogs()) {
@@ -12809,7 +12183,6 @@ async function saveSupplierWithModifications() {
             if (savedUser) {
                 const user = getUser(savedUser);
                 if (user && user.enabled) {
-                    // Check system lock for staff users
                     if (isSystemLocked() && user.role === 'staff') {
                         localStorage.removeItem('logged_user');
                         hideLoadingSpinner();
@@ -12829,7 +12202,6 @@ async function saveSupplierWithModifications() {
                         });
                     }
                     
-                    // Hide spinner and show home
                     hideLoadingSpinner();
                     document.getElementById('loginOverlay').style.display = 'none';
                     
@@ -12837,7 +12209,6 @@ async function saveSupplierWithModifications() {
                     updateUserDisplay();
                     applyRoleBasedUI();
                     showView('home');
-                    
                     startSessionHeartbeat();
                     
                     if (isSystemLocked() && canAccessLockedSystem()) {
@@ -12847,20 +12218,17 @@ async function saveSupplierWithModifications() {
                         }, 5000);
                     }
                 } else {
-                    // Invalid saved user - show login
                     localStorage.removeItem('logged_user');
                     localStorage.removeItem('last_login');
                     hideLoadingSpinner();
                     document.getElementById('loginOverlay').style.display = 'flex';
                 }
             } else {
-                // No saved user - show login
                 hideLoadingSpinner();
                 document.getElementById('loginOverlay').style.display = 'flex';
             }
         } catch (error) {
             console.error("Initialization error:", error);
-            // On error, show login
             hideLoadingSpinner();
             document.getElementById('loginOverlay').style.display = 'flex';
         }
@@ -12879,14 +12247,10 @@ async function saveSupplierWithModifications() {
         
         console.log("✅ Initialization complete");
 
-        // ========== ENHANCED DOCUMENT VIEWER AND PASSWORD CHANGE FEATURES ==========
-    
-    // Override the existing initializeApp function to include our new features
     const originalInitializeApp = initializeApp;
     window.initializeApp = async function() {
         await originalInitializeApp();
         
-        // Add escape key handler for modals
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeFullscreenDocument();
@@ -12894,7 +12258,6 @@ async function saveSupplierWithModifications() {
             }
         });
 
-        // Click outside to close modals
         window.onclick = function(event) {
             const fullscreenModal = document.getElementById('fullscreenDocumentView');
             const passwordModal = document.getElementById('changePasswordModal');
@@ -12908,7 +12271,6 @@ async function saveSupplierWithModifications() {
         };
     };
 
-    // Replace the manageUsersModal function
     window.manageUsersModal = async function() {
         const currentUser = getCurrentUser();
         const curUser = getUser(currentUser);
@@ -12923,11 +12285,9 @@ async function saveSupplierWithModifications() {
         document.getElementById('userManagementModal').style.display = 'flex';
     };
 
-    // Add change password option to user menu
     window.openChangePasswordModal = openChangePasswordModal;
     window.closeChangePasswordModal = closeChangePasswordModal;
 
-    // Close document viewer when clicking outside
     window.onclick = function(event) {
         const modal = document.getElementById('documentViewerModal');
         if (event.target === modal) {
