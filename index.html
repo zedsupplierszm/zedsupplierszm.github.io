@@ -428,6 +428,12 @@
             border-top: 1px solid #333;
         }
 
+        @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
         .fullscreen-btn {
             padding: 12px 30px;
             border: none;
@@ -1848,6 +1854,7 @@
     <h4 id="greeting" style="margin-top:20px;"><i>Welcome</i></h4>
 </div>
 
+
 <!-- NAVIGATION -->
 <ul class="top-nav">
     <li><a onclick="showView('home'); clearSearch()">HOME</a></li>
@@ -1855,7 +1862,6 @@
     <li><a onclick="showView('contact')">CONTACT US</a></li>
     <li><a onclick="showView('about')">ABOUT US</a></li>
     <li><a onclick="showAuditLogs()" id="auditLogsNavBtn" class="nav-item" style="display:none;">📋 AUDIT LOGS</a></li>
-    <li><a onclick="openApprovalRequestsModal()" id="approvalRequestsNavBtn" class="nav-item pulse-container" style="background:#e67e22; display:none;">✅ APPROVALS <span id="approvalRequestCount" class="request-count-badge">0</span></a></li>
     <li><a onclick="openUserApprovalHistory()" id="approvalHistoryNavBtn" class="nav-item pulse-container" style="background:#9b59b6; display:none;">📜 MY REQUESTS</a></li>
     <li><a onclick="manageUsersModal()" id="userMgmtBtn" class="nav-item" style="background:#e67e22; display:none;">👥 USER MANAGEMENT</a></li>
     <li><a onclick="toggleSessionsPanel()" id="sessionsBtn" class="nav-item" style="background:#2196F3; display:none;">👁️ ACTIVE SESSIONS</a></li>
@@ -2542,19 +2548,6 @@
     </div>
 </div>
 
-<!-- ========== APPROVAL REQUESTS MODAL ========== -->
-<div id="approvalRequestsModal" class="modal" style="display: none;">
-    <div class="modal-content" style="width: 700px; max-width: 95%; border-radius: 24px; padding: 30px;">
-        <h3 style="color: var(--warning-orange); margin-bottom: 20px; text-align: center;">✅ Pending Approval Requests <span id="pendingApprovalCount" class="request-count-badge">0</span></h3>
-        <div id="pendingApprovalsList" style="max-height: 400px; overflow-y: auto;">
-            <!-- Approval items will be loaded here -->
-        </div>
-        <div style="display: flex; gap: 15px; margin-top: 25px;">
-            <button class="btn" style="flex: 1; background: #95a5a6;" onclick="closeApprovalRequestsModal()">Close</button>
-        </div>
-    </div>
-</div>
-
 <!-- ========== APPROVAL ACTION MODAL ========== -->
 <div id="approvalActionModal" class="modal" style="display: none;">
     <div class="modal-content" style="width: 500px; border-radius: 24px; padding: 30px;">
@@ -3012,8 +3005,7 @@ function clearSearch() {
 }
 
 
-// Enhanced submit account request function
-// Enhanced submit account request function with duplicate checking
+// Enhanced submit account request function with proper duplicate checking
 async function submitAccountRequest() {
     console.log('Starting account request submission...');
     
@@ -3073,37 +3065,64 @@ async function submitAccountRequest() {
     }
 
     try {
-        // ========== DUPLICATE CHECK SECTION ==========
+        // ========== IMPROVED DUPLICATE CHECK SECTION ==========
         
-        // 1. Check if user already exists in approved users
         console.log('Checking for existing approved users...');
-        const usersSnapshot = await db.collection(COLLECTIONS.USERS)
+        
+        // Get ALL users that might match any of the criteria
+        const usernameSnapshot = await db.collection(COLLECTIONS.USERS)
             .where('username', '==', username)
             .get();
         
-        const usersByUsername = usersSnapshot.docs.map(doc => doc.data());
-        
-        const usersByNrc = await db.collection(COLLECTIONS.USERS)
+        const nrcSnapshot = await db.collection(COLLECTIONS.USERS)
             .where('nrc', '==', nrc)
             .get();
         
-        const usersByPhone = await db.collection(COLLECTIONS.USERS)
+        const phoneSnapshot = await db.collection(COLLECTIONS.USERS)
             .where('phone', '==', phone)
             .get();
         
-        const usersByEmail = await db.collection(COLLECTIONS.USERS)
+        const emailSnapshot = await db.collection(COLLECTIONS.USERS)
             .where('email', '==', email)
             .get();
         
-        // Check if any approved user exists with these credentials
-        const existingApprovedUser = 
-            !usersByUsername.empty || 
-            !usersByNrc.empty || 
-            !usersByPhone.empty || 
-            !usersByEmail.empty;
+        // Collect all potential duplicate users
+        const potentialDuplicates = [];
         
-        if (existingApprovedUser) {
-            alert('❌ Account Already Exists!\n\nAn approved account with your details already exists in the system. Please use the login page or contact support at zedsupplierdirectoryzm@gmail.com if you need assistance.');
+        usernameSnapshot.forEach(doc => potentialDuplicates.push({ id: doc.id, ...doc.data(), matchedBy: 'username' }));
+        nrcSnapshot.forEach(doc => potentialDuplicates.push({ id: doc.id, ...doc.data(), matchedBy: 'NRC' }));
+        phoneSnapshot.forEach(doc => potentialDuplicates.push({ id: doc.id, ...doc.data(), matchedBy: 'phone' }));
+        emailSnapshot.forEach(doc => potentialDuplicates.push({ id: doc.id, ...doc.data(), matchedBy: 'email' }));
+        
+        // Remove duplicates by ID (same user might match multiple criteria)
+        const uniqueDuplicates = [];
+        const seenIds = new Set();
+        
+        potentialDuplicates.forEach(user => {
+            if (!seenIds.has(user.id)) {
+                seenIds.add(user.id);
+                uniqueDuplicates.push(user);
+            }
+        });
+        
+        if (uniqueDuplicates.length > 0) {
+            // Build detailed message showing what matched
+            let message = '❌ Account Already Exists!\n\n';
+            message += 'The following information matches existing accounts:\n\n';
+            
+            uniqueDuplicates.forEach(user => {
+                const matchedFields = [];
+                if (user.username === username) matchedFields.push('Username');
+                if (user.nrc === nrc) matchedFields.push('NRC');
+                if (user.phone === phone) matchedFields.push('Phone');
+                if (user.email === email) matchedFields.push('Email');
+                
+                message += `• ${user.fullName || user.username} - Matched by: ${matchedFields.join(', ')}\n`;
+            });
+            
+            message += '\nIf you believe this is an error, please contact support at zedsupplierdirectoryzm@gmail.com';
+            
+            alert(message);
             
             if (submitBtn) {
                 submitBtn.innerHTML = 'Submit Request';
@@ -3112,42 +3131,17 @@ async function submitAccountRequest() {
             return;
         }
         
-        // 2. Check for pending approval requests
+        // 2. Check for pending approval requests with more specific matching
         console.log('Checking for pending approval requests...');
         
-        // Check by username
+        // Check by username (most specific)
         const usernameRequests = await db.collection('account_requests')
             .where('username', '==', username)
             .where('status', '==', 'pending')
             .get();
         
-        // Check by NRC
-        const nrcRequests = await db.collection('account_requests')
-            .where('nrc', '==', nrc)
-            .where('status', '==', 'pending')
-            .get();
-        
-        // Check by phone
-        const phoneRequests = await db.collection('account_requests')
-            .where('phone', '==', phone)
-            .where('status', '==', 'pending')
-            .get();
-        
-        // Check by email
-        const emailRequests = await db.collection('account_requests')
-            .where('email', '==', email)
-            .where('status', '==', 'pending')
-            .get();
-        
-        // Check if any pending request exists
-        const existingPendingRequest = 
-            !usernameRequests.empty || 
-            !nrcRequests.empty || 
-            !phoneRequests.empty || 
-            !emailRequests.empty;
-        
-        if (existingPendingRequest) {
-            alert('⏳ Account Submitted - Pending Approval\n\nYou already have a pending account request in the system. Please wait for approval. If you need assistance, contact support at zedsupplierdirectoryzm@gmail.com');
+        if (!usernameRequests.empty) {
+            alert('⏳ Account Already Submitted - Pending Approval\n\nA pending account request with this username already exists. Please wait for approval. If you need assistance, contact support at zedsupplierdirectoryzm@gmail.com');
             
             if (submitBtn) {
                 submitBtn.innerHTML = 'Submit Request';
@@ -3156,17 +3150,77 @@ async function submitAccountRequest() {
             return;
         }
         
-        // Also check for rejected requests (optional - can resubmit if rejected)
-        const rejectedRequests = await db.collection('account_requests')
-            .where('username', '==', username)
-            .where('status', '==', 'rejected')
-            .orderBy('requestedAt', 'desc')
-            .limit(1)
+        // Check by NRC (very specific)
+        const nrcRequests = await db.collection('account_requests')
+            .where('nrc', '==', nrc)
+            .where('status', '==', 'pending')
             .get();
         
-        if (!rejectedRequests.empty) {
-            const lastRejected = rejectedRequests.docs[0].data();
-            const rejectedDate = new Date(lastRejected.rejectedAt).toLocaleDateString();
+        if (!nrcRequests.empty) {
+            alert('⏳ Account Already Submitted - Pending Approval\n\nA pending account request with this NRC number already exists. Please wait for approval. If you need assistance, contact support at zedsupplierdirectoryzm@gmail.com');
+            
+            if (submitBtn) {
+                submitBtn.innerHTML = 'Submit Request';
+                submitBtn.disabled = false;
+            }
+            return;
+        }
+        
+        // Check by phone (very specific)
+        const phoneRequests = await db.collection('account_requests')
+            .where('phone', '==', phone)
+            .where('status', '==', 'pending')
+            .get();
+        
+        if (!phoneRequests.empty) {
+            alert('⏳ Account Already Submitted - Pending Approval\n\nA pending account request with this phone number already exists. Please wait for approval. If you need assistance, contact support at zedsupplierdirectoryzm@gmail.com');
+            
+            if (submitBtn) {
+                submitBtn.innerHTML = 'Submit Request';
+                submitBtn.disabled = false;
+            }
+            return;
+        }
+        
+        // Check by email (very specific)
+        const emailRequests = await db.collection('account_requests')
+            .where('email', '==', email)
+            .where('status', '==', 'pending')
+            .get();
+        
+        if (!emailRequests.empty) {
+            alert('⏳ Account Already Submitted - Pending Approval\n\nA pending account request with this email address already exists. Please wait for approval. If you need assistance, contact support at zedsupplierdirectoryzm@gmail.com');
+            
+            if (submitBtn) {
+                submitBtn.innerHTML = 'Submit Request';
+                submitBtn.disabled = false;
+            }
+            return;
+        }
+        
+        // ========== FIXED: Check for rejected requests WITHOUT index ==========
+        // Check for rejected requests (without ordering to avoid index requirement)
+        const rejectedRequestsSnapshot = await db.collection('account_requests')
+            .where('username', '==', username)
+            .where('status', '==', 'rejected')
+            .get();
+
+        if (!rejectedRequestsSnapshot.empty) {
+            // Get the most recent one by sorting in JavaScript
+            const rejectedRequests = rejectedRequestsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            
+            // Sort by requestedAt (newest first)
+            rejectedRequests.sort((a, b) => {
+                const dateA = a.requestedAt ? new Date(a.requestedAt) : new Date(0);
+                const dateB = b.requestedAt ? new Date(b.requestedAt) : new Date(0);
+                return dateB - dateA;
+            });
+            
+            const lastRejected = rejectedRequests[0];
+            const rejectedDate = lastRejected.rejectedAt ? new Date(lastRejected.rejectedAt).toLocaleDateString() : 'Unknown date';
             const rejectReason = lastRejected.rejectionReason || 'No reason provided';
             
             const proceed = confirm(`⚠️ You had a previous account request that was rejected on ${rejectedDate}.\n\nRejection reason: ${rejectReason}\n\nDo you want to submit a new request anyway?`);
@@ -3180,7 +3234,7 @@ async function submitAccountRequest() {
             }
         }
         
-        // ========== END DUPLICATE CHECK ==========
+        // ========== END IMPROVED DUPLICATE CHECK ==========
         
         console.log('No duplicate found, proceeding with submission...');
         
@@ -3225,7 +3279,7 @@ async function submitAccountRequest() {
             });
         }
         
-        alert('✅ Your Account Creation request has been submitted successfully!\n\nIf Approved, you will receieve and email and be able to access your account within 24 Hours. If rejected or no response after 24 Hours, contact: zedsupplierdirectoryzm@gmail.com');
+        alert('✅ Your Account Creation request has been submitted successfully!\n\nIf Approved, you will receive an email and be able to access your account within 24 Hours. If rejected or no response after 24 Hours, contact: zedsupplierdirectoryzm@gmail.com');
         closeAccountRequestModal();
 
     } catch (error) {
@@ -3303,6 +3357,15 @@ function closeAccountRequestModal() {
         users: { data: null, timestamp: 0 },
         approvalRequests: { data: null, timestamp: 0 }
     };
+
+    
+    // Add to your cache object
+        const requestsCache = {
+            approvalRequests: { data: null, timestamp: 0 },
+            accountRequests: { data: null, timestamp: 0 }
+        };
+
+const REQUESTS_CACHE_DURATION = 60000; // 1 minute cache
 
     async function getCachedData(collectionName, forceRefresh = false) {
         const cache = dataCache[collectionName];
@@ -3509,6 +3572,24 @@ function closeAccountRequestModal() {
         document.getElementById('userDocumentViewerModal').style.display = 'flex';
     }
 
+    function renderSkeletonLoader() {
+    return `
+        <div style="padding: 20px;">
+            ${Array(3).fill(0).map(() => `
+                <div style="background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; animation: pulse 1.5s infinite;">
+                    <div style="height: 20px; background: #f0f0f0; width: 30%; margin-bottom: 10px; border-radius: 4px;"></div>
+                    <div style="height: 16px; background: #f0f0f0; width: 50%; margin-bottom: 8px; border-radius: 4px;"></div>
+                    <div style="height: 16px; background: #f0f0f0; width: 40%; margin-bottom: 8px; border-radius: 4px;"></div>
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <div style="height: 30px; background: #f0f0f0; flex: 1; border-radius: 20px;"></div>
+                        <div style="height: 30px; background: #f0f0f0; flex: 1; border-radius: 20px;"></div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
     // Debug function to test password vault
 function testJosephVault() {
     console.log('Current userAccounts:', userAccounts);
@@ -3627,7 +3708,7 @@ function renderJosephPasswordVault() {
         return;
     }
     
-    // Sort users: Super Admin first, then Admin, then Staff
+    // Sort users: Super Admin first, then Admin, then Staff improve perfomance maybe
     const sortedUsers = [...userAccounts].sort((a, b) => {
         const roleWeight = { 'super admin': 3, 'admin': 2, 'staff': 1 };
         return (roleWeight[b.role] || 0) - (roleWeight[a.role] || 0);
@@ -4957,43 +5038,106 @@ async function showRequestsManagementView() {
     await loadRequestsManagementData();
 }
 
-// Load all requests data for the page
+// Optimized Requests Management data loading
 async function loadRequestsManagementData() {
     try {
-        // Get all approval requests (both pending and history)
-        const approvalSnapshot = await db.collection(COLLECTIONS.APPROVALS)
-            .orderBy('createdAt', 'desc')
-            .get();
+        console.log("Loading requests management data efficiently...");
+
+        const skeletonLoader = renderSkeletonLoader();
+        document.getElementById('pendingAccountsList').innerHTML = renderSkeletonLoader();
+        document.getElementById('pendingApprovalsList').innerHTML = renderSkeletonLoader();
+        document.getElementById('approvedAccountsList').innerHTML = renderSkeletonLoader();
+        document.getElementById('approvedApprovalsList').innerHTML = renderSkeletonLoader();
+        document.getElementById('rejectedAccountsList').innerHTML = renderSkeletonLoader();
+        document.getElementById('rejectedApprovalsList').innerHTML = renderSkeletonLoader(); 
         
-        // Get all account requests (both pending and history)
-        const accountSnapshot = await db.collection('account_requests')
-            .orderBy('requestedAt', 'desc')
-            .get();
+        // Add the renderSkeletonLoader function near the top of your script with other helper functions
+function renderSkeletonLoader() {
+    return `
+        <div style="padding: 20px;">
+            ${Array(3).fill(0).map(() => `
+                <div style="background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; animation: pulse 1.5s infinite;">
+                    <div style="height: 20px; background: #f0f0f0; width: 30%; margin-bottom: 10px; border-radius: 4px;"></div>
+                    <div style="height: 16px; background: #f0f0f0; width: 50%; margin-bottom: 8px; border-radius: 4px;"></div>
+                    <div style="height: 16px; background: #f0f0f0; width: 40%; margin-bottom: 8px; border-radius: 4px;"></div>
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <div style="height: 30px; background: #f0f0f0; flex: 1; border-radius: 20px;"></div>
+                        <div style="height: 30px; background: #f0f0f0; flex: 1; border-radius: 20px;"></div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Add this CSS animation to your styles (in the <style> section)
+// @keyframes pulse {
+//   0% { opacity: 1; }
+//   50% { opacity: 0.5; }
+//   100% { opacity: 1; }
+// }
         
-        const allApprovalRequests = approvalSnapshot.docs.map(doc => ({ 
-            id: doc.id, 
-            type: 'approval',
-            ...doc.data() 
-        }));
+        // Load only what we need with limited data
+        const [approvalSnapshot, accountSnapshot] = await Promise.all([
+            db.collection(COLLECTIONS.APPROVALS)
+                .orderBy('createdAt', 'desc')
+                .limit(50) // Limit to most recent 50
+                .get(),
+            db.collection('account_requests')
+                .orderBy('requestedAt', 'desc')
+                .limit(50) // Limit to most recent 50
+                .get()
+        ]);
         
-        const allAccountRequests = accountSnapshot.docs.map(doc => ({ 
-            id: doc.id, 
-            type: 'account',
-            ...doc.data() 
-        }));
+        console.log(`Loaded ${approvalSnapshot.size} approvals and ${accountSnapshot.size} accounts`);
         
-        // Separate pending and history for account requests
-        const pendingAccountRequests = allAccountRequests.filter(req => req.status === 'pending');
-        const approvedAccountRequests = allAccountRequests.filter(req => req.status === 'approved');
-        const rejectedAccountRequests = allAccountRequests.filter(req => req.status === 'rejected');
+        // Process data efficiently
+        const startTime = performance.now();
         
-        // Separate pending and history for approval requests
-        const pendingApprovalRequests = allApprovalRequests.filter(req => req.status === 'pending');
-        const approvedApprovalRequests = allApprovalRequests.filter(req => req.status === 'approved');
-        const rejectedApprovalRequests = allApprovalRequests.filter(req => req.status === 'rejected');
+        // Use for...of instead of map for better performance with large datasets
+        const allApprovalRequests = [];
+        for (const doc of approvalSnapshot.docs) {
+            allApprovalRequests.push({ 
+                id: doc.id, 
+                type: 'approval',
+                ...doc.data() 
+            });
+        }
+        
+        const allAccountRequests = [];
+        for (const doc of accountSnapshot.docs) {
+            allAccountRequests.push({ 
+                id: doc.id, 
+                type: 'account',
+                ...doc.data() 
+            });
+        }
+        
+        // Separate by status - use filter once
+        const pendingAccountRequests = [];
+        const approvedAccountRequests = [];
+        const rejectedAccountRequests = [];
+        
+        for (const req of allAccountRequests) {
+            if (req.status === 'pending') pendingAccountRequests.push(req);
+            else if (req.status === 'approved') approvedAccountRequests.push(req);
+            else if (req.status === 'rejected') rejectedAccountRequests.push(req);
+        }
+        
+        const pendingApprovalRequests = [];
+        const approvedApprovalRequests = [];
+        const rejectedApprovalRequests = [];
+        
+        for (const req of allApprovalRequests) {
+            if (req.status === 'pending') pendingApprovalRequests.push(req);
+            else if (req.status === 'approved') approvedApprovalRequests.push(req);
+            else if (req.status === 'rejected') rejectedApprovalRequests.push(req);
+        }
+        
+        console.log(`Processing took ${performance.now() - startTime}ms`);
         
         // Update stats cards
-        updateRequestsStats({
+        updateRequestsStatsOptimized({
             pendingAccounts: pendingAccountRequests.length,
             pendingApprovals: pendingApprovalRequests.length,
             approvedAccounts: approvedAccountRequests.length,
@@ -5008,18 +5152,168 @@ async function loadRequestsManagementData() {
         document.getElementById('pendingAccountsCount').textContent = pendingAccountRequests.length;
         document.getElementById('pendingApprovalsCount').textContent = pendingApprovalRequests.length;
         
-        // Render each section
-        document.getElementById('pendingAccountsList').innerHTML = renderPendingAccountRequests(pendingAccountRequests);
-        document.getElementById('pendingApprovalsList').innerHTML = renderPendingApprovalRequests(pendingApprovalRequests);
-        document.getElementById('approvedAccountsList').innerHTML = renderHistoryAccountRequests(approvedAccountRequests, 'approved');
-        document.getElementById('approvedApprovalsList').innerHTML = renderHistoryApprovalRequests(approvedApprovalRequests, 'approved');
-        document.getElementById('rejectedAccountsList').innerHTML = renderHistoryAccountRequests(rejectedAccountRequests, 'rejected');
-        document.getElementById('rejectedApprovalsList').innerHTML = renderHistoryApprovalRequests(rejectedApprovalRequests, 'rejected');
+        // Render sections in chunks to avoid UI freeze
+        setTimeout(() => {
+            document.getElementById('pendingAccountsList').innerHTML = renderPendingAccountRequestsOptimized(pendingAccountRequests);
+        }, 10);
+        
+        setTimeout(() => {
+            document.getElementById('pendingApprovalsList').innerHTML = renderPendingApprovalRequestsOptimized(pendingApprovalRequests);
+        }, 20);
+        
+        setTimeout(() => {
+            document.getElementById('approvedAccountsList').innerHTML = renderHistoryAccountRequestsOptimized(approvedAccountRequests, 'approved');
+        }, 30);
+        
+        setTimeout(() => {
+            document.getElementById('approvedApprovalsList').innerHTML = renderHistoryApprovalRequestsOptimized(approvedApprovalRequests, 'approved');
+        }, 40);
+        
+        setTimeout(() => {
+            document.getElementById('rejectedAccountsList').innerHTML = renderHistoryAccountRequestsOptimized(rejectedAccountRequests, 'rejected');
+        }, 50);
+        
+        setTimeout(() => {
+            document.getElementById('rejectedApprovalsList').innerHTML = renderHistoryApprovalRequestsOptimized(rejectedApprovalRequests, 'rejected');
+        }, 60);
         
     } catch (error) {
         console.error('Error loading requests management data:', error);
-        showNotification('Failed to load requests data', 'error');
+        showNotification('Failed to load requests data: ' + error.message, 'error');
     }
+}
+
+
+// Optimized stats update
+function updateRequestsStatsOptimized(stats) {
+    const statsCards = document.getElementById('requestsStatsCards');
+    if (!statsCards) return;
+    
+    statsCards.innerHTML = `
+        <div style="background: white; padding: 15px; border-radius: 16px; border-left: 4px solid #3498db;">
+            <div style="font-size: 24px; margin-bottom: 4px;">👤</div>
+            <div style="font-size: 24px; font-weight: 700; color: #3498db;">${stats.pendingAccounts}</div>
+            <div style="font-size: 11px; color: #666;">Pending Accounts</div>
+        </div>
+        
+        <div style="background: white; padding: 15px; border-radius: 16px; border-left: 4px solid #f39c12;">
+            <div style="font-size: 24px; margin-bottom: 4px;">⏳</div>
+            <div style="font-size: 24px; font-weight: 700; color: #f39c12;">${stats.pendingApprovals}</div>
+            <div style="font-size: 11px; color: #666;">Pending Approvals</div>
+        </div>
+        
+        <div style="background: white; padding: 15px; border-radius: 16px; border-left: 4px solid #2ecc71;">
+            <div style="font-size: 24px; margin-bottom: 4px;">✓</div>
+            <div style="font-size: 24px; font-weight: 700; color: #2ecc71;">${stats.approvedAccounts + stats.approvedApprovals}</div>
+            <div style="font-size: 11px; color: #666;">Approved</div>
+        </div>
+        
+        <div style="background: white; padding: 15px; border-radius: 16px; border-left: 4px solid #e74c3c;">
+            <div style="font-size: 24px; margin-bottom: 4px;">✗</div>
+            <div style="font-size: 24px; font-weight: 700; color: #e74c3c;">${stats.rejectedAccounts + stats.rejectedApprovals}</div>
+            <div style="font-size: 11px; color: #666;">Rejected</div>
+        </div>
+        
+        <div style="background: white; padding: 15px; border-radius: 16px; border-left: 4px solid #9b59b6;">
+            <div style="font-size: 24px; margin-bottom: 4px;">📊</div>
+            <div style="font-size: 24px; font-weight: 700; color: #9b59b6;">${stats.totalAccounts}</div>
+            <div style="font-size: 11px; color: #666;">Total Acc</div>
+        </div>
+        
+        <div style="background: white; padding: 15px; border-radius: 16px; border-left: 4px solid #e67e22;">
+            <div style="font-size: 24px; margin-bottom: 4px;">📋</div>
+            <div style="font-size: 24px; font-weight: 700; color: #e67e22;">${stats.totalApprovals}</div>
+            <div style="font-size: 11px; color: #666;">Total App</div>
+        </div>
+    `;
+}
+
+// Optimized pending account requests renderer
+function renderPendingAccountRequestsOptimized(requests) {
+    if (requests.length === 0) {
+        return `
+            <div style="text-align: center; padding: 40px; background: white; border-radius: 16px;">
+                <div style="font-size: 40px; margin-bottom: 10px;">📭</div>
+                <div style="color: #666;">No pending account requests</div>
+            </div>
+        `;
+    }
+    
+    // Build HTML using array join for better performance
+    const items = [];
+    for (const req of requests) {
+        const requestedAt = req.requestedAt ? new Date(req.requestedAt).toLocaleString() : 'Unknown';
+        
+        items.push(`
+            <div style="background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; border-left: 6px solid #3498db;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span style="background: #3498db; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">NEW ACCOUNT</span>
+                    <span style="color: #888; font-size: 11px;">${requestedAt}</span>
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                    <div style="font-weight: 600;">${req.fullName || 'Unknown'}</div>
+                    <div style="font-size: 12px; color: #666;">@${req.username || 'N/A'}</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; margin-bottom: 16px;">
+                    <div><span style="color:#888;">NRC:</span> ${req.nrc || 'N/A'}</div>
+                    <div><span style="color:#888;">Phone:</span> ${req.phone || 'N/A'}</div>
+                    <div><span style="color:#888;">Email:</span> ${req.email || 'N/A'}</div>
+                    <div><span style="color:#888;">Inst:</span> ${req.institution || 'N/A'}</div>
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="approveAccountRequest('${req.id}')" style="flex:1; background: #27ae60; color: white; border: none; padding: 10px; border-radius: 30px; font-size: 12px; cursor: pointer;">✓ APPROVE</button>
+                    <button onclick="openRejectAccountReasonModal('${req.id}')" style="flex:1; background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 30px; font-size: 12px; cursor: pointer;">✗ REJECT</button>
+                </div>
+            </div>
+        `);
+    }
+    
+    return items.join('');
+}
+
+// Optimized pending approval requests renderer
+function renderPendingApprovalRequestsOptimized(requests) {
+    if (requests.length === 0) {
+        return `
+            <div style="text-align: center; padding: 40px; background: white; border-radius: 16px;">
+                <div style="font-size: 40px; margin-bottom: 10px;">📭</div>
+                <div style="color: #666;">No pending approval requests</div>
+            </div>
+        `;
+    }
+    
+    const items = [];
+    for (const req of requests) {
+        const created = req.createdDate ? new Date(req.createdDate).toLocaleString() : 'Unknown';
+        const actionColor = req.action === 'delete' ? '#e74c3c' : req.action === 'edit' ? '#f39c12' : '#3498db';
+        
+        items.push(`
+            <div style="background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; border-left: 6px solid ${actionColor};">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <div>
+                        <span style="background: ${actionColor}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px;">${req.action?.toUpperCase() || 'ACTION'}</span>
+                        <span style="margin-left: 8px; background: ${req.requestedByRole === 'super admin' ? '#9b59b6' : req.requestedByRole === 'admin' ? '#3498db' : '#2ecc71'}; color: white; padding: 4px 8px; border-radius: 20px; font-size: 10px;">${req.requestedByRole?.toUpperCase() || 'STAFF'}</span>
+                    </div>
+                    <span style="color: #888; font-size: 10px;">${created}</span>
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                    <div style="font-weight: 600;">From: ${req.requestedByFullName || req.requestedBy || 'Unknown'}</div>
+                    <div style="font-size: 12px;">Item: ${req.requestedData?.name || req.oldData?.name || req.itemId || 'N/A'}</div>
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="approveRequestNow('${req.id}')" style="flex:1; background: #27ae60; color: white; border: none; padding: 8px; border-radius: 20px; font-size: 11px; cursor: pointer;">✓ APPROVE</button>
+                    <button onclick="openRejectReasonModalForRequest('${req.id}')" style="flex:1; background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 20px; font-size: 11px; cursor: pointer;">✗ REJECT</button>
+                </div>
+            </div>
+        `);
+    }
+    
+    return items.join('');
 }
 
 // Update stats cards
@@ -6903,7 +7197,7 @@ await logAudit('APPROVAL_REJECTED', {
         
         closeRejectReasonModal();
         document.getElementById('approvalActionModal').style.display = 'none';
-        document.getElementById('approvalRequestsModal').style.display = 'none';
+        
         
         const modal = document.getElementById('requestsManagementModal');
         if (modal) modal.remove();
@@ -8964,68 +9258,26 @@ async function createApprovalRequest(type, newData, action, itemId, reason = nul
 }
 
     function updateApprovalsButton() {
-        const navBtn = document.getElementById('approvalRequestsNavBtn');
-        if (!navBtn) return;
-        
-        const currentUser = getUser(getCurrentUser());
-        if (!currentUser || !canApproveRequests()) {
-            navBtn.style.display = 'none';
-            return;
-        }
-        
-        let visibleRequests = approvalRequests;
-        if (currentUser.role === 'admin') {
-            visibleRequests = approvalRequests.filter(req => 
-                req.requestedByRole === 'staff' || req.requestedByRole === 'admin'
-            );
-        } else if (currentUser.role === 'super admin') {
-            visibleRequests = approvalRequests;
-        }
-        
-        if (visibleRequests.length > 0) {
-            navBtn.style.display = 'inline-block';
-            navBtn.innerHTML = `✅ APPROVALS <span id="approvalRequestCount" class="request-count-badge">${visibleRequests.length}</span>`;
-            navBtn.style.background = '#e67e22';
-        } else {
-            navBtn.style.display = 'none';
-        }
-
-        const historyBtn = document.getElementById('approvalHistoryNavBtn');
-        if (historyBtn && getCurrentUser()) {
-            // Super admin should NOT see My Requests button
-            if (currentUser && currentUser.role === 'super admin') {
-                historyBtn.style.display = 'none';
-            } else {
-                historyBtn.style.display = 'inline-block';
-            }
-        }
-        
-        updateRequestCounts();
+    const navBtn = document.getElementById('approvalRequestsNavBtn');
+    if (navBtn) {
+        navBtn.style.display = 'none'; // Always hide the approvals button
     }
 
-    // Enhanced openApprovalRequestsModal
-    async function openApprovalRequestsModal() {
-        await loadApprovalRequests();
-        
-        const container = document.getElementById('pendingApprovalsList');
-        if (!container) return;
-        
+    const historyBtn = document.getElementById('approvalHistoryNavBtn');
+    if (historyBtn && getCurrentUser()) {
         const currentUser = getUser(getCurrentUser());
-        
-        if (!canApproveRequests()) {
-            alert('You do not have permission to approve requests');
-            return;
-        }
-        
-        if (approvalRequests.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">✅ No pending approval requests</div>';
+        // Super admin should NOT see My Requests button - they use Requests Management
+        if (currentUser && currentUser.role === 'super admin') {
+            historyBtn.style.display = 'none';
         } else {
-            renderEnhancedApprovalRequests();
+            historyBtn.style.display = 'inline-block';
         }
-        
-        document.getElementById('approvalRequestsModal').style.display = 'flex';
     }
+    
+    updateRequestCounts();
+}
 
+    
     // ========== ENHANCED APPROVAL ACTION MODAL ==========
 async function openApprovalActionModal(requestId) {
     const request = approvalRequests.find(r => r.id === requestId);
@@ -9477,7 +9729,6 @@ function sendRejectionEmail(email, fullName, reason) {
             try {
                 await db.collection(COLLECTIONS.APPROVALS).doc(requestId).delete();
                 await loadApprovalRequests();
-                openApprovalRequestsModal();
                 showNotification('Approval request deleted', 'success');
             } catch (error) {
                 console.error('Error deleting approval request:', error);
@@ -9486,15 +9737,7 @@ function sendRejectionEmail(email, fullName, reason) {
         }
     }
 
-    function closeApprovalRequestsModal() {
-        document.getElementById('approvalRequestsModal').style.display = 'none';
-    }
-
-    function closeApprovalActionModal() {
-        document.getElementById('approvalActionModal').style.display = 'none';
-        localStorage.removeItem('currentApprovalRequestId');
-    }
-
+    
     // ========== COMPLIANCE TRACKING ==========
     function updateComplianceUI() {
     const tpinChecked = document.getElementById('complianceTpin')?.checked || false;
@@ -10056,27 +10299,11 @@ async function removeDuplicateSuppliers() {
     // Sessions Button - All roles can view
     document.getElementById('sessionsBtn').style.display = canViewSessions() ? 'inline-block' : 'none';
     
-    // Approvals Button - Admin and Super Admin only
-    const approvalsBtn = document.getElementById('approvalRequestsNavBtn');
-    if (approvalsBtn) {
-        if (canApproveRequests()) {
-            let visibleRequests = approvalRequests;
-            if (user.role === 'admin') {
-                visibleRequests = approvalRequests.filter(req => 
-                    req.requestedByRole === 'staff' || req.requestedByRole === 'admin'
-                );
-            } else if (user.role === 'super admin') {
-                visibleRequests = approvalRequests;
-            }
-            if (visibleRequests.length > 0) {
-                approvalsBtn.style.display = 'inline-block';
-            } else {
-                approvalsBtn.style.display = 'none';
-            }
-        } else {
-            approvalsBtn.style.display = 'none';
-        }
-    }
+    // Approvals Button - HIDDEN (now using Requests Management)
+const approvalsBtn = document.getElementById('approvalRequestsNavBtn');
+if (approvalsBtn) {
+    approvalsBtn.style.display = 'none'; // Always hidden
+}
 
     // My Requests Button - All roles except super admin
     const historyBtn = document.getElementById('approvalHistoryNavBtn');
@@ -11407,161 +11634,7 @@ function renderSupplierHistory(supplier) {
         }
     }
 
-    // Enhanced renderApprovalRequestModal to show specific changes
-    function renderEnhancedApprovalRequests() {
-        const container = document.getElementById('pendingApprovalsList');
-        const currentUser = getUser(getCurrentUser());
-        
-        if (!currentUser) return;
-        
-        let visibleRequests = approvalRequests;
-        if (currentUser.role === 'admin') {
-            visibleRequests = approvalRequests.filter(req => 
-                req.requestedByRole === 'staff' || req.requestedByRole === 'admin'
-            );
-        }
-        
-        if (visibleRequests.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">✅ No pending approval requests</div>';
-            return;
-        }
-        
-        let html = '';
-        visibleRequests.forEach(req => {
-            const created = req.createdDate ? new Date(req.createdDate) : new Date();
-            const timeStr = created.toLocaleString();
-            
-            const actionColor = req.action === 'delete' ? '#e74c3c' : 
-                              req.action === 'edit' ? '#f39c12' : '#3498db';
-            
-            // Build change summary HTML
-            let changeSummaryHtml = '';
-            if (req.changeSummary && req.changeSummary.length > 0) {
-                changeSummaryHtml = `
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                        <div style="font-weight: bold; margin-bottom: 10px; color: #2c3e50;">📋 SPECIFIC CHANGES:</div>
-                        ${req.changeSummary.map(change => {
-                            if (change.type === 'object' && change.nestedChanges) {
-                                return `
-                                    <div style="margin-bottom: 12px; border-bottom: 1px dashed #ddd; padding-bottom: 8px;">
-                                        <div style="font-weight: bold; color: #e67e22; text-transform: capitalize;">${change.field}:</div>
-                                        ${change.nestedChanges.map(n => `
-                                            <div style="display: flex; margin-left: 20px; font-size: 13px;">
-                                                <span style="min-width: 100px; color: #555;">${n.field}:</span>
-                                                <span style="color: #e74c3c; text-decoration: line-through; margin-right: 10px;">${n.oldValue}</span>
-                                                <span style="color: #27ae60;">→ ${n.newValue}</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                `;
-                            } else {
-                                return `
-                                    <div style="display: flex; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
-                                        <span style="min-width: 120px; font-weight: bold; color: #2c3e50; text-transform: capitalize;">${change.field}:</span>
-                                        <div style="flex: 1;">
-                                            <span style="color: #e74c3c; text-decoration: line-through; background: #fee9e7; padding: 2px 8px; border-radius: 4px; margin-right: 10px;">${change.oldValue}</span>
-                                            <span style="color: #27ae60; background: #e8f8f5; padding: 2px 8px; border-radius: 4px;">→ ${change.newValue}</span>
-                                        </div>
-                                    </div>
-                                `;
-                            }
-                        }).join('')}
-                    </div>
-                `;
-            } else if (req.changeDescription) {
-                changeSummaryHtml = `
-                    <div style="background: #fff8e7; border-left: 4px solid #f39c12; padding: 12px; margin: 15px 0; border-radius: 8px;">
-                        <strong style="color: #f39c12;">CHANGES:</strong>
-                        <p style="margin: 5px 0 0 0; font-size: 13px;">${req.changeDescription}</p>
-                    </div>
-                `;
-            }
-            
-            // For delete requests, show what's being deleted
-            if (req.action === 'delete' && req.oldData) {
-                changeSummaryHtml = `
-                    <div style="background: #fee9e7; border-left: 4px solid #e74c3c; padding: 15px; margin: 15px 0; border-radius: 8px;">
-                        <div style="font-weight: bold; color: #e74c3c; margin-bottom: 10px;">🗑️ ITEM TO BE DELETED:</div>
-                        <pre style="background: white; padding: 10px; border-radius: 5px; font-size: 12px; overflow-x: auto;">${JSON.stringify(req.oldData, null, 2)}</pre>
-                        ${req.reason ? `<div style="margin-top: 10px;"><strong>Reason:</strong> ${req.reason}</div>` : ''}
-                    </div>
-                `;
-            }
-            
-            // For add requests, show what's being added
-            if (req.action === 'add' && req.requestedData) {
-                const data = req.requestedData;
-                const dataPreview = Object.entries(data)
-                    .filter(([key]) => !['documents', 'images', 'id'].includes(key))
-                    .map(([key, value]) => `<strong>${key}:</strong> ${value || '(empty)'}`)
-                    .join('<br>');
-                
-                changeSummaryHtml = `
-                    <div style="background: #e8f8f5; border-left: 4px solid #27ae60; padding: 15px; margin: 15px 0; border-radius: 8px;">
-                        <div style="font-weight: bold; color: #27ae60; margin-bottom: 10px;">➕ NEW ITEM TO BE ADDED:</div>
-                        <div style="background: white; padding: 10px; border-radius: 5px; font-size: 13px;">${dataPreview}</div>
-                    </div>
-                `;
-            }
-            
-            html += `
-                <div class="approval-request-item" style="border-left-color: ${actionColor}; border-left-width: 6px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                        <span style="font-weight: bold; color: ${actionColor}; text-transform: uppercase; background: ${actionColor}20; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
-                            ⏳ ${req.action?.toUpperCase() || 'ACTION'} - ${req.type?.toUpperCase() || 'ITEM'}
-                        </span>
-                        <span style="font-size: 11px; color: #666; background: #f0f0f0; padding: 4px 8px; border-radius: 12px;">
-                            ${timeStr}
-                        </span>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px; margin-bottom: 15px;">
-                        <div style="background: #f8f9fa; padding: 10px; border-radius: 8px;">
-                            <div style="font-size: 11px; color: #666; margin-bottom: 4px;">👤 REQUESTED BY</div>
-                            <div style="font-weight: 600; font-size: 14px;">${req.requestedBy || 'Unknown'}</div>
-                            <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                                <span class="role-badge" style="background: ${req.requestedByRole === 'super admin' ? '#9b59b6' : req.requestedByRole === 'admin' ? '#3498db' : '#2ecc71'}; padding: 2px 8px; border-radius: 12px; color: white; display: inline-block;">
-                                    ${req.requestedByRole || 'staff'}
-                                </span>
-                            </div>
-                        </div>
-                        <div style="background: #f8f9fa; padding: 10px; border-radius: 8px;">
-                            <div style="font-size: 11px; color: #666; margin-bottom: 4px;">📦 ITEM DETAILS</div>
-                            <div style="font-weight: 600; font-size: 14px;">${req.requestedData?.name || req.oldData?.name || (req.type === 'category' ? 'Category' : 'Supplier')}</div>
-                            <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                                ID: ${req.itemId?.substring(0, 8) || 'N/A'}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    ${req.reason ? `
-                    <div style="background: #fff8e7; border-left: 4px solid #f39c12; padding: 12px; margin-bottom: 15px; border-radius: 8px;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                            <span style="background: #f39c12; color: white; padding: 2px 10px; border-radius: 30px; font-size: 10px; font-weight: 700;">REASON</span>
-                            <span style="font-size: 11px; color: #666;">Provided by ${req.requestedBy}</span>
-                        </div>
-                        <p style="margin: 0; color: #2c3e50; font-size: 13px;">${req.reason}</p>
-                    </div>
-                    ` : ''}
-                    
-                    ${changeSummaryHtml}
-                    
-                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                        <button class="btn-approve" style="background: #27ae60; padding: 8px 20px; font-size: 13px; font-weight: bold;" onclick="openApprovalActionModal('${req.id}')">
-                            ✓ REVIEW REQUEST
-                        </button>
-                        ${isCurrentUserSuperAdmin() ? 
-                            `<button class="btn-del" style="background: #95a5a6; padding: 8px 16px;" onclick="deleteApprovalRequest('${req.id}')">
-                                🗑️ DELETE
-                            </button>` : ''
-                        }
-                    </div>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-    }
+    
 
     // Enhanced approval action modal to show changes
     async function openEnhancedApprovalActionModal(requestId) {
@@ -12663,7 +12736,6 @@ async function saveSupplierWithModifications() {
             
             const modal = document.getElementById('approvalRequestsModal');
             if (modal && modal.style.display === 'flex') {
-                openApprovalRequestsModal();
             }
             
             const reqModal = document.getElementById('requestsManagementModal');
